@@ -795,6 +795,10 @@ def cancelar_cita(request, cita_id):
                 "fecha_actualizacion",
             ]
         )
+        if hasattr(cita, "consulta"):
+            consulta = cita.consulta
+            consulta.estado = "cancelada"
+            consulta.save(update_fields=["estado"])
         messages.success(request, f"Cita {cita.numero_cita} cancelada correctamente.")
         return redirect("citas_detalle", pk=cita.id)
 
@@ -819,13 +823,14 @@ class CitaDeleteView(CitaPermisoMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         self.object: Cita = self.get_object()
-
-        if hasattr(self.object, "consulta"):
-            messages.error(request, "No se puede eliminar una cita con consulta asociada.")
-            return redirect("citas_detalle", pk=self.object.id)
-
+        consulta = getattr(self.object, "consulta", None)
         numero = self.object.numero_cita
+
         response = super().delete(request, *args, **kwargs)
+
+        if consulta:
+            consulta.delete()
+
         messages.success(request, f"Cita {numero} eliminada definitivamente.")
         return response
 
