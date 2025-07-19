@@ -987,9 +987,11 @@ class RecetaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Establecer fecha por defecto (30 días desde hoy)
-        if not self.instance.pk:
-            self.fields['valido_hasta'].initial = timezone.now().date() + timedelta(days=30)
+        # Mostrar fecha guardada o valor por defecto
+        self.initial["valido_hasta"] = (
+            self.instance.valido_hasta
+            or timezone.now().date() + timedelta(days=30)
+        )
 
 
 class MedicamentoRecetadoForm(forms.ModelForm):
