@@ -8,24 +8,48 @@
 
 {# ———————  CSS  ——————— #}
 {% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <style>
-  .loading-horarios{display:none;text-align:center;color:#6c757d;font-style:italic}
-  .error-horarios{display:none;color:#e03131;background:#ffe3e3;border:1px solid #ffcccc;border-radius:.25rem;padding:.5rem;margin-top:.25rem;font-size:.875rem}
-  .field-error{color:#e03131;font-size:.875rem;margin-top:.2rem}
+  .loading-horarios {
+    display: none;
+    text-align: center;
+    color: var(--secondary-color);
+    font-style: italic;
+  }
+  .error-horarios {
+    display: none;
+    color: var(--danger-color);
+    background: #fee2e2;
+    border: 1px solid var(--danger-color);
+    border-radius: .25rem;
+    padding: .5rem;
+    margin-top: .25rem;
+    font-size: .875rem;
+  }
+  .field-error {
+    color: var(--danger-color);
+    font-size: .875rem;
+    margin-top: .2rem;
+  }
+  .card {
+    box-shadow: var(--shadow);
+  }
 </style>
 {% endblock %}
 
 {# ———————  CONTENIDO  ——————— #}
 {% block content %}
 <div class="container-fluid my-4">
-  <h2 class="mb-4 text-primary">
-    <i class="bi bi-pencil-square me-2"></i>Editar Cita {{ cita.numero_cita }}
-  </h2>
-
-  <form id="citaForm" method="post" class="card shadow-sm p-4" novalidate>
-    {% csrf_token %}
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-primary bg-gradient text-white">
+      <h2 class="mb-0">
+        <i class="bi bi-pencil-square me-2"></i>Editar Cita {{ cita.numero_cita }}
+      </h2>
+    </div>
+    <div class="card-body">
+      <form id="citaForm" method="post" novalidate>
+        {% csrf_token %}
     <div class="row g-3">
 
       {# Paciente #}
@@ -120,7 +144,9 @@
         <i class="bi bi-save me-1"></i>Actualizar
       </button>
     </div>
-  </form>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -164,6 +190,7 @@ $(function(){
     const cons=$('#id_consultorio').val(), f=$('#id_fecha').val(), dur=$d.val();
     if(!cons||!f||!dur){$h.html('<option>Seleccione consultorio, fecha y duración</option>'); return;}
     if(parseFecha(f)<(new Date()).setHours(0,0,0,0)){err('Fecha en el pasado');return;}
+    const prev=$h.val();
     showLoad();
     $.getJSON("{% url 'ajax_horarios_disponibles' %}",{
       consultorio_id:cons,fecha:f,duracion:dur,cita_id:"{{ cita.id }}"
@@ -173,7 +200,7 @@ $(function(){
       $h.data('horarios',lst).empty().append('<option value="">Seleccione una hora</option>');
       if(!lst.length){$h.append('<option>No hay horarios disponibles</option>');err('No hay horarios disponibles');return;}
       lst.forEach(h=>{$h.append(`<option value="${h.value}"${h.estado==='ocupado'?' disabled':''}>${h.text}</option>`);});
-      if(!$h.val()){const l=lst.find(h=>h.estado==='libre');if(l)$h.val(l.value);}
+      if(prev && lst.some(h=>h.value===prev)){$h.val(prev);}else if(!$h.val()){const l=lst.find(h=>h.estado==='libre');if(l)$h.val(l.value);} 
       fitDuraciones();
     })
     .fail(()=>err('Error interno al cargar horarios'))
