@@ -4192,5 +4192,29 @@ def editar_perfil(request):
                 from django.contrib.auth import update_session_auth_hash
                 update_session_auth_hash(request, user)
                 messages.success(request, '✅ Perfil actualizado correctamente. Su contraseña ha sido cambiada.')
-                
-                # Crear notificación
+            else:
+                messages.success(request, '✅ Perfil actualizado correctamente.')
+
+            # Crear notificación
+            try:
+                NotificationManager.crear_notificacion(
+                    usuario=user,
+                    tipo='success',
+                    titulo='Perfil actualizado',
+                    mensaje='Tu perfil ha sido actualizado exitosamente.',
+                    categoria='sistema',
+                    objeto_relacionado=user
+                )
+            except Exception as e:
+                print(f'Error al crear notificación perfil: {e}')
+
+            return redirect_next(request, 'ver_perfil')
+    else:
+        form = EditarPerfilForm(instance=request.user)
+
+    context = {
+        'usuario': request.user,
+        'form': form,
+        'title': 'Editar Perfil'
+    }
+    return render(request, 'PAGES/perfil/editar.html', context)
