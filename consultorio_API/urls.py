@@ -58,6 +58,7 @@ urlpatterns = [
     path('ajax/consultas-stats/', views.consultas_stats_ajax, name='ajax_consultas_stats'),
     path('ajax/dashboard-stats/', views.dashboard_stats, name='ajax_dashboard_stats'),
     path('ajax/signos-vitales/<int:consulta_id>/', views.ajax_signos_vitales, name='ajax_signos_vitales'),
+    path('ajax/cita-detalle/<uuid:cita_id>/', viewscitas.ajax_cita_detalle, name='ajax_cita_detalle'),
 
     
     # ANTECEDENTES Y MEDICAMENTOS
