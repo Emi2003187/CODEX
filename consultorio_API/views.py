@@ -2299,6 +2299,11 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         consulta = get_object_or_404(Consulta, pk=pk)
+        # Al acceder por primera vez se marca como "en progreso" si estaba en espera
+        if consulta.estado == "espera":
+            consulta.estado = "en_progreso"
+            consulta.fecha_atencion = timezone.now()
+            consulta.save()
         consulta_form, receta_form, med_formset = self._setup_forms(consulta)
         return render(
             request,
