@@ -992,6 +992,7 @@ class RecetaForm(forms.ModelForm):
             self.fields['valido_hasta'].initial = timezone.now().date() + timedelta(days=30)
 
 
+
 class MedicamentoRecetadoForm(forms.ModelForm):
     """Formulario para medicamentos recetados"""
     
