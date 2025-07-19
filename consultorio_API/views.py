@@ -2099,9 +2099,8 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     success_url = reverse_lazy('consultas_lista')
 
     def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
+        """Return form kwargs without extra user param."""
+        return super().get_form_kwargs()
 
     def form_valid(self, form):
         user = self.request.user
@@ -2367,8 +2366,7 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
     template_name = 'PAGES/consultas/editar.html'
 
     def get_form_class(self):
-        if self.get_object().tipo == 'sin_cita':
-            return ConsultaSinCitaForm
+        """Use the medical form for editing regardless of tipo."""
         return ConsultaMedicoForm
 
     def _get_return_to(self):
@@ -2425,9 +2423,8 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
         return ctx
 
     def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
+        """Return form kwargs without passing current user."""
+        return super().get_form_kwargs()
 
     def form_valid(self, form):
         consulta = form.save(commit=False)
