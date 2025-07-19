@@ -8,545 +8,422 @@
     <style>
         @page {
             size: A4;
-            margin: 1.5cm;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 1.5cm; /* Margen general para la impresión */
         }
         
         body {
-            font-family: 'Arial', 'Helvetica', sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #333;
-            background: white;
-        }
-        
-        .prescription-container {
-            width: 100%;
-            max-width: 210mm;
-            margin: 0 auto;
-            background: white;
-            border: 2px solid #333;
-            min-height: 297mm;
-            position: relative;
-        }
-        
-        /* Header Section */
-        .header {
-            padding: 20px 30px;
-            border-bottom: 2px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            background: white;
-        }
-        
-        .doctor-info {
-            flex: 1;
-        }
-        
-        .doctor-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .doctor-title {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 3px;
-        }
-        
-        .doctor-specialty {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-        
-        .doctor-credentials {
+            font-family: 'Arial', sans-serif;
             font-size: 10px;
-            color: #888;
-            line-height: 1.3;
-        }
-        
-        .medical-symbol {
-            width: 60px;
-            height: 60px;
-            margin-left: 20px;
-            flex-shrink: 0;
-        }
-        
-        .medical-symbol svg {
-            width: 100%;
-            height: 100%;
-            fill: #333;
-        }
-        
-        /* Patient Information */
-        .patient-section {
-            padding: 20px 30px;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .patient-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 15px;
-        }
-        
-        .patient-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .field-group {
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-        }
-        
-        .field-label {
-            font-weight: bold;
-            color: #333;
-            min-width: 80px;
-            font-size: 11px;
-        }
-        
-        .field-value {
-            flex: 1;
-            color: #666;
-            font-size: 11px;
-            padding-left: 10px;
-        }
-        
-        /* Vital Signs Compact */
-        .vital-signs-compact {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        
-        .vital-item-compact {
-            display: flex;
-            align-items: center;
-            font-size: 10px;
-        }
-        
-        .vital-item-compact .label {
-            font-weight: bold;
-            color: #333;
-            min-width: 35px;
-        }
-        
-        .vital-item-compact .value {
-            color: #666;
-            border-bottom: 1px solid #ddd;
-            flex: 1;
-            padding: 2px 5px;
-            margin-left: 5px;
-        }
-        
-        /* Allergies Section */
-        .allergies-section {
-            padding: 15px 30px;
-            background: #fafafa;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .allergies-title {
-            font-weight: bold;
-            color: #333;
-            font-size: 11px;
-            margin-bottom: 8px;
-        }
-        
-        .allergies-content {
-            font-size: 11px;
-            color: #666;
-            padding: 5px 0;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .no-allergies {
-            color: #28a745;
-            font-weight: bold;
-        }
-        
-        /* Prescription Content */
-        .prescription-content {
-            padding: 30px;
-            min-height: 400px;
-            flex: 1;
-        }
-        
-        .prescription-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .medication-list {
-            list-style: none;
+            line-height: 1.2;
+            color: #000;
+            background: white;
+            margin: 0;
             padding: 0;
         }
         
-        .medication-item {
-            margin-bottom: 25px;
-            padding: 15px 0;
-            border-bottom: 1px solid #eee;
+        .container {
+            width: 19cm; /* Ancho aproximado de A4 menos márgenes */
+            margin: 0 auto;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        .medication-item:last-child {
-            border-bottom: none;
+
+        /* Generic Bordered Box Style */
+        .bordered-box {
+            border: 1px solid #000;
+            padding: 5px;
+            margin-bottom: 10px; /* Consistent spacing between boxes */
+            font-size: 9px;
+            line-height: 1.3;
         }
-        
-        .medication-name {
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-        
-        .medication-details {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 10px;
-        }
-        
-        .medication-detail {
-            font-size: 11px;
-            color: #666;
-        }
-        
-        .medication-detail strong {
-            color: #333;
-            display: block;
-            margin-bottom: 2px;
-        }
-        
-        .medication-instructions {
-            font-size: 11px;
-            color: #666;
-            font-style: italic;
-            margin-top: 8px;
-            padding: 8px;
-            background: #f9f9f9;
-            border-left: 3px solid #333;
-        }
-        
-        .general-instructions {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-        }
-        
-        .general-instructions h4 {
-            font-size: 12px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-        
-        .general-instructions p {
-            font-size: 11px;
-            color: #666;
-            line-height: 1.5;
-        }
-        
-        /* Footer */
-        .footer {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 20px 30px;
-            border-top: 2px solid #333;
-            background: white;
+
+        /* Header Section */
+        .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            margin-bottom: 5px; /* Reduced margin to fit prescription ID below */
         }
-        
-        .contact-info {
+
+        .header-left {
+            width: 60%;
+            text-align: center;
+            padding-right: 10px;
+        }
+
+        .imss-logo {
+            width: 40px; /* Ajusta según el tamaño real del logo */
+            height: auto;
+            margin-bottom: 5px;
+        }
+
+        .imss-text {
             font-size: 10px;
-            color: #666;
-            line-height: 1.3;
-        }
-        
-        .contact-info .phone {
             font-weight: bold;
-            color: #333;
             margin-bottom: 2px;
         }
-        
-        .signature-area {
-            text-align: center;
-            min-width: 200px;
+
+        .imss-subtitle {
+            font-size: 9px;
+            margin-bottom: 10px;
         }
-        
-        .signature-line {
-            border-top: 1px solid #333;
-            margin: 30px 0 8px 0;
-            width: 180px;
+
+        .prescription-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
         }
-        
-        .signature-text {
-            font-size: 10px;
-            color: #666;
+
+        .barcode-placeholder {
+            width: 100%;
+            height: 40px; /* Altura del código de barras */
+            background-color: #ccc; /* Color de fondo para simular el código de barras */
+            border: 1px solid #000;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 8px;
+            color: #555;
+            overflow: hidden; /* Asegura que el texto no se desborde */
         }
-        
-        .date-info {
+        .barcode-placeholder span {
+            transform: scaleX(0.8); /* Comprime el texto para simular barras */
+            display: inline-block;
+            white-space: nowrap;
+            color: #000; /* Asegura que el texto sea negro */
+        }
+
+        .header-right-patient-info { /* Specific box for patient info */
+            width: 40%;
+            /* Inherits from .bordered-box */
+        }
+
+        .header-right-patient-info div {
+            margin-bottom: 3px;
+        }
+
+        .header-right-patient-info .label {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 50px;
+        }
+
+        .prescription-id-number {
             text-align: right;
             font-size: 10px;
-            color: #666;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        /* Doctor Info & Date Section */
+        .doctor-date-box {
+            width: 100%;
+            /* Inherits from .bordered-box */
+        }
+
+        .doctor-date-box .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .doctor-date-box .info-field {
+            flex: 1;
+            font-size: 9px;
             line-height: 1.3;
         }
-        
-        .date-info strong {
-            color: #333;
+
+        .doctor-date-box .info-field .label {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 60px;
         }
-        
-        /* Print Optimization */
-        @media print {
-            .prescription-container {
-                border: 2px solid #333;
-                box-shadow: none;
-            }
-            
-            body {
-                font-size: 11px;
-            }
-            
-            .footer {
-                position: fixed;
-                bottom: 0;
-            }
+
+        .info-line {
+            border-bottom: 1px solid #000;
+            height: 15px; /* Altura de la línea para escribir */
+            margin-bottom: 5px;
         }
-        
-        /* Empty prescription area styling */
-        .empty-prescription {
-            min-height: 300px;
-            border: 1px dashed #ddd;
+
+        /* Vital Signs & Allergies Section */
+        .vital-allergies-box {
+            width: 100%;
+            /* Inherits from .bordered-box */
+        }
+        .vital-allergies-box .title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        .vital-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* Adjusted for more vital signs */
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        .vital-item .label {
+            font-weight: bold;
+        }
+        .allergies-content {
+            border-top: 1px solid #eee; /* Subtle separator */
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+
+        /* Prescription Content */
+        .prescription-content {
+            width: 100%;
+            min-height: 10cm; /* Altura para las líneas de prescripción */
+            position: relative;
+            /* Inherits from .bordered-box */
+        }
+
+        .medication-line {
+            border-bottom: 1px solid #000;
+            height: 18px; /* Altura de cada línea de medicamento */
+            margin-bottom: 3px;
+            font-size: 10px;
+            padding-left: 5px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: #999;
-            font-style: italic;
+        }
+
+        .medication-line.empty {
+            border-bottom: 1px dashed #ccc; /* Líneas punteadas para espacios vacíos */
+        }
+
+        .medication-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        /* General Instructions Section */
+        .general-instructions-section {
+            width: 100%;
+            /* Inherits from .bordered-box */
+        }
+        .general-instructions-section .title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        /* Footer */
+        .footer-signature {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 9px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 60%;
+            margin: 30px auto 5px auto;
+        }
+
+        .signature-text {
+            font-weight: bold;
+        }
+
+        /* Print Optimization */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .barcode-placeholder {
+                background-color: #000; /* Negro sólido para impresión */
+                color: #000; /* Texto negro para impresión */
+            }
+            .barcode-placeholder span {
+                color: #000; /* Asegura que el texto sea negro */
+            }
         }
     </style>
 </head>
 <body>
-    <div class="prescription-container">
-        <!-- Header with Doctor Info and Medical Symbol -->
+    <div class="container">
+        <!-- Header Section -->
         <div class="header">
-            <div class="doctor-info">
-                <div class="doctor-name">
-                    DR. {{ consulta.medico.get_full_name|upper }}
-                </div>
-                <div class="doctor-title">
-                    {% if consulta.medico.cedula_profesional %}
-                        Cédula: {{ consulta.medico.cedula_profesional }}
-                    {% else %}
-                        Médico Cirujano
-                    {% endif %}
-                </div>
-                <div class="doctor-specialty">
-                    {% if consulta.medico.institucion_cedula %}
-                        {{ consulta.medico.institucion_cedula }}
-                    {% else %}
-                        Medicina General
-                    {% endif %}
-                </div>
-                <div class="doctor-credentials">
-                    {% if consulta.medico.consultorio %}
-                        {{ consulta.medico.consultorio.nombre }}<br>
-                        {% if consulta.medico.consultorio.ubicacion %}
-                            {{ consulta.medico.consultorio.ubicacion }}
-                        {% endif %}
-                    {% endif %}
+            <div class="header-left">
+                <img src="{% static 'placeholder.svg?height=40&width=40' %}" alt="IMSS Logo" class="imss-logo">
+                <div class="imss-text">RECETA INDIVIDUAL</div>
+                <div class="imss-subtitle">----------------------------</div>
+                <div class="prescription-title"></div>
+                <div class="prescription-title">CONSULTORIO MEDICO</div>
+                <div class="barcode-placeholder">
+                    
                 </div>
             </div>
             
-            <div class="medical-symbol">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C13.1 2 14 2.9 14 4V6H16C17.1 6 18 6.9 18 8V10C18 11.1 17.1 12 16 12H14V14C14 15.1 13.1 16 12 16S10 15.1 10 14V12H8C6.9 12 6 11.1 6 10V8C6 6.9 6.9 6 8 6H10V4C10 2.9 10.9 2 12 2M12 4V6H10V8H12V10H14V8H16V6H14V4H12Z"/>
-                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1"/>
-                    <path d="M8 18C8 18 9 19 12 19S16 18 16 18" fill="none" stroke="currentColor" stroke-width="1"/>
-                </svg>
+            <div class="header-right-patient-info bordered-box">
+               
+                <div><span class="label">NOMBRE DEL PACIENTE:</span> {{ consulta.paciente.nombre_completo|upper }}</div>
+                
+                
+                <div><span class="label">CONSULTORIO:</span> {{ consulta.medico.consultorio.nombre|default:"_________" }}</div>
+               
             </div>
         </div>
 
-        <!-- Patient Information -->
-        <div class="patient-section">
-            <div class="patient-grid">
-                <div class="patient-row">
-                    <div class="field-group">
-                        <span class="field-label">Nombre:</span>
-                        <span class="field-value">{{ consulta.paciente.nombre_completo }}</span>
-                    </div>
-                    <div class="field-group">
-                        <span class="field-label">Edad:</span>
-                        <span class="field-value">{{ consulta.paciente.edad }} años</span>
-                    </div>
-                </div>
-                <div class="patient-row">
-                    <div class="field-group">
-                        <span class="field-label">Sexo:</span>
-                        <span class="field-value">{{ consulta.paciente.get_sexo_display }}</span>
-                    </div>
-                    <div class="field-group">
-                        <span class="field-label">Fecha:</span>
-                        <span class="field-value">{{ consulta.receta.fecha_emision|date:"d/m/Y" }}</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Compact Vital Signs -->
-            {% if consulta.signos_vitales %}
-            <div class="vital-signs-compact">
-                <div class="vital-item-compact">
-                    <span class="label">T.A.:</span>
-                    <span class="value">{{ consulta.signos_vitales.tension_arterial|default:"___" }}</span>
-                </div>
-                <div class="vital-item-compact">
-                    <span class="label">F.C.:</span>
-                    <span class="value">
-                        {% if consulta.signos_vitales.frecuencia_cardiaca %}
-                            {{ consulta.signos_vitales.frecuencia_cardiaca }} lpm
-                        {% else %}
-                            ___
-                        {% endif %}
-                    </span>
-                </div>
-                <div class="vital-item-compact">
-                    <span class="label">Peso:</span>
-                    <span class="value">
-                        {% if consulta.signos_vitales.peso %}
-                            {{ consulta.signos_vitales.peso }} kg
-                        {% else %}
-                            ___
-                        {% endif %}
-                    </span>
-                </div>
-                <div class="vital-item-compact">
-                    <span class="label">Temp.:</span>
-                    <span class="value">
-                        {% if consulta.signos_vitales.temperatura %}
-                            {{ consulta.signos_vitales.temperatura }}°C
-                        {% else %}
-                            ___
-                        {% endif %}
-                    </span>
-                </div>
-            </div>
-            {% endif %}
+        <!-- Prescription ID below the header-right-patient-info box -->
+        <div class="prescription-id-number">
+            {{ consulta.receta.id|stringformat:"015d" }}
         </div>
 
-        <!-- Allergies -->
-        <div class="allergies-section">
-            <div class="allergies-title">Alergias:</div>
+        <!-- Doctor Info & Date Section -->
+        <div class="doctor-date-box bordered-box">
+            <div class="info-row">
+                <div class="info-field">
+                    <span class="label">Fecha:</span> {{ consulta.receta.fecha_emision|date:"d/m/Y" }}
+                </div>
+                <div class="info-field" style="text-align: right;">
+                    <span class="label">Válido hasta:</span> {{ consulta.receta.valido_hasta|date:"d/m/Y"|default:"___" }}
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-field">
+                    <span class="label">Nombre y firma del médico:</span> DR. {{ consulta.medico.get_full_name|upper }}
+                </div>
+                <div class="info-field" style="text-align: right;">
+                    <span class="label">Cédula Profesional:</span> {{ consulta.medico.cedula_profesional|default:"_________" }}
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-field">
+                    <span class="label">Matrícula:</span> {{ consulta.medico.matricula|default:"_________" }}
+                </div>
+                <div class="info-field" style="text-align: right;">
+                    {# Institución Cédula is moved to footer to match image layout #}
+                </div>
+            </div>
+            <div class="info-line"></div>
+            <div class="info-line"></div>
+        </div>
+
+        <!-- Vital Signs & Allergies Section -->
+        {% if consulta.signos_vitales %}
+        <div class="vital-allergies-box bordered-box">
+            <div class="title">Signos Vitales y Alergias</div>
+            <div class="vital-grid">
+                <div class="vital-item">
+                    <span class="label">T.A.:</span> {{ consulta.signos_vitales.tension_arterial|default:"___" }}
+                </div>
+                <div class="vital-item">
+                    <span class="label">F.C.:</span> 
+                    {% if consulta.signos_vitales.frecuencia_cardiaca %}
+                        {{ consulta.signos_vitales.frecuencia_cardiaca }} lpm
+                    {% else %}
+                        ___
+                    {% endif %}
+                </div>
+                <div class="vital-item">
+                    <span class="label">Peso:</span> 
+                    {% if consulta.signos_vitales.peso %}
+                        {{ consulta.signos_vitales.peso }} kg
+                    {% else %}
+                        ___
+                    {% endif %}
+                </div>
+                <div class="vital-item">
+                    <span class="label">Temp.:</span> 
+                    {% if consulta.signos_vitales.temperatura %}
+                        {{ consulta.signos_vitales.temperatura }}°C
+                    {% else %}
+                        ___
+                    {% endif %}
+                </div>
+                <div class="vital-item">
+                    <span class="label">Talla:</span> 
+                    {% if consulta.signos_vitales.talla %}
+                        {{ consulta.signos_vitales.talla }} cm
+                    {% else %}
+                        ___
+                    {% endif %}
+                </div>
+                <div class="vital-item">
+                    <span class="label">Circ. Abd.:</span> 
+                    {% if consulta.signos_vitales.circunferencia_abdominal %}
+                        {{ consulta.signos_vitales.circunferencia_abdominal }} cm
+                    {% else %}
+                        ___
+                    {% endif %}
+                </div>
+                <div class="vital-item">
+                    <span class="label">IMC:</span> 
+                    {% if consulta.signos_vitales.imc %}
+                        {{ consulta.signos_vitales.imc }}
+                    {% else %}
+                        ___
+                    {% endif %}
+                </div>
+                <div class="vital-item"></div> {# Empty for alignment if needed #}
+            </div>
             <div class="allergies-content">
+                <span class="label">Alergias:</span> 
                 {% if consulta.signos_vitales.alergias %}
                     {{ consulta.signos_vitales.alergias }}
                 {% else %}
-                    <span class="no-allergies">NEGATIVO</span>
+                    NEGATIVO
                 {% endif %}
             </div>
         </div>
+        {% endif %}
 
         <!-- Prescription Content -->
-        <div class="prescription-content">
-            <div class="prescription-title">Prescripción</div>
-            
-            {% if consulta.receta.medicamentos.all %}
-                <ul class="medication-list">
-                    {% for med in consulta.receta.medicamentos.all %}
-                        <li class="medication-item">
-                            <div class="medication-name">{{ med.nombre }}</div>
-                            <div class="medication-details">
-                                <div class="medication-detail">
-                                    <strong>Dosis:</strong>
-                                    {{ med.dosis }}
-                                </div>
-                                <div class="medication-detail">
-                                    <strong>Frecuencia:</strong>
-                                    {{ med.frecuencia }}
-                                </div>
-                                <div class="medication-detail">
-                                    <strong>Duración:</strong>
-                                    {{ med.duracion|default:"Según indicación" }}
-                                </div>
-                            </div>
-                            {% if med.indicaciones_especificas %}
-                                <div class="medication-instructions">
-                                    {{ med.indicaciones_especificas }}
-                                </div>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <div class="empty-prescription">
-                    Área de prescripción
+        <div class="prescription-content bordered-box">
+            {% for med in consulta.receta.medicamentos.all %}
+                <div class="medication-line">
+                    <span class="medication-text">
+                        {{ forloop.counter }}. {{ med.nombre }} - Dosis: {{ med.dosis }}, Frecuencia: {{ med.frecuencia }}, Duración: {{ med.duracion|default:"Según indicación" }}. Indicaciones: {{ med.indicaciones_especificas|default:"N/A" }}
+                    </span>
                 </div>
-            {% endif %}
-            
-            {% if consulta.receta.indicaciones_generales %}
-                <div class="general-instructions">
-                    <h4>Indicaciones Generales</h4>
-                    <p>{{ consulta.receta.indicaciones_generales }}</p>
-                </div>
-            {% endif %}
+            {% empty %}
+                {# Add empty lines if no medications are prescribed #}
+                {% for i in "12345678901234567890"|make_list %} {# Adjust number of lines as needed #}
+                    <div class="medication-line empty"></div>
+                {% endfor %}
+            {% endfor %}
+
+            {# Add empty lines to ensure a minimum of 20 lines #}
+            {% with num_meds=consulta.receta.medicamentos.all|length %}
+                {% for i in "x"|ljust:20 %} {# Loop 20 times #}
+                    {% if forloop.counter0 >= num_meds %}
+                        <div class="medication-line empty"></div>
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}
         </div>
 
-        <!-- Footer -->
-        <div class="footer">
-            <div class="contact-info">
+        <!-- General Instructions Section -->
+        {% if consulta.receta.indicaciones_generales %}
+        <div class="general-instructions-section bordered-box">
+            <div class="title">Indicaciones Generales</div>
+            <p>{{ consulta.receta.indicaciones_generales }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Footer Signature Area -->
+        <div class="footer-signature">
+            <div class="signature-line"></div>
+            <div class="signature-text">
+                DR. {{ consulta.medico.get_full_name|upper }}<br>
+                CÉDULA PROFESIONAL: {{ consulta.medico.cedula_profesional|default:"_________" }}<br>
+                {% if consulta.medico.institucion_cedula %}
+                    INSTITUCIÓN CÉDULA: {{ consulta.medico.institucion_cedula|default:"_________" }}<br>
+                {% endif %}
                 {% if consulta.medico.telefono %}
-                    <div class="phone">{{ consulta.medico.telefono }}</div>
+                    TELÉFONO: {{ consulta.medico.telefono }}<br>
                 {% endif %}
                 {% if consulta.medico.consultorio.ubicacion %}
-                    <div>{{ consulta.medico.consultorio.ubicacion }}</div>
+                    UBICACIÓN: {{ consulta.medico.consultorio.ubicacion }}
                 {% endif %}
-            </div>
-            
-            <div class="signature-area">
-                <div class="signature-line"></div>
-                <div class="signature-text">
-                    Dr. {{ consulta.medico.get_full_name }}<br>
-                    {% if consulta.medico.cedula_profesional %}
-                        Cédula: {{ consulta.medico.cedula_profesional }}
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="date-info">
-                <strong>Fecha:</strong> {{ consulta.receta.fecha_emision|date:"d/m/Y" }}<br>
-                {% if consulta.receta.valido_hasta %}
-                    <strong>Válido hasta:</strong> {{ consulta.receta.valido_hasta|date:"d/m/Y" }}<br>
-                {% endif %}
-                <strong>Folio:</strong> {{ consulta.receta.id|stringformat:"05d" }}
             </div>
         </div>
     </div>
