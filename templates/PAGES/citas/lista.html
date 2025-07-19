@@ -1,0 +1,1061 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gestión de Citas Médicas{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+<style>
+.cita-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid #dee2e6;
+    position: relative;
+    overflow: hidden;
+}
+
+.cita-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.cita-card.prioridad-urgente { border-left-color: #dc3545; }
+.cita-card.prioridad-alta { border-left-color: #fd7e14; }
+.cita-card.prioridad-normal { border-left-color: #28a745; }
+.cita-card.prioridad-baja { border-left-color: #6c757d; }
+
+.cita-card.estado-confirmada {
+    background: linear-gradient(135deg, #e8f5e8 0%, #f0f9f0 100%);
+    border-left-color: #28a745;
+}
+
+.cita-card.estado-tomada {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%);
+    border-left-color: #2196f3;
+}
+
+.cita-card.estado-programada {
+    background: linear-gradient(135deg, #fff3e0 0%, #fef7f0 100%);
+    border-left-color: #ff9800;
+}
+
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-card .card-body {
+    padding: 1.5rem;
+}
+
+.badge-estado {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.filtros-avanzados {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.medico-asignado {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.sin-asignar {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.btn-action {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.alert-citas-urgentes {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.nav-pills .nav-link {
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.cita-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.status-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.confirmada {
+    background: #28a745;
+}
+
+.status-indicator.programada {
+    background: #ffc107;
+}
+
+.status-indicator.urgente {
+    background: #dc3545;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Alertas AJAX */
+.alert-ajax {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Contenedor para alertas AJAX -->
+    <div id="alert-container"></div>
+
+    <!-- HEADER -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="fw-bold text-primary mb-2">
+                <i class="bi bi-calendar-check me-2"></i>
+                Gestión de Citas Médicas
+            </h1>
+            <p class="text-muted mb-0">
+                Sistema integral de gestión de citas médicas - {{ usuario.consultorio.nombre|default:"Todos los consultorios" }}
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="btn-group" role="group">
+                <a href="{% url 'citas_crear' %}" class="btn btn-primary btn-action">
+                    <i class="bi bi-plus-circle me-1"></i>Nueva Cita
+                </a>
+                {% if usuario.rol == 'medico' %}
+                <a href="{% url 'mis_citas_asignadas' %}" class="btn btn-info btn-action">
+                    <i class="bi bi-person-check me-1"></i>Mis Citas
+                </a>
+                {% endif %}
+                <button type="button" class="btn btn-outline-primary btn-action" onclick="mostrarCalendario()">
+                    <i class="bi bi-calendar3 me-1"></i>Calendario
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTADÍSTICAS RÁPIDAS -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Citas</h6>
+                            <h2 class="mb-0">{{ stats.total|default:0 }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-calendar-check fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white" style="border-radius: 15px;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Hoy</h6>
+                            <h2 class="mb-0">{{ stats.hoy|default:0 }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-calendar-day fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white" style="border-radius: 15px;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Sin Asignar</h6>
+                            <h2 class="mb-0">{{ stats.sin_asignar|default:0 }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-clock fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white" style="border-radius: 15px;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Asignadas</h6>
+                            <h2 class="mb-0">{{ stats.asignadas|default:0 }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-person-check fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTROS AVANZADOS -->
+    <div class="filtros-avanzados">
+        <form method="get" id="filtroForm">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Buscar</label>
+                    <input type="text" name="buscar" class="form-control"
+                           placeholder="Buscar por paciente, número de cita o motivo..."
+                           value="{{ request.GET.buscar }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="programada" {% if request.GET.estado == 'programada' %}selected{% endif %}>Programada</option>
+                        <option value="confirmada" {% if request.GET.estado == 'confirmada' %}selected{% endif %}>Confirmada</option>
+                        <option value="en_espera" {% if request.GET.estado == 'en_espera' %}selected{% endif %}>En Espera</option>
+                        <option value="en_atencion" {% if request.GET.estado == 'en_atencion' %}selected{% endif %}>En Atención</option>
+                        <option value="completada" {% if request.GET.estado == 'completada' %}selected{% endif %}>Completada</option>
+                        <option value="cancelada" {% if request.GET.estado == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                        <option value="no_asistio" {% if request.GET.estado == 'no_asistio' %}selected{% endif %}>No Asistió</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Tipo</label>
+                    <select name="tipo_cita" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="primera_vez" {% if request.GET.tipo_cita == 'primera_vez' %}selected{% endif %}>Primera Vez</option>
+                        <option value="control" {% if request.GET.tipo_cita == 'control' %}selected{% endif %}>Control</option>
+                        <option value="urgencia" {% if request.GET.tipo_cita == 'urgencia' %}selected{% endif %}>Urgencia</option>
+                        <option value="cirugia" {% if request.GET.tipo_cita == 'cirugia' %}selected{% endif %}>Cirugía</option>
+                        <option value="procedimiento" {% if request.GET.tipo_cita == 'procedimiento' %}selected{% endif %}>Procedimiento</option>
+                        <option value="teleconsulta" {% if request.GET.tipo_cita == 'teleconsulta' %}selected{% endif %}>Teleconsulta</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Prioridad</label>
+                    <select name="prioridad" class="form-select">
+                        <option value="">Todas</option>
+                        <option value="baja" {% if request.GET.prioridad == 'baja' %}selected{% endif %}>Baja</option>
+                        <option value="normal" {% if request.GET.prioridad == 'normal' %}selected{% endif %}>Normal</option>
+                        <option value="alta" {% if request.GET.prioridad == 'alta' %}selected{% endif %}>Alta</option>
+                        <option value="urgente" {% if request.GET.prioridad == 'urgente' %}selected{% endif %}>Urgente</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Médico</label>
+                    <select name="medico" class="form-select">
+                        <option value="">Todos</option>
+                        {% for medico in medicos_disponibles %}
+                        <option value="{{ medico.id }}" {% if request.GET.medico == medico.id|stringformat:"s" %}selected{% endif %}>
+                            {{ medico.get_full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Fecha Desde</label>
+                    <input type="date" name="fecha_desde" class="form-control" value="{{ request.GET.fecha_desde }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Fecha Hasta</label>
+                    <input type="date" name="fecha_hasta" class="form-control" value="{{ request.GET.fecha_hasta }}">
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2 btn-action">
+                        <i class="bi bi-search me-1"></i>Filtrar
+                    </button>
+                    <a href="{% url 'citas_lista' %}" class="btn btn-outline-secondary btn-action">
+                        <i class="bi bi-x-circle me-1"></i>Limpiar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- CITAS URGENTES SIN ASIGNAR -->
+    {% if citas_urgentes %}
+    <div class="alert alert-citas-urgentes mb-4">
+        <h6 class="alert-heading fw-bold">
+            <i class="bi bi-exclamation-triangle me-2"></i>Citas Urgentes Sin Asignar
+        </h6>
+        <div class="row">
+            {% for cita in citas_urgentes %}
+            <div class="col-md-6 mb-2">
+                <div class="d-flex align-items-center justify-content-between p-2 bg-white rounded">
+                    <div>
+                        <span class="badge bg-danger me-2">{{ cita.fecha_hora|time:"H:i" }}</span>
+                        <strong>{{ cita.paciente.nombre_completo }}</strong>
+                        <small class="text-muted d-block">{{ cita.motivo|truncatechars:30 }}</small>
+                    </div>
+                    {% if usuario.rol == 'medico' %}
+                    <a href="{% url 'tomar_cita' cita.id %}" class="btn btn-sm btn-warning">
+                        <i class="bi bi-hand-index"></i> Tomar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- PESTAÑAS DE CITAS -->
+    <ul class="nav nav-pills nav-fill mb-4" id="citaTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="sin-asignar-tab" data-bs-toggle="pill"
+                    data-bs-target="#sin-asignar" type="button" role="tab">
+                <i class="bi bi-clock me-1"></i>
+                Sin Asignar <span class="badge bg-light text-dark ms-1">{{ grupos.sin_asignar.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="asignadas-tab" data-bs-toggle="pill"
+                    data-bs-target="#asignadas" type="button" role="tab">
+                <i class="bi bi-person-check me-1"></i>
+                Asignadas <span class="badge bg-light text-dark ms-1">{{ grupos.asignadas.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="completadas-tab" data-bs-toggle="pill"
+                    data-bs-target="#completadas" type="button" role="tab">
+                <i class="bi bi-check-circle me-1"></i>
+                Completadas <span class="badge bg-light text-dark ms-1">{{ grupos.completadas.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="canceladas-tab" data-bs-toggle="pill"
+                    data-bs-target="#canceladas" type="button" role="tab">
+                <i class="bi bi-x-circle me-1"></i>
+                Canceladas <span class="badge bg-light text-dark ms-1">{{ grupos.canceladas.count }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- CONTENIDO DE PESTAÑAS -->
+    <div class="tab-content" id="citaTabsContent">
+        <!-- Tab: Sin Asignar -->
+        <div class="tab-pane fade show active" id="sin-asignar" role="tabpanel">
+            {% if grupos.sin_asignar %}
+                <div class="row">
+                    {% for cita in grupos.sin_asignar %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card cita-card estado-{{ cita.estado }} prioridad-{{ cita.prioridad }} h-100">
+                            <div class="status-indicator {{ cita.estado }}"></div>
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-person me-1"></i>
+                                    {{ cita.paciente.nombre_completo }}
+                                </h6>
+                                <span class="badge badge-estado
+                                    {% if cita.estado == 'programada' %}bg-primary
+                                    {% elif cita.estado == 'confirmada' %}bg-success
+                                    {% elif cita.estado == 'en_espera' %}bg-warning
+                                    {% elif cita.estado == 'en_atencion' %}bg-info
+                                    {% elif cita.estado == 'completada' %}bg-success
+                                    {% elif cita.estado == 'cancelada' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ cita.get_estado_display }}
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">Fecha</small>
+                                        <div class="fw-bold">{{ cita.fecha_hora|date:"d/m/Y" }}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Hora</small>
+                                        <div class="fw-bold">{{ cita.fecha_hora|time:"H:i" }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <small class="text-muted">Médico</small>
+                                    <div>
+                                        {% if cita.medico_asignado %}
+                                            <span class="medico-asignado">{{ cita.medico_asignado.get_full_name }}</span>
+                                        {% else %}
+                                            <span class="sin-asignar">Sin asignar</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">Tipo</small>
+                                        <div>{{ cita.get_tipo_cita_display }}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Duración</small>
+                                        <div>{{ cita.duracion }} min</div>
+                                    </div>
+                                </div>
+                                
+                                {% if cita.motivo %}
+                                <div class="mb-2">
+                                    <small class="text-muted">Motivo</small>
+                                    <div class="text-truncate">{{ cita.motivo }}</div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <small class="text-muted">
+                                        <i class="bi bi-hash"></i>{{ cita.numero_cita }}
+                                    </small>
+                                    <div class="badge
+                                        {% if cita.prioridad == 'urgente' %}bg-danger
+                                        {% elif cita.prioridad == 'alta' %}bg-warning
+                                        {% elif cita.prioridad == 'normal' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ cita.get_prioridad_display }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="cita-actions">
+                                    <a href="{% url 'citas_detalle' cita.pk %}"
+                                       class="btn btn-sm btn-outline-info btn-action">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+                                    {% if usuario.rol == 'medico' %}
+                                    <a href="{% url 'tomar_cita' cita.id %}"
+                                       class="btn btn-sm btn-success btn-action">
+                                        <i class="bi bi-hand-index"></i> Tomar
+                                    </a>
+                                    {% endif %}
+                                    {% if permisos.puede_asignar %}
+                                    <button type="button" class="btn btn-sm btn-primary btn-action"
+                                            onclick="asignarMedico('{{ cita.pk }}')">
+                                        <i class="bi bi-person-plus"></i> Asignar
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-calendar-check display-1"></i>
+                    <h4>No hay citas sin asignar</h4>
+                    <p>Todas las citas han sido asignadas a médicos.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Tab: Asignadas -->
+        <div class="tab-pane fade" id="asignadas" role="tabpanel">
+            {% if grupos.asignadas %}
+                <div class="row">
+                    {% for cita in grupos.asignadas %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card cita-card estado-{{ cita.estado }} prioridad-{{ cita.prioridad }} h-100">
+                            <div class="status-indicator {{ cita.estado }}"></div>
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-person me-1"></i>
+                                    {{ cita.paciente.nombre_completo }}
+                                </h6>
+                                <span class="badge badge-estado
+                                    {% if cita.estado == 'programada' %}bg-primary
+                                    {% elif cita.estado == 'confirmada' %}bg-success
+                                    {% elif cita.estado == 'en_espera' %}bg-warning
+                                    {% elif cita.estado == 'en_atencion' %}bg-info
+                                    {% elif cita.estado == 'completada' %}bg-success
+                                    {% elif cita.estado == 'cancelada' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ cita.get_estado_display }}
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">Fecha</small>
+                                        <div class="fw-bold">{{ cita.fecha_hora|date:"d/m/Y" }}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Hora</small>
+                                        <div class="fw-bold">{{ cita.fecha_hora|time:"H:i" }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <small class="text-muted">Médico Asignado</small>
+                                    <div>
+                                        <span class="medico-asignado">{{ cita.medico_asignado.get_full_name }}</span>
+                                        {% if cita.fecha_asignacion_medico %}
+                                        <small class="text-muted d-block">
+                                            Asignado: {{ cita.fecha_asignacion_medico|date:"d/m/Y H:i" }}
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">Tipo</small>
+                                        <div>{{ cita.get_tipo_cita_display }}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Duración</small>
+                                        <div>{{ cita.duracion }} min</div>
+                                    </div>
+                                </div>
+                                
+                                {% if cita.motivo %}
+                                <div class="mb-2">
+                                    <small class="text-muted">Motivo</small>
+                                    <div class="text-truncate">{{ cita.motivo }}</div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <small class="text-muted">
+                                        <i class="bi bi-hash"></i>{{ cita.numero_cita }}
+                                    </small>
+                                    <div class="badge
+                                        {% if cita.prioridad == 'urgente' %}bg-danger
+                                        {% elif cita.prioridad == 'alta' %}bg-warning
+                                        {% elif cita.prioridad == 'normal' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ cita.get_prioridad_display }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="cita-actions">
+                                    <a href="{% url 'citas_detalle' cita.pk %}"
+                                       class="btn btn-sm btn-outline-info btn-action">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+                                    
+                                    {% if permisos.puede_liberar and cita.medico_asignado %}
+                                    <a href="{% url 'liberar_cita' cita.id %}"
+                                       class="btn btn-sm btn-warning btn-action">
+                                        <i class="bi bi-unlock"></i> Liberar
+                                    </a>
+                                    {% endif %}
+                                    
+                                    <!-- Lógica para mostrar botón Iniciar o Ver Consulta -->
+                                    {% if cita.medico_asignado and cita.estado in 'programada,confirmada,en_espera' %}
+                                        {% if cita.consulta %}
+                                            <!-- Si ya tiene consulta, mostrar botón para ir a la consulta -->
+                                            <a href="{% url 'consulta_detalle' cita.consulta.id %}"
+                                               class="btn btn-sm btn-info btn-action">
+                                                <i class="bi bi-clipboard-pulse"></i> Ver Consulta
+                                            </a>
+                                        {% else %}
+                                            <!-- Si no tiene consulta, mostrar botón Iniciar -->
+                                            <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-success btn-action">
+                                                    <i class="bi bi-play"></i> Iniciar
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-person-check display-1"></i>
+                    <h4>No hay citas asignadas</h4>
+                    <p>Las citas asignadas aparecerán aquí.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Tab: Completadas -->
+        <div class="tab-pane fade" id="completadas" role="tabpanel">
+            {% if grupos.completadas %}
+                <div class="row">
+                    {% for cita in grupos.completadas %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card cita-card estado-completada h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-person me-1"></i>
+                                    {{ cita.paciente.nombre_completo }}
+                                </h6>
+                                <span class="badge bg-success">Completada</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">Fecha</small>
+                                        <div class="fw-bold">{{ cita.fecha_hora|date:"d/m/Y" }}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Hora</small>
+                                        <div class="fw-bold">{{ cita.fecha_hora|time:"H:i" }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <small class="text-muted">Médico</small>
+                                    <div>{{ cita.medico_asignado.get_full_name|default:"No asignado" }}</div>
+                                </div>
+                                
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <small class="text-muted">
+                                        <i class="bi bi-hash"></i>{{ cita.numero_cita }}
+                                    </small>
+                                    <div class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Finalizada
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="cita-actions">
+                                    <a href="{% url 'citas_detalle' cita.pk %}"
+                                       class="btn btn-sm btn-outline-info btn-action">
+                                        <i class="bi bi-eye"></i> Ver Detalles
+                                    </a>
+                                    {% if cita.consulta %}
+                                    <a href="{% url 'consulta_detalle' cita.consulta.pk %}"
+                                       class="btn btn-sm btn-outline-success btn-action">
+                                        <i class="bi bi-clipboard-pulse"></i> Ver Consulta
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-check-circle display-1"></i>
+                    <h4>No hay citas completadas</h4>
+                    <p>Las citas completadas aparecerán aquí.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Tab: Canceladas -->
+        <div class="tab-pane fade" id="canceladas" role="tabpanel">
+            {% if grupos.canceladas %}
+                <div class="row">
+                    {% for cita in grupos.canceladas %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card cita-card h-100" style="opacity: 0.8;">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-person me-1"></i>
+                                    {{ cita.paciente.nombre_completo }}
+                                </h6>
+                                <span class="badge bg-danger">{{ cita.get_estado_display }}</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">Fecha</small>
+                                        <div class="fw-bold">{{ cita.fecha_hora|date:"d/m/Y" }}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Hora</small>
+                                        <div class="fw-bold">{{ cita.fecha_hora|time:"H:i" }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <small class="text-muted">Médico</small>
+                                    <div>{{ cita.medico_asignado.get_full_name|default:"No asignado" }}</div>
+                                </div>
+                                
+                                {% if cita.motivo_cancelacion %}
+                                <div class="mb-2">
+                                    <small class="text-muted">Motivo de cancelación</small>
+                                    <div class="text-truncate">{{ cita.motivo_cancelacion }}</div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <small class="text-muted">
+                                        <i class="bi bi-hash"></i>{{ cita.numero_cita }}
+                                    </small>
+                                    <div class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> {{ cita.get_estado_display }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="cita-actions">
+                                    <a href="{% url 'citas_detalle' cita.pk %}"
+                                       class="btn btn-sm btn-outline-info btn-action">
+                                        <i class="bi bi-eye"></i> Ver Detalles
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-x-circle display-1"></i>
+                    <h4>No hay citas canceladas</h4>
+                    <p>Las citas canceladas aparecerán aquí.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CALENDARIO -->
+<div class="modal fade" id="calendarioModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Calendario de Citas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="calendario"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ASIGNAR MÉDICO -->
+<div class="modal fade" id="asignarMedicoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Asignar Médico a Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="asignarMedicoForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="citaIdAsignar" name="cita_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Médico</label>
+                        <select class="form-select" name="medico_id" required>
+                            <option value="">Seleccionar médico...</option>
+                            {% for medico in medicos_disponibles %}
+                            <option value="{{ medico.id }}">{{ medico.get_full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Observaciones (opcional)</label>
+                        <textarea class="form-control" name="observaciones" rows="3"
+                                  placeholder="Observaciones sobre la asignación..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarAsignacion()">Asignar Médico</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CAMBIAR ESTADO -->
+<div class="modal fade" id="estadoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cambiar Estado de Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="estadoForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="citaId" name="cita_id">
+                    <input type="hidden" id="nuevoEstado" name="estado">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Motivo (opcional)</label>
+                        <textarea class="form-control" name="motivo" rows="3"
+                                  placeholder="Ingresa el motivo del cambio..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarCambioEstado()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+// Función para mostrar alertas AJAX
+function mostrarAlerta(mensaje, tipo = 'success') {
+    const alertContainer = document.getElementById('alert-container');
+    const alertId = 'alert-' + Date.now();
+    
+    const alertHTML = `
+        <div id="${alertId}" class="alert alert-${tipo} alert-dismissible fade show alert-ajax" role="alert">
+            <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    alertContainer.insertAdjacentHTML('beforeend', alertHTML);
+    
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        const alert = document.getElementById(alertId);
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+$(document).ready(function() {
+    // Inicializar Select2
+    $('.select2').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Seleccionar...'
+    });
+    
+    // Auto-submit del formulario de filtros con delay para búsqueda
+    let searchTimeout;
+    $('#filtroForm input[name="buscar"]').on('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            $('#filtroForm').submit();
+        }, 500);
+    });
+    
+    // Auto-submit para otros filtros
+    $('#filtroForm select, #filtroForm input[type="date"]').change(function() {
+        $('#filtroForm').submit();
+    });
+});
+
+function mostrarCalendario() {
+    const modal = new bootstrap.Modal(document.getElementById('calendarioModal'));
+    modal.show();
+    
+    // Inicializar FullCalendar
+    const calendarEl = document.getElementById('calendario');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: '{% url "citas_calendario" %}',
+        eventClick: function(info) {
+            window.location.href = `/citas/${info.event.id}/`;
+        },
+        eventMouseEnter: function(info) {
+            info.el.title = `${info.event.extendedProps.numero_cita}\n${info.event.extendedProps.medico}\n${info.event.extendedProps.tipo}`;
+        }
+    });
+    
+    calendar.render();
+}
+
+function asignarMedico(citaId) {
+    document.getElementById('citaIdAsignar').value = citaId;
+    const modal = new bootstrap.Modal(document.getElementById('asignarMedicoModal'));
+    modal.show();
+}
+
+function confirmarAsignacion() {
+    const form = document.getElementById('asignarMedicoForm');
+    const formData = new FormData(form);
+    const citaId = document.getElementById('citaIdAsignar').value;
+    
+    // Validar que se haya seleccionado un médico
+    const medicoSelect = form.querySelector('select[name="medico_id"]');
+    if (!medicoSelect.value) {
+        mostrarAlerta('Por favor selecciona un médico', 'danger');
+        return;
+    }
+    
+    // Deshabilitar botón para evitar doble envío
+    const btnAsignar = document.querySelector('#asignarMedicoModal .btn-primary');
+    btnAsignar.disabled = true;
+    btnAsignar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Asignando...';
+    
+    fetch(`/citas/${citaId}/asignar-medico/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarAlerta(data.message, 'success');
+            // Cerrar modal
+            bootstrap.Modal.getInstance(document.getElementById('asignarMedicoModal')).hide();
+            // Recargar página después de un breve delay
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            mostrarAlerta('Error: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarAlerta('Error al asignar médico. Por favor intenta nuevamente.', 'danger');
+    })
+    .finally(() => {
+        // Rehabilitar botón
+        btnAsignar.disabled = false;
+        btnAsignar.innerHTML = 'Asignar Médico';
+    });
+}
+
+function cambiarEstado(citaId, nuevoEstado) {
+    document.getElementById('citaId').value = citaId;
+    document.getElementById('nuevoEstado').value = nuevoEstado;
+    
+    const modal = new bootstrap.Modal(document.getElementById('estadoModal'));
+    modal.show();
+}
+
+function confirmarCambioEstado() {
+    const form = document.getElementById('estadoForm');
+    const formData = new FormData(form);
+    const citaId = document.getElementById('citaId').value;
+    
+    fetch(`/citas/${citaId}/cambiar-estado/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarAlerta(data.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('estadoModal')).hide();
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            mostrarAlerta('Error: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarAlerta('Error al cambiar el estado. Por favor intenta nuevamente.', 'danger');
+    });
+}
+
+// Auto-refresh cada 30 segundos para citas urgentes
+setInterval(function() {
+    // Solo actualizar si hay citas urgentes visibles
+    if (document.querySelector('.alert-citas-urgentes')) {
+        fetch(window.location.href + '?ajax=1')
+        .then(response => response.json())
+        .then(data => {
+            if (data.citas_urgentes_count > 0) {
+                // Mostrar notificación si hay nuevas citas urgentes
+                console.log('Nuevas citas urgentes detectadas');
+            }
+        })
+        .catch(error => console.log('Error en auto-refresh:', error));
+    }
+}, 30000);
+</script>
+{% endblock %}

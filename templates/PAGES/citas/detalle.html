@@ -1,0 +1,974 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Detalle de Cita – {{ cita.numero_cita }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-container {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 1.5rem 0;
+  }
+
+  .breadcrumb-custom {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #4f46e5;
+  }
+
+  .breadcrumb-custom .breadcrumb {
+    margin: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  .breadcrumb-custom .breadcrumb-item a {
+    color: #4f46e5;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .breadcrumb-custom .breadcrumb-item a:hover {
+    color: #3730a3;
+    text-decoration: underline;
+  }
+
+  .breadcrumb-custom .breadcrumb-item.active {
+    color: #374151;
+    font-weight: 600;
+  }
+
+  .page-header {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    border-top: 4px solid #4f46e5;
+  }
+
+  .page-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-subtitle {
+    color: #6b7280;
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+
+  .volver-btn {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .volver-btn:hover {
+    background: #4b5563;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+
+  .cita-header-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+  }
+
+  .cita-header-gradient {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    padding: 2rem;
+    color: white;
+  }
+
+  .cita-numero {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+    color: white;
+  }
+
+  .paciente-nombre {
+    font-size: 1.25rem;
+    opacity: 0.95;
+    font-weight: 500;
+    margin-bottom: 0;
+    color: white;
+  }
+
+  .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-programada { background: #6b7280; color: white; }
+  .status-confirmada { background: #3b82f6; color: white; }
+  .status-en-espera { background: #f59e0b; color: white; }
+  .status-en-atencion { background: #f97316; color: white; }
+  .status-completada { background: #10b981; color: white; }
+  .status-cancelada { background: #ef4444; color: white; }
+
+  .info-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+
+  .info-section {
+    padding: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .info-section:last-child {
+    border-bottom: none;
+  }
+
+  .section-title {
+    color: #111827;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .section-title i {
+    color: #4f46e5;
+    font-size: 1.25rem;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .info-item {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #4f46e5;
+    transition: all 0.3s ease;
+  }
+
+  .info-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .info-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .info-value {
+    font-size: 1rem;
+    color: #111827;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .priority-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .priority-normal { 
+    background: #dbeafe; 
+    color: #1d4ed8; 
+  }
+  .priority-alta { 
+    background: #fef3c7; 
+    color: #d97706; 
+  }
+  .priority-urgente { 
+    background: #fee2e2; 
+    color: #dc2626; 
+  }
+
+  .actions-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: sticky;
+    top: 20px;
+  }
+
+  .actions-header {
+    background: #374151;
+    color: white;
+    padding: 1.5rem;
+    margin: 0;
+  }
+
+  .actions-body {
+    padding: 1.5rem;
+  }
+
+  .btn-action {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    margin-bottom: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    text-decoration: none;
+  }
+
+  .btn-editar {
+    background: #f59e0b;
+    color: white;
+  }
+
+  .btn-editar:hover {
+    background: #d97706;
+    color: white;
+  }
+
+  .btn-liberar {
+    background: #f97316;
+    color: white;
+  }
+
+  .btn-liberar:hover {
+    background: #ea580c;
+    color: white;
+  }
+
+  .btn-ver-consulta {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .btn-ver-consulta:hover {
+    background: #2563eb;
+    color: white;
+  }
+
+  .btn-iniciar-consulta {
+    background: #10b981;
+    color: white;
+  }
+
+  .btn-iniciar-consulta:hover {
+    background: #059669;
+    color: white;
+  }
+
+  .btn-tomar {
+    background: #10b981;
+    color: white;
+  }
+
+  .btn-tomar:hover {
+    background: #059669;
+    color: white;
+  }
+
+  .btn-cancelar {
+    background: #6b7280;
+    color: white;
+  }
+
+  .btn-cancelar:hover {
+    background: #4b5563;
+    color: white;
+  }
+
+  .btn-eliminar {
+    background: #ef4444;
+    color: white;
+  }
+
+  .btn-eliminar:hover {
+    background: #dc2626;
+    color: white;
+  }
+
+  .consulta-card {
+    background: #ecfdf5;
+    border: none;
+    border-left: 4px solid #10b981;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+
+  .consulta-header {
+    background: #10b981;
+    color: white;
+    padding: 1.5rem;
+    margin: 0;
+  }
+
+  .medicos-card {
+    background: #fffbeb;
+    border: none;
+    border-left: 4px solid #f59e0b;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+
+  .medicos-header {
+    background: #f59e0b;
+    color: white;
+    padding: 1.5rem;
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .medico-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .medico-nombre {
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-asignar {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-asignar:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  .timeline-item {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-left: 2px solid #e5e7eb;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #4f46e5;
+  }
+
+  .timeline-item:last-child {
+    border-left: none;
+  }
+
+  .timeline-date {
+    font-size: 0.875rem;
+    color: #4f46e5;
+    font-weight: 600;
+  }
+
+  .timeline-content {
+    margin-top: 0.25rem;
+    color: #374151;
+    font-weight: 500;
+  }
+
+  .timeline-content strong {
+    color: #111827;
+  }
+
+  .alert-info-custom {
+    background: #dbeafe;
+    border: none;
+    border-left: 4px solid #3b82f6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .alert-info-custom .alert-heading {
+    color: #1e40af;
+    font-weight: 700;
+  }
+
+  @media (max-width: 768px) {
+    .page-container {
+      padding: 1rem 0;
+    }
+    
+    .cita-numero {
+      font-size: 2rem;
+    }
+    
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .actions-card {
+      position: static;
+      margin-top: 2rem;
+    }
+    
+    .page-header {
+      padding: 1.5rem;
+    }
+    
+    .info-section {
+      padding: 1.5rem;
+    }
+    
+    .actions-body {
+      padding: 1.5rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="container-fluid">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-custom">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% url 'citas_lista' %}">
+              <i class="bi bi-calendar3 me-1"></i>Citas
+            </a>
+          </li>
+          <li class="breadcrumb-item active">{{ cita.numero_cita }}</li>
+        </ol>
+      </nav>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="page-title">Detalle de Cita</h1>
+          <p class="page-subtitle">Información completa de la cita médica</p>
+        </div>
+        <a href="{% url 'citas_lista' %}" class="volver-btn">
+          <i class="bi bi-arrow-left"></i>
+          Volver a Lista
+        </a>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Panel Principal -->
+      <div class="col-lg-8">
+        <!-- Header de la Cita -->
+        <div class="cita-header-card">
+          <div class="cita-header-gradient">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="cita-numero">{{ cita.numero_cita }}</div>
+                <div class="paciente-nombre">{{ cita.paciente.nombre_completo }}</div>
+              </div>
+              <div class="text-end">
+                <div class="status-badge status-{{ cita.estado }}">
+                  {{ cita.get_estado_display }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información General -->
+        <div class="info-card">
+          <div class="info-section">
+            <div class="section-title">
+              <i class="bi bi-info-circle"></i>
+              Información General
+            </div>
+            
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="bi bi-building"></i>Consultorio
+                </div>
+                <div class="info-value">{{ cita.consultorio.nombre }}</div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="bi bi-person"></i>Paciente
+                </div>
+                <div class="info-value">{{ cita.paciente.nombre_completo }}</div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="bi bi-calendar"></i>Fecha y Hora
+                </div>
+                <div class="info-value">{{ cita.fecha_hora|date:"l d \\d\\e F Y, H:i" }}</div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="bi bi-clock"></i>Duración
+                </div>
+                <div class="info-value">{{ cita.duracion }} minutos</div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="bi bi-tag"></i>Tipo de Cita
+                </div>
+                <div class="info-value">{{ cita.get_tipo_cita_display }}</div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="bi bi-flag"></i>Prioridad
+                </div>
+                <div class="info-value">
+                  <span class="priority-badge priority-{{ cita.prioridad }}">
+                    {{ cita.get_prioridad_display }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información del Médico -->
+          <div class="info-section">
+            <div class="section-title">
+              <i class="bi bi-person-badge"></i>
+              Asignación Médica
+            </div>
+            
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="bi bi-person-check"></i>Médico Asignado
+                </div>
+                <div class="info-value">
+                  {% if cita.medico_asignado %}
+                    Dr. {{ cita.medico_asignado.get_full_name }}
+                    {% if cita.fecha_asignacion_medico %}
+                      <br><small class="text-muted">
+                        Asignado el {{ cita.fecha_asignacion_medico|date:"d/m/Y H:i" }}
+                      </small>
+                    {% endif %}
+                  {% else %}
+                    <span class="badge bg-warning text-dark">Sin asignar</span>
+                  {% endif %}
+                </div>
+              </div>
+              
+              {% if cita.medico_preferido %}
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="bi bi-heart"></i>Médico Preferido
+                </div>
+                <div class="info-value">Dr. {{ cita.medico_preferido.get_full_name }}</div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Motivos y Notas -->
+          {% if cita.motivo or cita.notas or cita.observaciones_medicas %}
+          <div class="info-section">
+            <div class="section-title">
+              <i class="bi bi-chat-text"></i>
+              Motivos y Observaciones
+            </div>
+            
+            {% if cita.motivo %}
+            <div class="info-item mb-3">
+              <div class="info-label">
+                <i class="bi bi-question-circle"></i>Motivo de la Cita
+              </div>
+              <div class="info-value">{{ cita.motivo }}</div>
+            </div>
+            {% endif %}
+            
+            {% if cita.notas %}
+            <div class="info-item mb-3">
+              <div class="info-label">
+                <i class="bi bi-sticky-note"></i>Notas Generales
+              </div>
+              <div class="info-value">{{ cita.notas }}</div>
+            </div>
+            {% endif %}
+            
+            {% if cita.observaciones_medicas %}
+            <div class="info-item mb-3">
+              <div class="info-label">
+                <i class="bi bi-clipboard-pulse"></i>Observaciones Médicas
+              </div>
+              <div class="info-value">{{ cita.observaciones_medicas }}</div>
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- Información de Contacto -->
+          {% if cita.telefono_contacto or cita.email_recordatorio %}
+          <div class="info-section">
+            <div class="section-title">
+              <i class="bi bi-telephone"></i>
+              Información de Contacto
+            </div>
+            
+            <div class="info-grid">
+              {% if cita.telefono_contacto %}
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="bi bi-phone"></i>Teléfono
+                </div>
+                <div class="info-value">{{ cita.telefono_contacto }}</div>
+              </div>
+              {% endif %}
+              
+              {% if cita.email_recordatorio %}
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="bi bi-envelope"></i>Email
+                </div>
+                <div class="info-value">{{ cita.email_recordatorio }}</div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Historial -->
+          <div class="info-section">
+            <div class="section-title">
+              <i class="bi bi-clock-history"></i>
+              Historial de Cambios
+            </div>
+            
+            <div class="timeline-item">
+              <div class="timeline-date">{{ cita.fecha_creacion|date:"d/m/Y H:i" }}</div>
+              <div class="timeline-content">
+                <strong>Cita creada</strong> por {{ cita.creado_por.get_full_name }}
+              </div>
+            </div>
+            
+            {% if cita.fecha_confirmacion %}
+            <div class="timeline-item">
+              <div class="timeline-date">{{ cita.fecha_confirmacion|date:"d/m/Y H:i" }}</div>
+              <div class="timeline-content">
+                <strong>Cita confirmada</strong>
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if cita.fecha_asignacion_medico %}
+            <div class="timeline-item">
+              <div class="timeline-date">{{ cita.fecha_asignacion_medico|date:"d/m/Y H:i" }}</div>
+              <div class="timeline-content">
+                <strong>Médico asignado:</strong> Dr. {{ cita.medico_asignado.get_full_name }}
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if cita.fecha_cancelacion %}
+            <div class="timeline-item">
+              <div class="timeline-date">{{ cita.fecha_cancelacion|date:"d/m/Y H:i" }}</div>
+              <div class="timeline-content">
+                <strong>Cita cancelada</strong>
+                {% if cita.motivo_cancelacion %}
+                  <br><small class="text-muted">Motivo: {{ cita.motivo_cancelacion }}</small>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+            
+            <div class="timeline-item">
+              <div class="timeline-date">{{ cita.fecha_actualizacion|date:"d/m/Y H:i" }}</div>
+              <div class="timeline-content">
+                <strong>Última actualización</strong>
+                {% if cita.actualizado_por %}
+                  por {{ cita.actualizado_por.get_full_name }}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Consulta Asociada -->
+        {% if consulta %}
+        <div class="card consulta-card mb-4">
+          <div class="consulta-header">
+            <h5 class="mb-0">
+              <i class="bi bi-clipboard-pulse me-2"></i>
+              Consulta Asociada
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Estado de la Consulta</div>
+                <div class="info-value">
+                  <span class="status-badge status-{{ consulta.estado }}">
+                    {{ consulta.get_estado_display }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <div class="info-label">Médico Responsable</div>
+                <div class="info-value">Dr. {{ consulta.medico.get_full_name }}</div>
+              </div>
+              
+              {% if consulta.fecha_atencion %}
+              <div class="info-item">
+                <div class="info-label">Fecha de Atención</div>
+                <div class="info-value">{{ consulta.fecha_atencion|date:"d/m/Y H:i" }}</div>
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="mt-3">
+              <a href="{% url 'consulta_detalle' consulta.id %}" class="btn btn-ver-consulta">
+                <i class="bi bi-eye"></i>
+                Ver Detalle de Consulta
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Panel de Acciones -->
+      <div class="col-lg-4">
+        <div class="actions-card">
+          <div class="actions-header">
+            <h5 class="mb-0">
+              <i class="bi bi-gear me-2"></i>
+              Acciones Disponibles
+            </h5>
+          </div>
+          <div class="actions-body">
+            
+            <!-- Editar Cita -->
+            {% if puede_editar %}
+            <a href="{% url 'citas_editar' cita.id %}" class="btn btn-action btn-editar">
+              <i class="bi bi-pencil-square"></i>
+              Editar Cita
+            </a>
+            {% endif %}
+
+            <!-- Liberar Cita -->
+            {% if user.rol == 'admin' or cita.medico_asignado == user %}
+              {% if cita.medico_asignado and cita.estado != 'en_atencion' and cita.estado != 'completada' and cita.estado != 'cancelada' %}
+              <a href="{% url 'liberar_cita' cita.id %}" class="btn btn-action btn-liberar">
+                <i class="bi bi-unlock"></i>
+                Liberar Cita
+              </a>
+              {% endif %}
+            {% endif %}
+
+            <!-- Tomar Cita -->
+            {% if puede_tomar_cita %}
+            <form method="post" action="{% url 'tomar_cita' cita.id %}" class="d-inline w-100">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-action btn-tomar" onclick="return confirm('¿Confirmas que deseas tomar esta cita?');">
+                <i class="bi bi-hand-thumbs-up"></i>
+                Tomar Cita
+              </button>
+            </form>
+            {% endif %}
+
+            <!-- Crear/Ver Consulta -->
+            {% if cita.medico_asignado %}
+              {% if consulta %}
+                <a href="{% url 'consulta_detalle' consulta.id %}" class="btn btn-action btn-ver-consulta">
+                  <i class="bi bi-clipboard-pulse"></i>
+                  Ver Consulta
+                </a>
+              {% else %}
+                <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline w-100">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-action btn-iniciar-consulta">
+                    <i class="bi bi-play-circle"></i>
+                    Iniciar Consulta
+                  </button>
+                </form>
+              {% endif %}
+            {% endif %}
+
+            <!-- Cancelar Cita -->
+            {% if puede_editar and cita.estado != 'completada' and cita.estado != 'cancelada' %}
+            <form method="post" action="{% url 'cancelar_cita' cita.id %}" class="d-inline w-100">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-action btn-cancelar" onclick="return confirm('¿Confirmas que deseas cancelar esta cita?');">
+                <i class="bi bi-x-circle"></i>
+                Cancelar Cita
+              </button>
+            </form>
+            {% endif %}
+
+            <!-- Eliminar Cita (Solo Admin) -->
+            {% if user.rol == 'admin' and cita.estado != 'completada' %}
+            <a href="{% url 'citas_eliminar' cita.id %}" class="btn btn-action btn-eliminar" onclick="return confirm('¿Estás seguro? Esta acción eliminará permanentemente la cita.');">
+              <i class="bi bi-trash"></i>
+              Eliminar Cita
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Médicos Disponibles -->
+{% if puede_asignar_medico and medicos_disponibles and not cita.medico_asignado and cita.estado != 'cancelada' and cita.estado != 'completada' %}
+        <div class="card medicos-card mt-4">
+          <div class="medicos-header">
+            <h6 class="mb-0">
+              <i class="bi bi-people me-2"></i>
+              Médicos Disponibles
+            </h6>
+          </div>
+          <div class="card-body">
+            {% for medico in medicos_disponibles %}
+            <div class="medico-item">
+              <div class="medico-nombre">
+                <i class="bi bi-person-badge"></i>
+                Dr. {{ medico.get_full_name }}
+              </div>
+              <form method="post" action="{% url 'asignar_medico_cita' cita.id %}" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="medico" value="{{ medico.id }}">
+                <button type="submit" class="btn btn-asignar">
+                  Asignar
+                </button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Información Adicional -->
+        {% if cita.cita_anterior %}
+        <div class="alert alert-info-custom mt-4">
+          <h6 class="alert-heading">
+            <i class="bi bi-info-circle me-2"></i>
+            Cita Relacionada
+          </h6>
+          <p class="mb-0">
+            Esta cita tiene una <strong>cita anterior</strong> asociada:
+            <br>
+            <a href="{% url 'citas_detalle' cita.cita_anterior.id %}" class="fw-bold">
+              {{ cita.cita_anterior.numero_cita }} 
+              ({{ cita.cita_anterior.fecha_hora|date:"d/m/Y H:i" }})
+            </a>
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmación especial para liberar cita
+    const liberarBtn = document.querySelector('.btn-liberar');
+    if (liberarBtn) {
+        liberarBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const confirmMessage = '¿Estás seguro de que deseas liberar esta cita?\n\n' +
+                                 'Esta acción hará que la cita quede disponible para otros médicos del consultorio.';
+            if (confirm(confirmMessage)) {
+                window.location.href = this.href;
+            }
+        });
+    }
+
+    // Animaciones suaves para los botones
+    const actionButtons = document.querySelectorAll('.btn-action');
+    actionButtons.forEach(button => {
+        button.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+
+    // Efecto hover para info-items
+    const infoItems = document.querySelectorAll('.info-item');
+    infoItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

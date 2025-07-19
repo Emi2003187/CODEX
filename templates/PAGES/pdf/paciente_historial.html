@@ -1,0 +1,130 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial Médico - {{ paciente.nombre_completo }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
+    h2, h3 { border-bottom: 1px solid #333; padding-bottom: 4px; }
+    .section { margin-bottom: 20px; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .table th, .table td { border: 1px solid #666; padding: 6px; text-align: left; }
+    .small { font-size: 11px; color: #555; }
+    .badge { font-size: 11px; background-color: #eee; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <h2>Historial Médico del Paciente</h2>
+
+  <!-- Datos del Paciente -->
+  <div class="section">
+    <h3>Datos Generales</h3>
+    <p><strong>Nombre:</strong> {{ paciente.nombre_completo }}</p>
+    <p><strong>Edad:</strong> {{ paciente.edad }} años</p>
+    <p><strong>Sexo:</strong> {{ paciente.get_sexo_display }}</p>
+    <p><strong>Teléfono:</strong> {{ paciente.telefono }}</p>
+    <p><strong>Correo:</strong> {{ paciente.correo }}</p>
+    <p><strong>Dirección:</strong> {{ paciente.direccion }}</p>
+  </div>
+
+  <!-- Antecedentes -->
+  <div class="section">
+    <h3>Antecedentes</h3>
+    {% if antecedentes %}
+    <ul>
+      {% for ant in antecedentes %}
+        <li>
+          <strong>{{ ant.get_tipo_display }}:</strong> {{ ant.descripcion }}
+          {% if ant.fecha_diagnostico %}
+            <span class="small">(Diagnóstico: {{ ant.fecha_diagnostico }})</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p>No hay antecedentes registrados.</p>
+    {% endif %}
+  </div>
+
+  <!-- Alergias -->
+  <div class="section">
+    <h3>Alergias</h3>
+    {% if alergias %}
+    <ul>
+      {% for al in alergias %}
+        <li>{{ al.descripcion }}</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p>No se registran alergias.</p>
+    {% endif %}
+  </div>
+
+  <!-- Medicamentos Actuales -->
+  <div class="section">
+    <h3>Medicamentos Actuales</h3>
+    {% if medicamentos %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Dosis</th>
+          <th>Frecuencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in medicamentos %}
+        <tr>
+          <td>{{ m.nombre }}</td>
+          <td>{{ m.dosis }}</td>
+          <td>{{ m.frecuencia }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p>No hay medicamentos actuales.</p>
+    {% endif %}
+  </div>
+
+  <!-- Consultas Finalizadas -->
+  <div class="section">
+    <h3>Historial de Consultas</h3>
+    {% if consultas %}
+      {% for consulta in consultas %}
+        {% if consulta.estado == "finalizada" %}
+          <div style="margin-bottom: 15px;">
+            <p><strong>Fecha:</strong> {{ consulta.fecha_atencion|date:"d/m/Y H:i" }}</p>
+            <p><strong>Médico:</strong> {{ consulta.medico.get_full_name }}</p>
+            <p><strong>Motivo:</strong> {{ consulta.motivo_consulta|default:"-" }}</p>
+            <p><strong>Diagnóstico:</strong> {{ consulta.diagnostico|default:"-" }}</p>
+            <p><strong>Tratamiento:</strong> {{ consulta.tratamiento|default:"-" }}</p>
+            <p><strong>Observaciones:</strong> {{ consulta.observaciones|default:"-" }}</p>
+            {% if consulta.receta %}
+              <p><strong>Receta:</strong></p>
+              <ul>
+                {% for med in consulta.receta.medicamentos.all %}
+                  <li>{{ med.nombre }} - {{ med.dosis }} ({{ med.frecuencia }})</li>
+                {% empty %}
+                  <li>No se registraron medicamentos.</li>
+                {% endfor %}
+              </ul>
+              {% if consulta.receta.indicaciones_generales %}
+                <p><strong>Indicaciones Generales:</strong> {{ consulta.receta.indicaciones_generales }}</p>
+              {% endif %}
+            {% else %}
+              <p class="small">No se emitió receta médica.</p>
+            {% endif %}
+          </div>
+          <hr>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <p>No hay consultas registradas.</p>
+    {% endif %}
+  </div>
+
+</body>
+</html>

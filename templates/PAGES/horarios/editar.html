@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block title %}Editar Horario{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="mb-4">
+    <h2 class="text-primary fw-bold mb-1">Editar Horario</h2>
+    <p class="text-muted">Modificación de días y horario asignado</p>
+  </div>
+
+  <form method="post" id="form-horario-editar" class="card shadow-sm border-0 rounded-4 p-4">
+    {% csrf_token %}
+    <div class="row g-4 align-items-center">
+      <!-- Médico (solo lectura) -->
+      <div class="col-md-6">
+        <label for="medico_display" class="form-label fw-semibold">Médico</label>
+        <input
+          type="text"
+          id="medico_display"
+          class="form-control"
+          value="{{ form.instance.medico.get_full_name }} ({{ form.instance.medico.rol }})"
+          readonly
+        >
+        <input type="hidden" name="medico" value="{{ form.instance.medico.pk }}">
+      </div>
+
+      <!-- Consultorio (solo lectura) -->
+      <div class="col-md-6">
+        <label for="consultorio_display" class="form-label fw-semibold">Consultorio</label>
+        <input
+          type="text"
+          id="consultorio_display"
+          class="form-control"
+          value="{{ form.instance.consultorio.nombre }}"
+          readonly
+        >
+        <input type="hidden" name="consultorio" value="{{ form.instance.consultorio.pk }}">
+      </div>
+
+      <!-- Días -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">Días de la semana</label>
+        <div class="d-flex flex-wrap gap-2">
+          {% for checkbox in form.dias %}
+            <div class="form-check form-check-inline">
+              {{ checkbox.tag }} {{ checkbox.choice_label }}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Hora de inicio -->
+      <div class="col-md-6">
+        <label for="{{ form.hora_inicio.id_for_label }}" class="form-label fw-semibold">Hora inicio</label>
+        {{ form.hora_inicio|add_class:"form-control" }}
+      </div>
+
+      <!-- Hora de fin -->
+      <div class="col-md-6">
+        <label for="{{ form.hora_fin.id_for_label }}" class="form-label fw-semibold">Hora fin</label>
+        {{ form.hora_fin|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="mt-4 d-flex justify-content-between">
+      <a href="{% url 'horarios_lista' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Cancelar
+      </a>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save"></i> Actualizar
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+<div class="row">
+    {% for cita in citas %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card cita-card 
+            {% if cita.prioridad == 'urgente' %}cita-urgente{% endif %}
+            {% if cita.fecha_hora.date == today %}cita-hoy{% endif %}
+        ">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ cita.paciente.nombre_completo }}</strong>
+                    {% if cita.prioridad == 'urgente' %}
+                        <span class="badge badge-danger ml-2">URGENTE</span>
+                    {% endif %}
+                </div>
+                <small class="text-muted">{{ cita.numero_cita }}</small>
+            </div>
+            <div class="card-body">
+                <div class="row mb-2">
+                    <div class="col-6">
+                        <i class="fas fa-calendar text-primary"></i>
+                        <strong>{{ cita.fecha_hora|date:"d/m/Y" }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <i class="fas fa-clock text-info"></i>
+                        <strong>{{ cita.fecha_hora|date:"H:i" }}</strong>
+                    </div>
+                </div>
+                
+                <div class="mb-2">
+                    <i class="fas fa-clinic-medical text-secondary"></i>
+                    {{ cita.consultorio.nombre }}
+                </div>
+                
+                {% if cita.medico_preferido %}
+                <div class="mb-2">
+                    <i class="fas fa-heart text-warning"></i>
+                    <small>Prefiere: {{ cita.medico_preferido.get_full_name }}</small>
+                </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <i class="fas fa-comment-medical text-muted"></i>
+                    <small>{{ cita.motivo|truncatechars:60 }}</small>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge badge-{{ cita.tipo_cita|default:'secondary' }}">
+                            {{ cita.get_tipo_cita_display }}
+                        </span>
+                        <span class="badge badge-outline-{{ cita.prioridad }}">
+                            {{ cita.get_prioridad_display }}
+                        </span>
+                    </div>
+                    <small class="text-muted">
+                        {{ cita.duracion }} min
+                    </small>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'citas_detalle' cita.id %}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-eye"></i> Ver
+                    </a>
+                    {% if puede_tomar %}
+                        <a href="{% url 'tomar_cita' cita.id %}" 
+                           class="btn btn-tomar-cita btn-sm btn-tomar-cita"
+                           data-cita-id="{{ cita.id }}"
+                           data-paciente="{{ cita.paciente.nombre_completo }}"
+                           data-fecha="{{ cita.fecha_hora|date:'d/m/Y' }}"
+                           data-hora="{{ cita.fecha_hora|date:'H:i' }}"
+                           data-motivo="{{ cita.motivo }}">
+                            <i class="fas fa-hand-paper"></i> Tomar Cita
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-check fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No hay citas disponibles</h4>
+            <p class="text-muted">
+                {% if tipo == 'urgentes' %}
+                    No hay citas urgentes sin asignar en este momento.
+                {% elif tipo == 'hoy' %}
+                    No hay citas disponibles para hoy.
+                {% elif tipo == 'proximas' %}
+                    No hay citas próximas sin asignar.
+                {% else %}
+                    No hay citas disponibles que coincidan con los filtros.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    {% endfor %}
+</div>

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block title %}Crear Horario{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="mb-4">
+    <h2 class="text-primary fw-bold mb-1">Crear Horario</h2>
+    <p class="text-muted">Asignación de días y horario para un médico específico</p>
+  </div>
+
+  <form method="post" class="card shadow-sm border-0 rounded-4 p-4">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="row g-4">
+      <!-- Médico -->
+      <div class="col-md-6">
+        <label for="id_medico" class="form-label fw-semibold">Médico</label>
+        {{ form.medico|add_class:"form-select" }}
+      </div>
+
+      <!-- Consultorio -->
+      <div class="col-md-6">
+        <label for="id_consultorio" class="form-label fw-semibold">Consultorio</label>
+        {{ form.consultorio|add_class:"form-select" }}
+      </div>
+
+      <!-- Días -->
+      <div class="col-12">
+        <label class="form-label fw-semibold">Días de la semana</label>
+        <div class="d-flex flex-wrap gap-2">
+          {% for checkbox in form.dias %}
+            <div class="form-check form-check-inline">
+              {{ checkbox.tag }} {{ checkbox.choice_label }}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Hora inicio -->
+      <div class="col-md-6">
+        <label for="id_hora_inicio" class="form-label fw-semibold">Hora de inicio</label>
+        {{ form.hora_inicio|add_class:"form-control" }}
+      </div>
+
+      <!-- Hora fin -->
+      <div class="col-md-6">
+        <label for="id_hora_fin" class="form-label fw-semibold">Hora de fin</label>
+        {{ form.hora_fin|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="mt-4 d-flex justify-content-between">
+      <a href="{% url 'horarios_lista' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Cancelar
+      </a>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-circle"></i> Guardar
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Script para autocompletar consultorio -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const medicoSelect = document.getElementById("id_medico");
+  const consultorioSelect = document.getElementById("id_consultorio");
+
+  medicoSelect.addEventListener("change", function () {
+    const medicoId = this.value;
+    if (medicoId) {
+      fetch(`/ajax/consultorio-del-medico/${medicoId}/`)
+        .then(response => response.json())
+        .then(data => {
+          consultorioSelect.value = data.consultorio_id;
+        });
+    } else {
+      consultorioSelect.value = "";
+    }
+  });
+
+  if (medicoSelect.value) {
+    medicoSelect.dispatchEvent(new Event("change"));
+  }
+});
+</script>
+{% endblock %}

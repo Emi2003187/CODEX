@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tomar Cita - {{ cita.paciente.nombre_completo }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.cita-info-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.paciente-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.info-item {
+    background: white;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-top: 0.25rem;
+}
+
+.prioridad-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.prioridad-urgente {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.prioridad-alta {
+    background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+    color: white;
+}
+
+.prioridad-normal {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    color: white;
+}
+
+.prioridad-baja {
+    background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+    color: white;
+}
+
+.btn-tomar {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-tomar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    color: white;
+}
+
+.btn-cancelar {
+    background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-cancelar:hover {
+    transform: translateY(-2px);
+    color: white;
+}
+
+.conflicto-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: none;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 1rem;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #2563eb;
+}
+
+.timeline-item:last-child::after {
+    display: none;
+}
+
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 1.5rem;
+    width: 2px;
+    height: calc(100% + 1rem);
+    background: #e9ecef;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'citas_lista' %}" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+                <div>
+                    <h2 class="fw-bold text-primary mb-1">Tomar Cita Médica</h2>
+                    <p class="text-muted mb-0">Confirma que deseas tomar esta cita</p>
+                </div>
+            </div>
+
+            <!-- Alerta de conflicto si existe -->
+            {% if conflicto %}
+            <div class="alert conflicto-warning">
+                <h5 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Conflicto de Horario Detectado
+                </h5>
+                <p class="mb-3">
+                    Ya tienes una cita programada cerca de este horario:
+                </p>
+                <div class="d-flex align-items-center p-3 bg-white rounded">
+                    <div class="me-3">
+                        <i class="bi bi-calendar-event fs-4 text-warning"></i>
+                    </div>
+                    <div>
+                        <strong>{{ conflicto.paciente.nombre_completo }}</strong><br>
+                        <small class="text-muted">
+                            {{ conflicto.fecha_hora|date:"d/m/Y" }} a las {{ conflicto.fecha_hora|time:"H:i" }}
+                        </small>
+                    </div>
+                </div>
+                <p class="mt-3 mb-0">
+                    <strong>¿Estás seguro de que deseas tomar esta cita adicional?</strong>
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Información de la cita -->
+            <div class="card cita-info-card">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <!-- Avatar y datos básicos del paciente -->
+                        <div class="col-md-4 text-center mb-4">
+                            <div class="paciente-avatar mx-auto mb-3">
+                                {{ cita.paciente.nombre_completo|first }}
+                            </div>
+                            <h4 class="fw-bold">{{ cita.paciente.nombre_completo }}</h4>
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-hash"></i> Cita {{ cita.numero_cita }}
+                            </p>
+                            <div class="prioridad-badge prioridad-{{ cita.prioridad }}">
+                                <i class="bi bi-flag"></i> {{ cita.get_prioridad_display }}
+                            </div>
+                        </div>
+
+                        <!-- Detalles de la cita -->
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <div class="info-label">Fecha</div>
+                                        <div class="info-value">
+                                            <i class="bi bi-calendar me-2"></i>
+                                            {{ cita.fecha_hora|date:"l, d \d\e F \d\e Y" }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <div class="info-label">Hora</div>
+                                        <div class="info-value">
+                                            <i class="bi bi-clock me-2"></i>
+                                            {{ cita.fecha_hora|time:"H:i" }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <div class="info-label">Tipo de Cita</div>
+                                        <div class="info-value">
+                                            <i class="bi bi-clipboard-pulse me-2"></i>
+                                            {{ cita.get_tipo_cita_display }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <div class="info-label">Duración</div>
+                                        <div class="info-value">
+                                            <i class="bi bi-stopwatch me-2"></i>
+                                            {{ cita.duracion }} minutos
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="info-item">
+                                        <div class="info-label">Consultorio</div>
+                                        <div class="info-value">
+                                            <i class="bi bi-building me-2"></i>
+                                            {{ cita.consultorio.nombre }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if cita.motivo %}
+                                <div class="col-12">
+                                    <div class="info-item">
+                                        <div class="info-label">Motivo de la Consulta</div>
+                                        <div class="info-value">
+                                            <i class="bi bi-chat-text me-2"></i>
+                                            {{ cita.motivo }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            {% if cita.medico_preferido %}
+            <div class="alert alert-info mt-4">
+                <h6 class="alert-heading">
+                    <i class="bi bi-info-circle me-2"></i>Médico Preferido
+                </h6>
+                <p class="mb-0">
+                    El paciente ha solicitado ser atendido por: 
+                    <strong>{{ cita.medico_preferido.get_full_name }}</strong>
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Timeline de la cita -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Historial de la Cita
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline-item">
+                        <strong>Cita creada</strong><br>
+                        <small class="text-muted">
+                            {{ cita.fecha_creacion|date:"d/m/Y H:i" }} por {{ cita.creado_por.get_full_name }}
+                        </small>
+                    </div>
+                    <div class="timeline-item">
+                        <strong>Estado actual: {{ cita.get_estado_display }}</strong><br>
+                        <small class="text-muted">Disponible para ser tomada</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="card mt-4">
+                <div class="card-body text-center">
+                    <h5 class="mb-4">¿Confirmas que deseas tomar esta cita?</h5>
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        {% if conflicto %}
+                        <input type="hidden" name="confirmar" value="si">
+                        {% endif %}
+                        <button type="submit" class="btn btn-tomar me-3">
+                            <i class="bi bi-hand-index me-2"></i>
+                            Sí, Tomar Cita
+                        </button>
+                    </form>
+                    <a href="{% url 'citas_lista' %}" class="btn btn-cancelar">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Cancelar
+                    </a>
+                </div>
+            </div>
+
+            <!-- Información del médico -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-badge me-2"></i>Tu Información
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Médico:</strong> {{ usuario.get_full_name }}<br>
+                            <strong>Consultorio:</strong> {{ usuario.consultorio.nombre }}<br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Especialidad:</strong> {{ usuario.especialidad|default:"No especificada" }}<br>
+                            <strong>Fecha actual:</strong> {{ "now"|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmar antes de tomar la cita
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            {% if not conflicto %}
+            if (!confirm('¿Estás seguro de que deseas tomar esta cita?')) {
+                e.preventDefault();
+            }
+            {% endif %}
+        });
+    }
+});
+</script>
+{% endblock %}

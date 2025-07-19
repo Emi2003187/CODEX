@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+  <h3>Receta para {{ consulta.paciente.nombre_completo }}</h3>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      {{ receta_form.indicaciones_generales.label_tag }}
+      {{ receta_form.indicaciones_generales }}
+    </div>
+    <div class="mb-3">
+      {{ receta_form.valido_hasta.label_tag }}
+      {{ receta_form.valido_hasta }}
+    </div>
+    <div class="mb-3">
+      {{ receta_form.notas.label_tag }}
+      {{ receta_form.notas }}
+    </div>
+
+    <h5>Medicamentos</h5>
+    {{ med_formset.management_form }}
+    <div id="medicamentos-formset">
+      {% for form in med_formset.forms %}
+        <div class="card mb-3 p-3 border">
+          {% for field in form.visible_fields %}
+            <div class="mb-2">
+              {{ field.label_tag }}<br>
+              {{ field }}
+              {% if field.errors %}<div class="text-danger">{{ field.errors }}</div>{% endif %}
+            </div>
+          {% endfor %}
+          {% if form.instance.pk %}
+            <div class="form-check">
+              {{ form.DELETE }} <label class="form-check-label">Eliminar este</label>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <button type="button" id="add-med" class="btn btn-sm btn-outline-secondary mb-3">
+      + Agregar otro medicamento
+    </button>
+    <button type="submit" class="btn btn-primary">Guardar Receta</button>
+  </form>
+</div>
+
+<script>
+  document.getElementById('add-med').addEventListener('click', () => {
+    const formsetDiv = document.getElementById('medicamentos-formset');
+    const totalForms = document.getElementById('id_medicamentorecetado_set-TOTAL_FORMS');
+    const currentCount = parseInt(totalForms.value, 10);
+    const emptyForm = formsetDiv.lastElementChild.cloneNode(true);
+
+    emptyForm.innerHTML = emptyForm.innerHTML.replace(
+      /-{{ forloop.counter0 }}-/g,
+      `-${currentCount}-`
+    ).replace(
+      /__prefix__/g,
+      currentCount
+    );
+    emptyForm.querySelectorAll('input, select, textarea').forEach(el => {
+      el.name = el.name.replace(/-\d+-/, `-${currentCount}-`);
+      el.id   = 'id_' + el.name;
+      if (el.type !== 'hidden') el.value = '';
+    });
+
+    formsetDiv.appendChild(emptyForm);
+    totalForms.value = currentCount + 1;
+  });
+</script>
+{% endblock %}

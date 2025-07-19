@@ -1,0 +1,309 @@
+<!-- PAGES/consultas/consulta_card.html -->
+<div class="col consultation-card" 
+     data-patient="{{ consulta.paciente.nombre_completo|lower }}"
+     data-tipo="{{ consulta.tipo }}"
+     data-medico="{{ consulta.medico.id|default:'' }}"
+     data-fecha="{{ consulta.fecha_atencion|date:'Y-m-d' }}">
+  <div class="card h-100 shadow-sm border-start border-4 
+              {% if consulta.cita %}border-info{% else %}border-warning{% endif %}">
+    
+    <!-- HEADER DE LA TARJETA -->
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-3">
+      <h5 class="card-title mb-0 text-truncate patient-name" title="{{ consulta.paciente.nombre_completo }}">
+        <i class="bi bi-person-circle me-2"></i>{{ consulta.paciente.nombre_completo }}
+      </h5>
+      <div class="d-flex align-items-center gap-2">
+        {% if consulta.estado == "espera" %}
+          <span class="badge bg-warning">
+            <i class="bi bi-hourglass-split me-1"></i>En Espera
+          </span>
+        {% elif consulta.estado == "en_progreso" %}
+          <span class="badge bg-primary">
+            <i class="bi bi-activity me-1"></i>En Progreso
+          </span>
+        {% elif consulta.estado == "finalizada" %}
+          <span class="badge bg-success">
+            <i class="bi bi-check-circle me-1"></i>Finalizada
+          </span>
+        {% elif consulta.estado == "cancelada" %}
+          <span class="badge bg-danger">
+            <i class="bi bi-x-circle me-1"></i>Cancelada
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- CUERPO DE LA TARJETA -->
+    <div class="card-body p-4">
+      <!-- INFORMACIÓN TEMPORAL -->
+      <div class="mb-3">
+        <div class="d-flex align-items-center mb-2">
+          <i class="bi bi-calendar-event text-muted me-2"></i>
+          <small class="text-muted">
+            <strong>Creada:</strong> {{ consulta.fecha_creacion|date:"d/m/Y H:i" }}
+          </small>
+        </div>
+        {% if consulta.cita %}
+          <div class="d-flex align-items-center">
+            <i class="bi bi-alarm text-info me-2"></i>
+            <small class="text-muted">
+              <strong>Cita:</strong> {{ consulta.cita.fecha_hora|date:"d/m/Y H:i" }}
+            </small>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- INFORMACIÓN MÉDICA -->
+      <div class="row g-3 mb-3">
+        <div class="col-12">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-tag-fill text-primary me-2"></i>
+            <strong class="me-2">Tipo:</strong>
+            <span class="badge bg-light text-dark">{{ consulta.get_tipo_display }}</span>
+          </div>
+        </div>
+        
+        {% if consulta.medico %}
+        <div class="col-12">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-person-badge text-success me-2"></i>
+            <strong class="me-2">Médico:</strong>
+            <span class="text-muted">{{ consulta.medico.get_full_name }}</span>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="col-12">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-heart-pulse-fill text-danger me-2"></i>
+            <strong class="me-2">Signos vitales:</strong>
+            {% if consulta.signos_vitales %}
+              <span class="badge bg-success">
+                <i class="bi bi-check-circle me-1"></i>Registrados
+              </span>
+            {% else %}
+              <span class="badge bg-secondary">
+                <i class="bi bi-dash-circle me-1"></i>Pendientes
+              </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div class="d-grid gap-2">
+        <!-- BOTONES PRINCIPALES -->
+        {% if usuario.rol == 'asistente' %}
+        <div class="btn-group" role="group">
+          {% if consulta.signos_vitales %}
+            <a href="{% url 'signos_editar' consulta.signos_vitales.pk %}"
+               class="btn btn-info btn-sm">
+              <i class="bi bi-heart-pulse me-1"></i>Ver Signos
+            </a>
+          {% elif consulta.estado != "cancelada" %}
+            <a href="{% url 'consultas_precheck' consulta.pk %}"
+               class="btn btn-warning btn-sm">
+              <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
+            </a>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="btn-group" role="group">
+          {% if consulta.estado != "finalizada" and consulta.estado != "cancelada" %}
+            <a href="{% url 'consultas_atencion' consulta.pk %}"
+               class="btn btn-primary btn-sm">
+              <i class="bi bi-clipboard-plus me-1"></i>Atender
+            </a>
+          {% endif %}
+
+          {% if consulta.signos_vitales %}
+            <a href="{% url 'signos_editar' consulta.signos_vitales.pk %}"
+               class="btn btn-info btn-sm">
+              <i class="bi bi-heart-pulse me-1"></i>Ver Signos
+            </a>
+          {% elif consulta.estado != "cancelada" %}
+            <a href="{% url 'consultas_precheck' consulta.pk %}"
+               class="btn btn-warning btn-sm">
+              <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
+            </a>
+          {% endif %}
+
+          <a href="{% url 'consulta_detalle' consulta.pk %}"
+             class="btn btn-info btn-sm">
+            <i class="bi bi-eye me-1"></i>Detalle
+          </a>
+        </div>
+        {% endif %}
+
+        <!-- DROPDOWN DE ACCIONES ADICIONALES -->
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100"
+                  type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-three-dots me-1"></i>Más acciones
+          </button>
+          <ul class="dropdown-menu w-100">
+            {% if usuario.rol != 'asistente' %}
+              {% if consulta.estado != "cancelada" %}
+                <li>
+                  <a class="dropdown-item" href="{% url 'consulta_editar' consulta.pk %}">
+                    <i class="bi bi-pencil me-2"></i>Editar
+                  </a>
+                </li>
+              {% endif %}
+            {% endif %}
+
+            {% if consulta.signos_vitales %}
+              <li>
+                <a class="dropdown-item" href="{% url 'signos_editar' consulta.signos_vitales.pk %}">
+                  <i class="bi bi-heart-pulse me-2"></i>Ver Signos
+                </a>
+              </li>
+            {% else %}
+              <li>
+                <a class="dropdown-item" href="{% url 'consultas_precheck' consulta.pk %}">
+                  <i class="bi bi-heart-pulse me-2"></i>Registrar Signos
+                </a>
+              </li>
+            {% endif %}
+
+            {% if usuario.rol != 'asistente' %}
+              {% if consulta.receta %}
+                <li>
+                  <a class="dropdown-item" href="{% url 'receta_pdf' consulta.receta.pk %}">
+                    <i class="bi bi-download me-2"></i>Descargar Receta
+                  </a>
+                </li>
+              {% else %}
+                <li>
+                  <a class="dropdown-item" href="{% url 'receta_nueva' consulta.pk %}">
+                    <i class="bi bi-file-earmark-plus me-2"></i>Emitir Receta
+                  </a>
+                </li>
+              {% endif %}
+            {% endif %}
+            
+            {% if consulta.estado != "cancelada" and consulta.estado != "finalizada" %}
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <button class="dropdown-item text-danger" onclick="cancelarConsulta({{ consulta.pk }})">
+                  <i class="bi bi-x-circle me-2"></i>Cancelar
+                </button>
+              </li>
+            {% endif %}
+            
+            {% if consulta.estado == "cancelada" or consulta.estado == "finalizada" %}
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <button class="dropdown-item text-danger" onclick="eliminarConsulta({{ consulta.pk }})">
+                  <i class="bi bi-trash me-2"></i>Eliminar
+                </button>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER CON INFORMACIÓN ADICIONAL -->
+    <div class="card-footer bg-light border-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <small class="text-muted">
+          {% if consulta.cita %}
+            <i class="bi bi-calendar-check me-1"></i>Con cita programada
+          {% else %}
+            <i class="bi bi-clipboard me-1"></i>Sin cita previa
+          {% endif %}
+        </small>
+        <small class="text-muted">
+          ID: #{{ consulta.pk }}
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Signos Vitales -->
+<div class="modal fade" id="signosModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Signos Vitales</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="signosModalBody">
+        <!-- Contenido cargado via AJAX -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Función para ver signos vitales
+function verSignosVitales(consultaId) {
+    fetch(`/ajax/signos-vitales/${consultaId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+            
+            const modalBody = document.getElementById('signosModalBody');
+            modalBody.innerHTML = `
+                <div class="row g-3">
+                    <div class="col-6">
+                        <strong>Presión Arterial:</strong><br>
+                        <span class="text-primary">${data.presion_arterial}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Frecuencia Cardíaca:</strong><br>
+                        <span class="text-primary">${data.frecuencia_cardiaca} bpm</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Temperatura:</strong><br>
+                        <span class="text-primary">${data.temperatura}°C</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Peso:</strong><br>
+                        <span class="text-primary">${data.peso} kg</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Altura:</strong><br>
+                        <span class="text-primary">${data.altura} cm</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Saturación O2:</strong><br>
+                        <span class="text-primary">${data.saturacion_oxigeno}%</span>
+                    </div>
+                    <div class="col-12">
+                        <hr>
+                        <small class="text-muted">
+                            <strong>Registrado:</strong> ${data.fecha_registro}<br>
+                            <strong>Por:</strong> ${data.registrado_por}
+                        </small>
+                    </div>
+                </div>
+            `;
+            
+            const modal = new bootstrap.Modal(document.getElementById('signosModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los signos vitales');
+        });
+}
+
+// Otras funciones existentes...
+function cancelarConsulta(consultaId) {
+    if (confirm('¿Está seguro de cancelar esta consulta?')) {
+        alert(`Consulta ID: ${consultaId} marcada como cancelada.\n\nFunción de cancelación en desarrollo.`);
+    }
+}
+
+function eliminarConsulta(consultaId) {
+    if (confirm('¿Está seguro de eliminar esta consulta? Esta acción no se puede deshacer.')) {
+        alert(`Consulta ID: ${consultaId} eliminada.\n\nFunción de eliminación en desarrollo.`);
+    }
+}
+</script>

@@ -1,0 +1,527 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Historial Médico - {{ paciente.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- HEADER CON BREADCRUMB -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'dashboard_asistente' %}{% endif %}">
+              Dashboard
+            </a>
+          </li>
+          <li class="breadcrumb-item"><a href="{% url 'pacientes_lista' %}">Pacientes</a></li>
+          <li class="breadcrumb-item active">{{ paciente.nombre_completo }}</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- CABECERA DEL PACIENTE -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card-body text-white p-4">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <div class="position-relative">
+                {% if paciente.foto %}
+                  <img src="{{ paciente.foto.url }}" alt="Foto de {{ paciente.nombre_completo }}" 
+                       class="rounded-circle border border-3 border-white shadow" 
+                       width="120" height="120" style="object-fit: cover;">
+                {% else %}
+                  <div class="rounded-circle border border-3 border-white shadow d-flex align-items-center justify-content-center bg-white" 
+                       style="width: 120px; height: 120px;">
+                    <i class="bi bi-person-fill text-primary" style="font-size: 3rem;"></i>
+                  </div>
+                {% endif %}
+                <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" 
+                      style="width: 24px; height: 24px;" title="Paciente activo"></span>
+              </div>
+            </div>
+            <div class="col">
+              <h1 class="mb-2 fw-bold">{{ paciente.nombre_completo }}</h1>
+              <div class="row g-3">
+                <div class="col-auto">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-calendar3 me-2"></i>
+                    <span>{{ paciente.edad }} años</span>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-gender-{{ paciente.sexo|lower }} me-2"></i>
+                    <span>{{ paciente.get_sexo_display }}</span>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-telephone me-2"></i>
+                    <span>{{ paciente.telefono|default:"No registrado" }}</span>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-envelope me-2"></i>
+                    <span>{{ paciente.correo|default:"No registrado" }}</span>
+                  </div>
+                </div>
+              </div>
+              {% if paciente.direccion %}
+              <div class="mt-2">
+                <i class="bi bi-geo-alt me-2"></i>
+                <span>{{ paciente.direccion }}</span>
+              </div>
+              {% endif %}
+            </div>
+            <div class="col-auto">
+              <div class="dropdown">
+                <button class="btn btn-light btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                  <li>
+                    <a class="dropdown-item" href="{% url 'antecedente_nuevo' paciente.pk %}?next={{ request.path }}">
+                      <i class="bi bi-journal-plus me-2 text-primary"></i>Nuevo Antecedente
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{% url 'medicamento_nuevo' paciente.pk %}?next={{ request.path }}">
+                      <i class="bi bi-capsule me-2 text-success"></i>Nuevo Medicamento
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{% url 'consultas_crear_sin_cita' %}?paciente_id={{ paciente.pk }}&next={{ request.path }}">
+                      <i class="bi bi-plus-circle me-2 text-info"></i>Nueva Consulta
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <a class="dropdown-item" href="{% url 'paciente_pdf' paciente.pk %}">
+                      <i class="bi bi-download me-2 text-dark"></i>Descargar PDF
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{% url 'pacientes_editar' paciente.pk %}">
+                      <i class="bi bi-pencil-square me-2 text-warning"></i>Editar Paciente
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTADÍSTICAS RÁPIDAS -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-primary mb-2">
+            <i class="bi bi-calendar-check" style="font-size: 2rem;"></i>
+          </div>
+          <h3 class="mb-1 fw-bold">{{ consultas.count }}</h3>
+          <p class="text-muted mb-0">Consultas Totales</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-success mb-2">
+            <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+          </div>
+          <h3 class="mb-1 fw-bold">{{ consultas_finalizadas.count }}</h3>
+          <p class="text-muted mb-0">Finalizadas</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-warning mb-2">
+            <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+          </div>
+          <h3 class="mb-1 fw-bold">{{ alergias.count }}</h3>
+          <p class="text-muted mb-0">Alergias</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-info mb-2">
+            <i class="bi bi-capsule" style="font-size: 2rem;"></i>
+          </div>
+          <h3 class="mb-1 fw-bold">{{ medicamentos.count }}</h3>
+          <p class="text-muted mb-0">Medicamentos</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFORMACIÓN MÉDICA -->
+  <div class="row mb-4">
+    <!-- ANTECEDENTES -->
+    <div class="col-lg-4 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-primary text-white border-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-journal-text me-2"></i>Antecedentes Médicos
+            </h5>
+            <a href="{% url 'antecedente_nuevo' paciente.pk %}?next={{ request.path }}" 
+               class="btn btn-light btn-sm">
+              <i class="bi bi-plus"></i>
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          {% if antecedentes %}
+            <div class="list-group list-group-flush">
+              {% for ant in antecedentes %}
+                <div class="list-group-item border-0">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      <span class="badge bg-secondary mb-2">{{ ant.get_tipo_display }}</span>
+                      <p class="mb-1 fw-medium">{{ ant.descripcion }}</p>
+                      {% if ant.fecha_diagnostico %}
+                        <small class="text-muted">
+                          <i class="bi bi-calendar3 me-1"></i>
+                          {{ ant.fecha_diagnostico|date:"d/m/Y" }}
+                        </small>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-journal text-muted" style="font-size: 3rem;"></i>
+              <p class="text-muted mt-2 mb-0">Sin antecedentes registrados</p>
+              <a href="{% url 'antecedente_nuevo' paciente.pk %}?next={{ request.path }}" 
+                 class="btn btn-primary btn-sm mt-2">
+                <i class="bi bi-plus me-1"></i>Agregar Antecedente
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERGIAS -->
+    <div class="col-lg-4 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-warning text-dark border-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-exclamation-octagon me-2"></i>Alergias
+            </h5>
+            <!-- Botón deshabilitado hasta que se implemente la funcionalidad -->
+            <button class="btn btn-dark btn-sm" disabled title="Funcionalidad en desarrollo">
+              <i class="bi bi-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          {% if alergias %}
+            <div class="list-group list-group-flush">
+              {% for al in alergias %}
+                <div class="list-group-item border-0">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      {% if al.severidad %}
+                        <span class="badge bg-danger mb-2">{{ al.severidad }}</span>
+                      {% endif %}
+                      <p class="mb-1 fw-medium">{{ al.descripcion }}</p>
+                      {% if al.notas %}
+                        <small class="text-muted">{{ al.notas }}</small>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
+              <p class="text-muted mt-2 mb-0">Sin alergias conocidas</p>
+              <small class="text-muted">Funcionalidad de alergias en desarrollo</small>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDICAMENTOS -->
+    <div class="col-lg-4 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-success text-white border-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-capsule me-2"></i>Medicamentos Actuales
+            </h5>
+            <a href="{% url 'medicamento_nuevo' paciente.pk %}?next={{ request.path }}" 
+               class="btn btn-light btn-sm">
+              <i class="bi bi-plus"></i>
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          {% if medicamentos %}
+            <div class="list-group list-group-flush">
+              {% for med in medicamentos %}
+                <div class="list-group-item border-0">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      <p class="mb-1 fw-bold">{{ med.nombre }}</p>
+                      <p class="mb-1 text-muted">{{ med.dosis }}</p>
+                      <small class="text-muted">
+                        <i class="bi bi-clock me-1"></i>{{ med.frecuencia }}
+                        {% if med.inicio %}
+                          • Desde {{ med.inicio|date:"d/m/Y" }}
+                        {% endif %}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-capsule text-muted" style="font-size: 3rem;"></i>
+              <p class="text-muted mt-2 mb-0">Sin medicamentos actuales</p>
+              <a href="{% url 'medicamento_nuevo' paciente.pk %}?next={{ request.path }}" 
+                 class="btn btn-success btn-sm mt-2">
+                <i class="bi bi-plus me-1"></i>Agregar Medicamento
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL DE CONSULTAS -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light border-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-calendar-check me-2"></i>Historial de Consultas
+            </h5>
+            <a href="{% url 'consultas_crear_sin_cita' %}?paciente_id={{ paciente.pk }}&next={{ request.path }}" 
+               class="btn btn-primary">
+              <i class="bi bi-plus-circle me-2"></i>Nueva Consulta
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          {% if consultas %}
+            <div class="table-responsive">
+              <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th class="border-0">Fecha y Hora</th>
+                    <th class="border-0">Tipo</th>
+                    <th class="border-0">Estado</th>
+                    <th class="border-0">Médico</th>
+                    <th class="border-0">Signos Vitales</th>
+                    <th class="border-0">Receta</th>
+                    <th class="border-0 text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for c in consultas %}
+                    <tr>
+                      <td>
+                        <div class="fw-medium">{{ c.fecha_atencion|date:"d/m/Y" }}</div>
+                        <small class="text-muted">{{ c.fecha_atencion|date:"H:i" }}</small>
+                      </td>
+                      <td>
+                        <span class="badge bg-info">{{ c.get_tipo_display }}</span>
+                      </td>
+                      <td>
+                        {% if c.estado == "finalizada" %}
+                          <span class="badge bg-success">
+                            <i class="bi bi-check-circle me-1"></i>{{ c.get_estado_display }}
+                          </span>
+                        {% elif c.estado == "cancelada" %}
+                          <span class="badge bg-danger">
+                            <i class="bi bi-x-circle me-1"></i>{{ c.get_estado_display }}
+                          </span>
+                        {% elif c.estado == "en_progreso" %}
+                          <span class="badge bg-warning">
+                            <i class="bi bi-clock me-1"></i>{{ c.get_estado_display }}
+                          </span>
+                        {% else %}
+                          <span class="badge bg-secondary">{{ c.get_estado_display }}</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if c.medico %}
+                          <div class="d-flex align-items-center">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                 style="width: 32px; height: 32px;">
+                              <i class="bi bi-person-fill text-white"></i>
+                            </div>
+                            <div>
+                              <div class="fw-medium">{{ c.medico.get_full_name }}</div>
+                              <small class="text-muted">{{ c.medico.especialidad|default:"Médico General" }}</small>
+                            </div>
+                          </div>
+                        {% else %}
+                          <span class="text-muted">Sin asignar</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if c.signos_vitales %}
+                          <span class="badge bg-success">
+                            <i class="bi bi-thermometer-half me-1"></i>Registrados
+                          </span>
+                        {% else %}
+                          <span class="badge bg-secondary">
+                            <i class="bi bi-dash-circle me-1"></i>Pendientes
+                          </span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if c.receta %}
+                          <span class="badge bg-success">
+                            <i class="bi bi-file-earmark-medical me-1"></i>Emitida
+                          </span>
+                        {% else %}
+                          <span class="badge bg-secondary">
+                            <i class="bi bi-dash-circle me-1"></i>Sin receta
+                          </span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <div class="btn-group" role="group">
+                          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                  data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots"></i>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end">
+                            {% if c.estado != "finalizada" %}
+                              <li>
+                                <a class="dropdown-item" href="{% url 'consultas_atencion' c.pk %}?next={{ request.path }}">
+                                  <i class="bi bi-heart-pulse me-2 text-info"></i>Atender
+                                </a>
+                              </li>
+                            {% endif %}
+                            
+                            {% if not c.signos_vitales %}
+                              <li>
+                                <a class="dropdown-item" href="{% url 'consultas_precheck' c.pk %}?next={{ request.path }}">
+                                  <i class="bi bi-thermometer-half me-2 text-warning"></i>Signos Vitales
+                                </a>
+                              </li>
+                            {% endif %}
+                            
+                            {% if c.receta %}
+                              <li>
+                                <a class="dropdown-item" href="{% url 'receta_pdf' c.receta.pk %}">
+                                  <i class="bi bi-download me-2 text-success"></i>Descargar Receta
+                                </a>
+                              </li>
+                            {% else %}
+                              <li>
+                                <a class="dropdown-item" href="{% url 'receta_nueva' c.pk %}?next={{ request.path }}">
+                                  <i class="bi bi-file-earmark-plus me-2 text-primary"></i>Emitir Receta
+                                </a>
+                              </li>
+                            {% endif %}
+                            
+                            {% if c.estado == "finalizada" %}
+                              <li><hr class="dropdown-divider"></li>
+                              <li>
+                                <a class="dropdown-item" href="{% url 'consulta_editar' c.pk %}?next={{ request.path }}">
+                                  <i class="bi bi-pencil-square me-2 text-warning"></i>Editar
+                                </a>
+                              </li>
+                            {% endif %}
+                            
+                            {% if c.estado == "finalizada" or c.estado == "cancelada" %}
+                              <li>
+                                <a class="dropdown-item text-danger" href="{% url 'consulta_eliminar' c.pk %}?next={{ request.path }}"
+                                   onclick="return confirm('¿Está seguro de eliminar esta consulta?')">
+                                  <i class="bi bi-trash3 me-2"></i>Eliminar
+                                </a>
+                              </li>
+                            {% endif %}
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-5">
+              <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+              <h5 class="text-muted mt-3">Sin consultas registradas</h5>
+              <p class="text-muted">Este paciente aún no tiene consultas en el sistema.</p>
+              <a href="{% url 'consultas_crear_sin_cita' %}?paciente_id={{ paciente.pk }}&next={{ request.path }}" 
+                 class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Crear Primera Consulta
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Estilos adicionales -->
+<style>
+  .bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  }
+  
+  .card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+  }
+  
+  .list-group-item {
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .list-group-item:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .table tbody tr {
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .table tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .btn {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .badge {
+    font-weight: 500;
+  }
+</style>
+{% endblock %}

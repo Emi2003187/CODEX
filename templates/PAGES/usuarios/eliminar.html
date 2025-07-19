@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Eliminar usuario{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card border-danger shadow-sm">
+        <div class="card-header bg-danger text-white">
+          <h4 class="mb-0"><i class="bi bi-trash"></i> Confirmar eliminación</h4>
+        </div>
+        <div class="card-body">
+          <p class="fw-bold">Vas a eliminar definitivamente a:</p>
+          <ul class="list-group mb-3">
+            <li class="list-group-item"><strong>Nombre:</strong> {{ object.get_full_name }}</li>
+            <li class="list-group-item"><strong>Rol:</strong> {{ object.get_rol_display }}</li>
+            <li class="list-group-item"><strong>Email:</strong> {{ object.email }}</li>
+          </ul>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="d-grid gap-2">
+              <button class="btn btn-danger" type="submit">Eliminar</button>
+              <a href="{% url 'usuarios_lista' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

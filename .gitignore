@@ -1,0 +1,31 @@
+# ── Entorno / compilados ─────────────────────────
+env/
+venv/
+*.py[cod]
+__pycache__/
+*.so
+*.pyd
+*.dll
+
+# ── Archivos de usuario / sistema ───────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# ── Django ───────────────────────────────────────
+# Claves, variables de entorno:
+.env
+*.sqlite3
+*.log
+
+# Archivos generados
+staticfiles/
+media/
+coverage/
+htmlcov/
+
+# Migraciones (opcional ignorarlas en equipo)
+**/migrations/*
+!**/migrations/__init__.py

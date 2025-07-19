@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Usuario{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-header bg-primary text-white rounded-top-4">
+      <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Editar Usuario</h4>
+    </div>
+    <div class="card-body px-4">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+          <!-- COLUMNA IZQUIERDA: Foto -->
+          <div class="col-md-4 text-center">
+            <div class="mb-3">
+              {% if form.instance.foto %}
+                <img id="preview-img" src="{{ form.instance.foto.url }}" class="img-thumbnail rounded shadow" width="180" alt="Foto actual">
+              {% else %}
+                <img id="preview-img" src="{% static 'img/default_user.png' %}" class="img-thumbnail rounded shadow" width="180" alt="Foto por defecto">
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label for="id_foto" class="form-label fw-semibold">Modificar foto:</label>
+              <input type="file" name="foto" class="form-control" id="id_foto">
+              {% for error in form.foto.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- COLUMNA DERECHA: Todos los campos -->
+          <div class="col-md-8">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                {{ form.first_name.label_tag }} {{ form.first_name }}
+                {% for error in form.first_name.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 mb-3">
+                {{ form.last_name.label_tag }} {{ form.last_name }}
+                {% for error in form.last_name.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 mb-3">
+                {{ form.username.label_tag }} {{ form.username }}
+                {% for error in form.username.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 mb-3">
+                {{ form.email.label_tag }} {{ form.email }}
+                {% for error in form.email.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 mb-3">
+                {{ form.telefono.label_tag }} {{ form.telefono }}
+                {% for error in form.telefono.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 mb-3">
+                {{ form.rol.label_tag }} {{ form.rol }}
+                {% for error in form.rol.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 mb-3">
+                {{ form.cedula_profesional.label_tag }} {{ form.cedula_profesional }}
+                {% for error in form.cedula_profesional.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 mb-3">
+                {{ form.consultorio.label_tag }} {{ form.consultorio }}
+                {% for error in form.consultorio.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-12 mb-3">
+                {{ form.institucion_cedula.label_tag }} {{ form.institucion_cedula }}
+                {% for error in form.institucion_cedula.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="mt-4 d-flex justify-content-end gap-2">
+          <a href="{% url 'usuarios_lista' %}" class="btn btn-secondary px-4">Cancelar</a>
+          <button type="submit" class="btn btn-primary px-4">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPT DE VISTA PREVIA -->
+<script>
+  const fotoInput = document.getElementById("id_foto");
+  const previewImg = document.getElementById("preview-img");
+
+  fotoInput.addEventListener("change", function () {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        previewImg.src = e.target.result;
+      }
+      reader.readAsDataURL(file);
+    } else {
+      previewImg.src = "{% static 'img/default_user.png' %}";
+    }
+  });
+</script>
+
+<!-- OCULTAR CHECKBOX DE LIMPIAR FOTO -->
+<style>
+  input[type="checkbox"][name$="-clear"] {
+    display: none !important;
+  }
+</style>
+{% endblock %}

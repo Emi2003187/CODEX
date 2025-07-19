@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Detalle de Consulta - {{ consulta.paciente.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- BREADCRUMB -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'consultas_lista' %}">Consultas</a>
+      </li>
+      <li class="breadcrumb-item active">Detalle #{{ consulta.pk }}</li>
+    </ol>
+  </nav>
+
+  <!-- HEADER -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h1 class="fw-bold text-primary">
+        <i class="bi bi-clipboard-data me-2"></i>
+        Consulta #{{ consulta.pk }}
+      </h1>
+      <p class="text-muted mb-0">{{ consulta.paciente.nombre_completo }}</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+      {% if consulta.estado == 'espera' and puede_editar %}
+        <a href="{% url 'consultas_atencion' consulta.pk %}" class="btn btn-primary me-1">
+          <i class="bi bi-play me-1"></i>Atender
+        </a>
+      {% elif puede_editar %}
+        <a href="{% url 'consulta_editar' consulta.pk %}" class="btn btn-warning me-1">
+          <i class="bi bi-pencil me-1"></i>Editar
+        </a>
+      {% endif %}
+      {% if receta and receta.medicamentos.exists %}
+        <a href="{% url 'receta_pdf' receta.pk %}" class="btn btn-success me-1">
+          <i class="bi bi-printer me-1"></i>Imprimir
+        </a>
+      {% endif %}
+      <a href="{% url 'consulta_eliminar' consulta.pk %}?next={% url 'consultas_lista' %}" class="btn btn-danger me-1">
+        <i class="bi bi-trash me-1"></i>Eliminar
+      </a>
+      <a href="{% url 'consultas_lista' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Volver
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    {% if usuario.rol != 'asistente' %}
+    <!-- INFORMACIÓN PRINCIPAL -->
+    <div class="col-lg-8">
+      <!-- DATOS BÁSICOS -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-info-circle me-2"></i>Información General
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Paciente:</strong> {{ consulta.paciente.nombre_completo }}</p>
+              <p><strong>Médico:</strong> {{ consulta.medico.get_full_name|default:"No asignado" }}</p>
+              <p><strong>Tipo:</strong> {{ consulta.get_tipo_display }}</p>
+              <p><strong>Estado:</strong> 
+                <span class="badge 
+                  {% if consulta.estado == 'espera' %}bg-warning
+                  {% elif consulta.estado == 'en_progreso' %}bg-primary
+                  {% elif consulta.estado == 'finalizada' %}bg-success
+                  {% else %}bg-danger{% endif %}">
+                  {{ consulta.get_estado_display }}
+                </span>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Fecha Creación:</strong> {{ consulta.fecha_creacion|date:"d/m/Y H:i" }}</p>
+              <p><strong>Fecha Atención:</strong> {{ consulta.fecha_atencion|date:"d/m/Y H:i"|default:"Pendiente" }}</p>
+              {% if consulta.cita %}
+                <p><strong>Cita Programada:</strong> {{ consulta.cita.fecha_hora|date:"d/m/Y H:i" }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOTIVO Y DIAGNÓSTICO -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-clipboard-pulse me-2"></i>Información Médica
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <strong>Motivo de Consulta:</strong>
+            <p class="mt-1">{{ consulta.motivo_consulta|default:"No especificado" }}</p>
+          </div>
+          
+          <div class="mb-3">
+            <strong>Diagnóstico:</strong>
+            <p class="mt-1">{{ consulta.diagnostico|default:"Pendiente" }}</p>
+          </div>
+          
+          <div class="mb-3">
+            <strong>Tratamiento:</strong>
+            <p class="mt-1">{{ consulta.tratamiento|default:"No definido" }}</p>
+          </div>
+          
+          {% if consulta.observaciones %}
+            <div class="mb-3">
+              <strong>Observaciones:</strong>
+              <p class="mt-1">{{ consulta.observaciones }}</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- PANEL LATERAL -->
+    <div class="{% if usuario.rol == 'asistente' %}col-lg-12{% else %}col-lg-4{% endif %}">
+      <!-- SIGNOS VITALES -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-heart-pulse me-2"></i>Signos Vitales
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if signos_vitales %}
+            <div class="row g-2">
+              <div class="col-6">
+                <small class="text-muted">Tensión Arterial</small>
+                <p class="fw-bold mb-2">{{ signos_vitales.tension_arterial|default:"No registrado" }}</p>
+              </div>
+              <div class="col-6">
+                <small class="text-muted">Frecuencia Cardíaca</small>
+                <p class="fw-bold mb-2">
+                  {% if signos_vitales.frecuencia_cardiaca %}
+                    {{ signos_vitales.frecuencia_cardiaca }} lpm
+                  {% else %}
+                    No registrado
+                  {% endif %}
+                </p>
+              </div>
+              <div class="col-6">
+                <small class="text-muted">Temperatura</small>
+                <p class="fw-bold mb-2">
+                  {% if signos_vitales.temperatura %}
+                    {{ signos_vitales.temperatura }}°C
+                  {% else %}
+                    No registrado
+                  {% endif %}
+                </p>
+              </div>
+              <div class="col-6">
+                <small class="text-muted">Peso</small>
+                <p class="fw-bold mb-2">
+                  {% if signos_vitales.peso %}
+                    {{ signos_vitales.peso }} kg
+                  {% else %}
+                    No registrado
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+            <small class="text-muted">
+              Registrado: {{ signos_vitales.fecha_registro|date:"d/m/Y H:i" }}
+            </small>
+            <div class="mt-3 d-grid gap-2">
+              <a href="{% url 'signos_detalle' signos_vitales.pk %}" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-eye me-1"></i>Ver Detalles
+              </a>
+              {% if usuario.rol in 'medico,asistente,admin' %}
+                <a href="{% url 'consultas_precheck' consulta.pk %}?next={{ request.get_full_path }}" class="btn btn-sm btn-outline-warning">
+                  <i class="bi bi-pencil me-1"></i>Editar Signos
+                </a>
+              {% endif %}
+            </div>
+          {% else %}
+            <p class="text-muted text-center">
+              <i class="bi bi-dash-circle me-1"></i>
+              No hay signos vitales registrados
+            </p>
+            <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-sm btn-outline-primary w-100">
+              <i class="bi bi-plus me-1"></i>Registrar Signos
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if usuario.rol != 'asistente' %}
+      <!-- RECETA -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-file-earmark-medical me-2"></i>Receta Médica
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if receta %}
+            <p class="text-success">
+              <i class="bi bi-check-circle me-1"></i>
+              Receta emitida el {{ receta.fecha_emision|date:"d/m/Y" }}
+            </p>
+            {% if receta.medicamentos.exists %}
+              <a href="{% url 'receta_pdf' receta.pk %}" class="btn btn-sm btn-outline-success w-100 mb-3">
+                <i class="bi bi-download me-1"></i>Descargar PDF
+              </a>
+            {% endif %}
+
+            <p class="mb-2"><strong>Válido hasta:</strong> {{ receta.valido_hasta|date:"d/m/Y"|default:"-" }}</p>
+            {% if receta.notas %}
+              <p class="mb-2"><strong>Notas:</strong> {{ receta.notas }}</p>
+            {% endif %}
+
+            <h6 class="mb-2">Medicamentos</h6>
+            <ul class="list-group mb-3">
+              {% for med in receta.medicamentos.all %}
+                <li class="list-group-item">
+                  <strong>{{ med.nombre }}</strong> {{ med.dosis }} - {{ med.frecuencia }} ({{ med.via_administracion }})
+                  {% if med.duracion %} por {{ med.duracion }}{% endif %}
+                  {% if med.indicaciones_especificas %}
+                    <p class="mb-0"><small>{{ med.indicaciones_especificas }}</small></p>
+                  {% endif %}
+                </li>
+              {% empty %}
+                <li class="list-group-item">No se registraron medicamentos.</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted text-center">
+              <i class="bi bi-dash-circle me-1"></i>
+              No hay receta emitida
+            </p>
+            {% if consulta.estado == 'en_progreso' or consulta.estado == 'finalizada' %}
+              <a href="{% url 'receta_nueva' consulta.pk %}" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-plus me-1"></i>Emitir Receta
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ACCIONES RÁPIDAS -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-lightning me-2"></i>Acciones Rápidas
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            {% if consulta.estado == 'espera' %}
+              <a href="{% url 'consultas_atencion' consulta.pk %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-play me-1"></i>Iniciar Atención
+              </a>
+            {% endif %}
+            
+            {% if not signos_vitales %}
+              <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-warning btn-sm">
+                <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
+              </a>
+            {% endif %}
+            
+            {% if puede_editar %}
+              <a href="{% url 'consulta_editar' consulta.pk %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Editar Consulta
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

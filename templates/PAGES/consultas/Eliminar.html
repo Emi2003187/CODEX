@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Eliminar Consulta{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <div class="alert alert-danger">
+    <h5>¿Seguro que quieres eliminar esta consulta?</h5>
+    <p>Consulta de {{ object.paciente.nombre_completo }} ({{ object.get_tipo_display }})</p>
+    <form method="post">
+      {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+      <a href="{{ next }}" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-danger">Eliminar</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

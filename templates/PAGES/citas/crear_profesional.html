@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo|default:"Nueva Cita" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left: 4px solid #007bff;
+    }
+    
+    .form-section h5 {
+        color: #495057;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .required-field label::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .btn-group-custom {
+        gap: 10px;
+    }
+    
+    .alert-info {
+        border-left: 4px solid #17a2b8;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .horarios-disponibles {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 10px;
+        background: #fff;
+    }
+    
+    .horario-slot {
+        padding: 8px 12px;
+        margin: 2px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .horario-slot:hover {
+        background: #e9ecef;
+    }
+    
+    .horario-slot.ocupado {
+        background: #f8d7da;
+        color: #721c24;
+        cursor: not-allowed;
+    }
+    
+    .horario-slot.seleccionado {
+        background: #d4edda;
+        border-color: #28a745;
+        color: #155724;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>{{ titulo|default:"Nueva Cita" }}</h2>
+                    <p class="text-muted mb-0">Complete la información para agendar una nueva cita médica</p>
+                </div>
+                <div>
+                    <a href="{% url 'citas_lista' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Volver
+                    </a>
+                </div>
+            </div>
+
+            <!-- Formulario -->
+            <form method="post" id="citaForm">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Columna Principal -->
+                    <div class="col-lg-8">
+                        <!-- Información del Paciente -->
+                        <div class="form-section">
+                            <h5><i class="bi bi-person me-2"></i>Información del Paciente</h5>
+                            <div class="row">
+                                <div class="col-md-6 required-field">
+                                    <label for="{{ form.paciente.id_for_label }}" class="form-label">Paciente</label>
+                                    {{ form.paciente }}
+                                    {% if form.paciente.errors %}
+                                        <div class="text-danger small">{{ form.paciente.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 required-field">
+                                    <label for="{{ form.medico.id_for_label }}" class="form-label">Médico</label>
+                                    {{ form.medico }}
+                                    {% if form.medico.errors %}
+                                        <div class="text-danger small">{{ form.medico.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fecha y Hora -->
+                        <div class="form-section">
+                            <h5><i class="bi bi-calendar3 me-2"></i>Fecha y Hora</h5>
+                            <div class="row">
+                                <div class="col-md-4 required-field">
+                                    <label for="{{ form.fecha.id_for_label }}" class="form-label">Fecha</label>
+                                    {{ form.fecha }}
+                                    {% if form.fecha.errors %}
+                                        <div class="text-danger small">{{ form.fecha.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 required-field">
+                                    <label for="{{ form.hora.id_for_label }}" class="form-label">Hora</label>
+                                    {{ form.hora }}
+                                    {% if form.hora.errors %}
+                                        <div class="text-danger small">{{ form.hora.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.duracion.id_for_label }}" class="form-label">Duración</label>
+                                    {{ form.duracion }}
+                                    {% if form.duracion.errors %}
+                                        <div class="text-danger small">{{ form.duracion.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Horarios Disponibles -->
+                            <div class="mt-3" id="horariosDisponibles" style="display: none;">
+                                <label class="form-label">Horarios Disponibles</label>
+                                <div class="horarios-disponibles" id="listaHorarios">
+                                    <div class="text-center text-muted">
+                                        <i class="bi bi-clock me-2"></i>Seleccione una fecha para ver horarios disponibles
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalles de la Cita -->
+                        <div class="form-section">
+                            <h5><i class="bi bi-clipboard me-2"></i>Detalles de la Cita</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="{{ form.tipo_cita.id_for_label }}" class="form-label">Tipo de Cita</label>
+                                    {{ form.tipo_cita }}
+                                    {% if form.tipo_cita.errors %}
+                                        <div class="text-danger small">{{ form.tipo_cita.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.prioridad.id_for_label }}" class="form-label">Prioridad</label>
+                                    {{ form.prioridad }}
+                                    {% if form.prioridad.errors %}
+                                        <div class="text-danger small">{{ form.prioridad.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <label for="{{ form.motivo.id_for_label }}" class="form-label">Motivo de la Consulta</label>
+                                    {{ form.motivo }}
+                                    {% if form.motivo.errors %}
+                                        <div class="text-danger small">{{ form.motivo.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <label for="{{ form.notas.id_for_label }}" class="form-label">Notas Adicionales</label>
+                                    {{ form.notas }}
+                                    {% if form.notas.errors %}
+                                        <div class="text-danger small">{{ form.notas.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información de Contacto -->
+                        <div class="form-section">
+                            <h5><i class="bi bi-telephone me-2"></i>Información de Contacto</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="{{ form.telefono_contacto.id_for_label }}" class="form-label">Teléfono de Contacto</label>
+                                    {{ form.telefono_contacto }}
+                                    {% if form.telefono_contacto.errors %}
+                                        <div class="text-danger small">{{ form.telefono_contacto.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.email_recordatorio.id_for_label }}" class="form-label">Email para Recordatorios</label>
+                                    {{ form.email_recordatorio }}
+                                    {% if form.email_recordatorio.errors %}
+                                        <div class="text-danger small">{{ form.email_recordatorio.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="col-lg-4">
+                        <!-- Información Rápida -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <small>
+                                        <strong>Recordatorio:</strong><br>
+                                        • Las citas deben programarse con al menos 1 hora de anticipación<br>
+                                        • Horario de atención: 8:00 AM - 6:00 PM<br>
+                                        • Los campos marcados con * son obligatorios
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Acciones -->
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle me-2"></i>Guardar Cita
+                                    </button>
+                                    <a href="{% url 'citas_lista' %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaInput = document.getElementById('{{ form.fecha.id_for_label }}');
+    const medicoSelect = document.getElementById('{{ form.medico.id_for_label }}');
+    const horaInput = document.getElementById('{{ form.hora.id_for_label }}');
+    const horariosDiv = document.getElementById('horariosDisponibles');
+    const listaHorarios = document.getElementById('listaHorarios');
+
+    // Cargar horarios disponibles cuando cambie la fecha o médico
+    function cargarHorariosDisponibles() {
+        const fecha = fechaInput.value;
+        const medico = medicoSelect.value;
+        
+        if (!fecha || !medico) {
+            horariosDiv.style.display = 'none';
+            return;
+        }
+
+        fetch(`{% url 'ajax_horarios_disponibles' %}?fecha=${fecha}&medico=${medico}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.horarios && data.horarios.length > 0) {
+                    mostrarHorarios(data.horarios);
+                    horariosDiv.style.display = 'block';
+                } else {
+                    listaHorarios.innerHTML = '<div class="text-center text-muted">No hay horarios disponibles para esta fecha</div>';
+                    horariosDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                listaHorarios.innerHTML = '<div class="text-center text-danger">Error al cargar horarios</div>';
+            });
+    }
+
+    function mostrarHorarios(horarios) {
+        let html = '';
+        
+        horarios.forEach(horario => {
+            html += `<div class="mb-3">
+                <h6>${horario.medico} - ${horario.consultorio}</h6>
+                <div class="d-flex flex-wrap">`;
+            
+            horario.bloques.forEach(bloque => {
+                const claseOcupado = bloque.ocupado ? 'ocupado' : '';
+                const titulo = bloque.ocupado ? `Ocupado - ${bloque.paciente || 'Paciente'}` : 'Disponible';
+                
+                html += `<div class="horario-slot ${claseOcupado}" 
+                            data-hora="${bloque.hora}" 
+                            title="${titulo}"
+                            ${!bloque.ocupado ? 'onclick="seleccionarHora(this)"' : ''}>
+                            ${bloque.hora}
+                        </div>`;
+            });
+            
+            html += '</div></div>';
+        });
+        
+        listaHorarios.innerHTML = html;
+    }
+
+    // Eventos
+    fechaInput.addEventListener('change', cargarHorariosDisponibles);
+    medicoSelect.addEventListener('change', cargarHorariosDisponibles);
+
+    // Cargar horarios si ya hay valores
+    if (fechaInput.value && medicoSelect.value) {
+        cargarHorariosDisponibles();
+    }
+});
+
+function seleccionarHora(elemento) {
+    // Remover selección anterior
+    document.querySelectorAll('.horario-slot.seleccionado').forEach(el => {
+        el.classList.remove('seleccionado');
+    });
+    
+    // Seleccionar nuevo horario
+    elemento.classList.add('seleccionado');
+    
+    // Actualizar input de hora
+    const hora = elemento.dataset.hora;
+    document.getElementById('{{ form.hora.id_for_label }}').value = hora;
+}
+
+// Validación del formulario
+document.getElementById('citaForm').addEventListener('submit', function(e) {
+    const requiredFields = ['{{ form.paciente.id_for_label }}', '{{ form.medico.id_for_label }}', '{{ form.fecha.id_for_label }}', '{{ form.hora.id_for_label }}'];
+    let isValid = true;
+    
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field.value.trim()) {
+            field.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('Por favor complete todos los campos obligatorios');
+    }
+});
+</script>
+{% endblock %}

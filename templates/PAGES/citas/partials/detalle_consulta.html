@@ -1,0 +1,31 @@
+<div class="row gy-2">
+  <div class="col-md-6">
+    <p><strong>Motivo:</strong> {{ consulta.motivo_consulta|default:"No especificado" }}</p>
+    <p><strong>Diagnóstico:</strong> {{ consulta.diagnostico|default:"No registrado" }}</p>
+  </div>
+  <div class="col-md-6">
+    <p><strong>Tratamiento:</strong> {{ consulta.tratamiento|default:"No registrado" }}</p>
+    <p><strong>Observaciones:</strong> {{ consulta.observaciones|default:"Sin observaciones" }}</p>
+  </div>
+</div>
+
+{% if consulta.receta %}
+<hr>
+<h6 class="text-muted">Receta:</h6>
+<p><strong>Indicaciones generales:</strong> {{ consulta.receta.indicaciones_generales|default:"-" }}</p>
+
+{% if consulta.receta.medicamentos.exists %}
+<ul class="list-group list-group-flush">
+  {% for med in consulta.receta.medicamentos.all %}
+    <li class="list-group-item">
+      <strong>{{ med.nombre }}</strong> ({{ med.dosis }}) – {{ med.frecuencia }} por {{ med.duracion }}
+      {% if med.indicaciones_especificas %}
+      <br><small class="text-muted">{{ med.indicaciones_especificas }}</small>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+{% else %}
+  <p class="text-muted">Sin medicamentos recetados.</p>
+{% endif %}
+{% endif %}

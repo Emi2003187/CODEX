@@ -1,0 +1,237 @@
+{% extends 'BASE/base.html' %}
+{% load static %}
+
+{% block title %}Calendario de Citas{% endblock %}
+
+{% block extra_css %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+<style>
+    .fc-event-sin-medico {
+        background-color: #ffc107 !important;
+        border-color: #ffc107 !important;
+        color: #000 !important;
+    }
+    .fc-event-con-medico {
+        background-color: #198754 !important;
+        border-color: #198754 !important;
+    }
+    .calendar-filters {
+        background: #f8f9fa;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-calendar-alt me-2"></i>Calendario de Citas</h2>
+            <p class="text-muted mb-0">Vista general de todas las citas</p>
+        </div>
+        <div>
+            <a href="{% url 'citas_lista' %}" class="btn btn-secondary">
+                <i class="fas fa-list me-2"></i>Vista Lista
+            </a>
+            <a href="{% url 'crear_cita' %}" class="btn btn-primary ms-2">
+                <i class="fas fa-plus me-2"></i>Nueva Cita
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="calendar-filters">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="consultorio-filter" class="form-label">Consultorio</label>
+                <select id="consultorio-filter" class="form-select">
+                    <option value="">Todos los consultorios</option>
+                    {% for consultorio in consultorios %}
+                        <option value="{{ consultorio.id }}" 
+                                {% if consultorio.id == user_consultorio %}selected{% endif %}>
+                            {{ consultorio.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="medico-filter" class="form-label">Médico</label>
+                <select id="medico-filter" class="form-select">
+                    <option value="">Todos los médicos</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Leyenda</label>
+                <div>
+                    <span class="badge bg-warning text-dark me-2">
+                        <i class="fas fa-circle me-1"></i>Sin médico
+                    </span>
+                    <span class="badge bg-success me-2">
+                        <i class="fas fa-circle me-1"></i>Con médico
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendario -->
+    <div class="card">
+        <div class="card-body">
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles de cita -->
+<div class="modal fade" id="citaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles de la Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="cita-details"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a id="ver-cita-btn" href="#" class="btn btn-primary">Ver Detalles</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/es.global.min.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        height: 'auto',
+        events: function(fetchInfo, successCallback, failureCallback) {
+            var consultorioId = document.getElementById('consultorio-filter').value;
+            var medicoId = document.getElementById('medico-filter').value;
+            
+            var url = '{% url "citas_calendario_data" %}?' + 
+                      'start=' + fetchInfo.startStr + 
+                      '&end=' + fetchInfo.endStr;
+            
+            if (consultorioId) {
+                url += '&consultorio=' + consultorioId;
+            }
+            if (medicoId) {
+                url += '&medico=' + medicoId;
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Aplicar clases CSS según si tiene médico o no
+                    data.forEach(event => {
+                        if (event.extendedProps.sin_medico) {
+                            event.className = 'fc-event-sin-medico';
+                        } else {
+                            event.className = 'fc-event-con-medico';
+                        }
+                    });
+                    successCallback(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    failureCallback(error);
+                });
+        },
+        eventClick: function(info) {
+            var event = info.event;
+            var props = event.extendedProps;
+            
+            var detailsHtml = `
+                <div class="row">
+                    <div class="col-6">
+                        <p><strong>Número:</strong> ${props.numero_cita}</p>
+                        <p><strong>Paciente:</strong> ${props.paciente}</p>
+                        <p><strong>Consultorio:</strong> ${props.consultorio}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>Médico:</strong> ${props.medico}</p>
+                        <p><strong>Estado:</strong> 
+                            <span class="badge bg-primary">${props.estado}</span>
+                        </p>
+                        <p><strong>Duración:</strong> ${props.duracion} min</p>
+                    </div>
+                </div>
+            `;
+            
+            if (props.motivo) {
+                detailsHtml += `<p><strong>Motivo:</strong> ${props.motivo}</p>`;
+            }
+            
+            if (props.telefono) {
+                detailsHtml += `<p><strong>Teléfono:</strong> ${props.telefono}</p>`;
+            }
+            
+            document.getElementById('cita-details').innerHTML = detailsHtml;
+            document.getElementById('ver-cita-btn').href =
+                '{% url "citas_detalle" "00000000-0000-0000-0000-000000000000" %}'.replace(
+                    '00000000-0000-0000-0000-000000000000', 
+                    event.id
+                );
+            
+            var modal = new bootstrap.Modal(document.getElementById('citaModal'));
+            modal.show();
+        },
+        eventDidMount: function(info) {
+            // Tooltip con información básica
+            info.el.setAttribute('title', 
+                info.event.extendedProps.paciente + ' - ' + 
+                info.event.extendedProps.medico
+            );
+        }
+    });
+    
+    calendar.render();
+    
+    // Event listeners para filtros
+    document.getElementById('consultorio-filter').addEventListener('change', function() {
+        // Cargar médicos del consultorio seleccionado
+        var consultorioId = this.value;
+        var medicoSelect = document.getElementById('medico-filter');
+        
+        // Limpiar opciones de médico
+        medicoSelect.innerHTML = '<option value="">Todos los médicos</option>';
+        
+        if (consultorioId) {
+            fetch(`/ajax/consultorio-medico/${consultorioId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    data.medicos.forEach(medico => {
+                        var option = document.createElement('option');
+                        option.value = medico.id;
+                        option.textContent = medico.nombre;
+                        medicoSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        
+        calendar.refetchEvents();
+    });
+    
+    document.getElementById('medico-filter').addEventListener('change', function() {
+        calendar.refetchEvents();
+    });
+});
+</script>
+{% endblock %}

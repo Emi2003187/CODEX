@@ -1,0 +1,1003 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Editar Consulta #{{ consulta.pk }}{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --primary-color: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #3b82f6;
+  --secondary-color: #64748b;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --accent-color: #f59e0b;
+  --bg-color: #f8fafc;
+  --sidebar-bg: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --border-radius: 15px;
+}
+
+body {
+  background-color: var(--bg-color);
+}
+
+.main-container {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  margin: 1rem;
+  overflow: hidden;
+}
+
+.header-section {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: 2rem;
+  position: relative;
+}
+
+.header-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  opacity: 0.3;
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.breadcrumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: none;
+}
+
+.breadcrumb-item a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+  color: white;
+}
+
+.breadcrumb-item.active {
+  color: white;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.content-section {
+  padding: 2rem;
+}
+
+.form-card {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.form-card-header {
+  background: linear-gradient(135deg, var(--bg-color) 0%, #e2e8f0 100%);
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.form-card-header h5 {
+  margin: 0;
+  color: var(--primary-color);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-card-body {
+  padding: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.form-label i {
+  color: var(--primary-color);
+  font-size: 1rem;
+}
+
+.form-control, .form-select {
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: none;
+}
+
+.form-control:hover, .form-select:hover {
+  border-color: #cbd5e0;
+}
+
+textarea.form-control {
+  min-height: 100px;
+  resize: vertical;
+}
+
+input[type="date"].form-control {
+  position: relative;
+  appearance: none;
+}
+
+input[type="number"].form-control {
+  text-align: left;
+  appearance: none;
+}
+
+input[type="text"].form-control {
+  appearance: none;
+}
+
+.sidebar-card {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.sidebar-card-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+}
+
+.sidebar-card-header h5 {
+  margin: 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar-card-body {
+  padding: 1.5rem;
+}
+
+.info-item {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-value {
+  color: var(--text-primary);
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-espera { 
+  background: #fef3c7; 
+  color: #92400e; 
+}
+
+.status-en_progreso { 
+  background: #dbeafe; 
+  color: #1e40af; 
+}
+
+.status-finalizada { 
+  background: #d1fae5; 
+  color: #065f46; 
+}
+
+.status-cancelada { 
+  background: #fee2e2; 
+  color: #991b1b; 
+}
+
+.medication-form {
+  background: var(--bg-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 2px solid var(--border-color);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.medication-form:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow);
+}
+
+.medication-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.medication-number {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.btn-custom {
+  border: none;
+  border-radius: 25px;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-primary-custom {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+  color: white;
+}
+
+.btn-secondary-custom {
+  background: var(--secondary-color);
+  color: white;
+}
+
+.btn-secondary-custom:hover {
+  background: #475569;
+  transform: translateY(-2px);
+  color: white;
+}
+
+.btn-success-custom {
+  background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+  color: white;
+}
+
+.btn-success-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+  color: white;
+}
+
+.action-buttons {
+  background: var(--bg-color);
+  padding: 2rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.text-danger {
+  color: var(--danger-color) !important;
+}
+
+.alert-danger {
+  background-color: #fee2e2;
+  border-color: #fecaca;
+  color: var(--danger-color);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+/* Hide delete checkboxes */
+input[name$="-DELETE"] {
+  display: none !important;
+}
+
+label[for*="DELETE"] {
+  display: none !important;
+}
+
+.form-check:has(input[name$="-DELETE"]) {
+  display: none !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-container {
+    margin: 0.5rem;
+  }
+  
+  .header-section, .content-section {
+    padding: 1.5rem;
+  }
+  
+  .form-card-body {
+    padding: 1.5rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+  
+  .btn-custom {
+    justify-content: center;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="main-container">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-content">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+              <a href="{% url 'consultas_lista' %}">Consultas</a>
+            </li>
+            <li class="breadcrumb-item">
+              <a href="{% url 'consulta_detalle' consulta.pk %}">Consulta #{{ consulta.pk }}</a>
+            </li>
+            <li class="breadcrumb-item active">Editar</li>
+          </ol>
+        </nav>
+        
+        <h1 class="mb-2">
+          <i class="bi bi-pencil-square me-2"></i>
+          Editar Consulta #{{ consulta.pk }}
+        </h1>
+        <p class="mb-0 opacity-75">
+          <i class="bi bi-person me-1"></i>
+          {{ consulta.paciente.nombre_completo }}
+        </p>
+      </div>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ return_to }}">
+      
+      <div class="content-section">
+        <div class="row">
+          <!-- Main Content -->
+          <div class="col-lg-8">
+            <!-- Información de la Consulta -->
+            <div class="form-card">
+              <div class="form-card-header">
+                <h5>
+                  <i class="bi bi-clipboard-data"></i>
+                  Información de la Consulta
+                </h5>
+              </div>
+              <div class="form-card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ form.motivo_consulta.id_for_label }}">
+                        <i class="bi bi-chat-text"></i>
+                        Motivo de Consulta
+                      </label>
+                      {{ form.motivo_consulta }}
+                      {% if form.motivo_consulta.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in form.motivo_consulta.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ form.diagnostico.id_for_label }}">
+                        <i class="bi bi-search"></i>
+                        Diagnóstico
+                      </label>
+                      {{ form.diagnostico }}
+                      {% if form.diagnostico.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in form.diagnostico.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ form.tratamiento.id_for_label }}">
+                        <i class="bi bi-bandaid"></i>
+                        Tratamiento
+                      </label>
+                      {{ form.tratamiento }}
+                      {% if form.tratamiento.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in form.tratamiento.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ form.observaciones.id_for_label }}">
+                        <i class="bi bi-journal-text"></i>
+                        Observaciones
+                      </label>
+                      {{ form.observaciones }}
+                      {% if form.observaciones.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in form.observaciones.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Signos Vitales -->
+            <div class="form-card">
+              <div class="form-card-header">
+                <h5>
+                  <i class="bi bi-heart-pulse"></i>
+                  Signos Vitales
+                </h5>
+              </div>
+              <div class="form-card-body">
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ signos_form.tension_arterial.id_for_label }}">
+                        <i class="bi bi-activity"></i>
+                        Tensión Arterial
+                      </label>
+                      {{ signos_form.tension_arterial }}
+                      {% if signos_form.tension_arterial.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in signos_form.tension_arterial.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ signos_form.frecuencia_cardiaca.id_for_label }}">
+                        <i class="bi bi-heart"></i>
+                        Frecuencia Cardíaca
+                      </label>
+                      {{ signos_form.frecuencia_cardiaca }}
+                      {% if signos_form.frecuencia_cardiaca.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in signos_form.frecuencia_cardiaca.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ signos_form.temperatura.id_for_label }}">
+                        <i class="bi bi-thermometer"></i>
+                        Temperatura
+                      </label>
+                      {{ signos_form.temperatura }}
+                      {% if signos_form.temperatura.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in signos_form.temperatura.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ signos_form.peso.id_for_label }}">
+                        <i class="bi bi-speedometer2"></i>
+                        Peso (kg)
+                      </label>
+                      {{ signos_form.peso }}
+                      {% if signos_form.peso.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in signos_form.peso.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ signos_form.talla.id_for_label }}">
+                        <i class="bi bi-rulers"></i>
+                        Talla (m)
+                      </label>
+                      {{ signos_form.talla }}
+                      {% if signos_form.talla.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in signos_form.talla.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ signos_form.frecuencia_respiratoria.id_for_label }}">
+                        <i class="bi bi-lungs"></i>
+                        Frecuencia Respiratoria
+                      </label>
+                      {{ signos_form.frecuencia_respiratoria }}
+                      {% if signos_form.frecuencia_respiratoria.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in signos_form.frecuencia_respiratoria.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Campos adicionales de signos vitales -->
+                {% if signos_form.circunferencia_abdominal %}
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ signos_form.circunferencia_abdominal.id_for_label }}">
+                        <i class="bi bi-circle"></i>
+                        Circunferencia Abdominal (cm)
+                      </label>
+                      {{ signos_form.circunferencia_abdominal }}
+                      {% if signos_form.circunferencia_abdominal.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in signos_form.circunferencia_abdominal.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  {% if signos_form.alergias %}
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ signos_form.alergias.id_for_label }}">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Alergias
+                      </label>
+                      {{ signos_form.alergias }}
+                      {% if signos_form.alergias.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in signos_form.alergias.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  {% endif %}
+                  {% if signos_form.sintomas %}
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ signos_form.sintomas.id_for_label }}">
+                        <i class="bi bi-clipboard-pulse"></i>
+                        Síntomas
+                      </label>
+                      {{ signos_form.sintomas }}
+                      {% if signos_form.sintomas.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in signos_form.sintomas.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Receta Médica -->
+            <div class="form-card">
+              <div class="form-card-header">
+                <h5>
+                  <i class="bi bi-file-earmark-medical"></i>
+                  Receta Médica
+                </h5>
+              </div>
+              <div class="form-card-body">
+                <div class="form-group">
+                  <label class="form-label" for="{{ receta_form.indicaciones_generales.id_for_label }}">
+                    <i class="bi bi-list-ul"></i>
+                    Indicaciones Generales
+                  </label>
+                  {{ receta_form.indicaciones_generales }}
+                  {% if receta_form.indicaciones_generales.errors %}
+                    <div class="text-danger mt-1">
+                      {% for error in receta_form.indicaciones_generales.errors %}
+                        <small>{{ error }}</small>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ receta_form.valido_hasta.id_for_label }}">
+                        <i class="bi bi-calendar-check"></i>
+                        Válido Hasta
+                      </label>
+                      {{ receta_form.valido_hasta }}
+                      {% if receta_form.valido_hasta.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in receta_form.valido_hasta.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label" for="{{ receta_form.notas.id_for_label }}">
+                        <i class="bi bi-sticky"></i>
+                        Notas Adicionales
+                      </label>
+                      {{ receta_form.notas }}
+                      {% if receta_form.notas.errors %}
+                        <div class="text-danger mt-1">
+                          {% for error in receta_form.notas.errors %}
+                            <small>{{ error }}</small>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Medicamentos -->
+                <h6 class="mt-4 mb-3 text-primary">
+                  <i class="bi bi-capsule me-2"></i>
+                  Medicamentos Recetados
+                </h6>
+                {{ med_formset.management_form }}
+                
+                <div id="medicamentos-container">
+                  {% for form in med_formset %}
+                    <div class="medication-form">
+                      {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                          {% for error in form.non_field_errors %}
+                            {{ error }}
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                      
+                      <div class="medication-header">
+                        <div class="medication-number">{{ forloop.counter }}</div>
+                      </div>
+                      
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label class="form-label" for="{{ form.nombre.id_for_label }}">
+                              <i class="bi bi-capsule"></i>
+                              Nombre del Medicamento
+                            </label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                              <div class="text-danger mt-1">
+                                {% for error in form.nombre.errors %}
+                                  <small>{{ error }}</small>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label class="form-label" for="{{ form.principio_activo.id_for_label }}">
+                              <i class="bi bi-molecule"></i>
+                              Principio Activo
+                            </label>
+                            {{ form.principio_activo }}
+                            {% if form.principio_activo.errors %}
+                              <div class="text-danger mt-1">
+                                {% for error in form.principio_activo.errors %}
+                                  <small>{{ error }}</small>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="row">
+                        <div class="col-md-3">
+                          <div class="form-group">
+                            <label class="form-label" for="{{ form.dosis.id_for_label }}">
+                              <i class="bi bi-speedometer2"></i>
+                              Dosis
+                            </label>
+                            {{ form.dosis }}
+                            {% if form.dosis.errors %}
+                              <div class="text-danger mt-1">
+                                {% for error in form.dosis.errors %}
+                                  <small>{{ error }}</small>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                        <div class="col-md-3">
+                          <div class="form-group">
+                            <label class="form-label" for="{{ form.frecuencia.id_for_label }}">
+                              <i class="bi bi-clock"></i>
+                              Frecuencia
+                            </label>
+                            {{ form.frecuencia }}
+                            {% if form.frecuencia.errors %}
+                              <div class="text-danger mt-1">
+                                {% for error in form.frecuencia.errors %}
+                                  <small>{{ error }}</small>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                        <div class="col-md-3">
+                          <div class="form-group">
+                            <label class="form-label" for="{{ form.via_administracion.id_for_label }}">
+                              <i class="bi bi-arrow-right"></i>
+                              Vía
+                            </label>
+                            {{ form.via_administracion }}
+                            {% if form.via_administracion.errors %}
+                              <div class="text-danger mt-1">
+                                {% for error in form.via_administracion.errors %}
+                                  <small>{{ error }}</small>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                        <div class="col-md-3">
+                          <div class="form-group">
+                            <label class="form-label" for="{{ form.duracion.id_for_label }}">
+                              <i class="bi bi-hourglass"></i>
+                              Duración
+                            </label>
+                            {{ form.duracion }}
+                            {% if form.duracion.errors %}
+                              <div class="text-danger mt-1">
+                                {% for error in form.duracion.errors %}
+                                  <small>{{ error }}</small>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label class="form-label" for="{{ form.cantidad.id_for_label }}">
+                              <i class="bi bi-123"></i>
+                              Cantidad
+                            </label>
+                            {{ form.cantidad }}
+                            {% if form.cantidad.errors %}
+                              <div class="text-danger mt-1">
+                                {% for error in form.cantidad.errors %}
+                                  <small>{{ error }}</small>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label class="form-label" for="{{ form.indicaciones_especificas.id_for_label }}">
+                              <i class="bi bi-info-circle"></i>
+                              Indicaciones Específicas
+                            </label>
+                            {{ form.indicaciones_especificas }}
+                            {% if form.indicaciones_especificas.errors %}
+                              <div class="text-danger mt-1">
+                                {% for error in form.indicaciones_especificas.errors %}
+                                  <small>{{ error }}</small>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {{ form.id }}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="col-lg-4">
+            <!-- Información del Paciente -->
+            <div class="sidebar-card">
+              <div class="sidebar-card-header">
+                <h5>
+                  <i class="bi bi-person"></i>
+                  Información del Paciente
+                </h5>
+              </div>
+              <div class="sidebar-card-body">
+                <div class="info-item">
+                  <div class="info-label">Nombre</div>
+                  <div class="info-value">{{ consulta.paciente.nombre_completo }}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Edad</div>
+                  <div class="info-value">{{ consulta.paciente.edad }} años</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Teléfono</div>
+                  <div class="info-value">{{ consulta.paciente.telefono|default:"No registrado" }}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Email</div>
+                  <div class="info-value">{{ consulta.paciente.correo|default:"No registrado" }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información de la Consulta -->
+            <div class="sidebar-card">
+              <div class="sidebar-card-header">
+                <h5>
+                  <i class="bi bi-clipboard-data"></i>
+                  Detalles de la Consulta
+                </h5>
+              </div>
+              <div class="sidebar-card-body">
+                <div class="info-item">
+                  <div class="info-label">Tipo</div>
+                  <div class="info-value">{{ consulta.get_tipo_display }}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Estado</div>
+                  <div class="info-value">
+                    <span class="status-badge status-{{ consulta.estado }}">
+                      {{ consulta.get_estado_display }}
+                    </span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Médico</div>
+                  <div class="info-value">{{ consulta.medico.get_full_name|default:"No asignado" }}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Fecha Creación</div>
+                  <div class="info-value">{{ consulta.fecha_creacion|date:"d/m/Y H:i" }}</div>
+                </div>
+                {% if consulta.fecha_atencion %}
+                  <div class="info-item">
+                    <div class="info-label">Fecha Atención</div>
+                    <div class="info-value">{{ consulta.fecha_atencion|date:"d/m/Y H:i" }}</div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <a href="{{ return_to }}" class="btn-custom btn-secondary-custom">
+          <i class="bi bi-x-circle"></i>
+          Cancelar
+        </a>
+        <button type="submit" class="btn-custom btn-success-custom">
+          <i class="bi bi-check-circle"></i>
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

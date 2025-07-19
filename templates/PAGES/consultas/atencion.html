@@ -1,0 +1,772 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Atención Médica{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --success-color: #11998e;
+  --warning-color: #f093fb;
+  --danger-color: #ff6b6b;
+  --light-bg: #f8fafc;
+  --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  --border-radius: 15px;
+}
+
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.main-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  margin: 2rem auto;
+  padding: 0;
+  overflow: hidden;
+}
+
+.header-section {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.header-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  opacity: 0.3;
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.patient-info {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.progress-container {
+  padding: 2rem;
+  background: var(--light-bg);
+}
+
+.custom-progress {
+  height: 8px;
+  border-radius: 50px;
+  background: #e9ecef;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.custom-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--success-color) 0%, var(--primary-color) 100%);
+  border-radius: 50px;
+  transition: width 0.6s ease;
+  position: relative;
+}
+
+.custom-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.step-indicators {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  gap: 1rem;
+}
+
+.step-indicator {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.step-indicator.active {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.step-indicator.completed {
+  background: linear-gradient(135deg, var(--success-color) 0%, #38ef7d 100%);
+  color: white;
+}
+
+.step-indicator.pending {
+  background: #e9ecef;
+  color: #6c757d;
+}
+
+.wizard-step {
+  display: none;
+  padding: 2rem;
+  animation: fadeInUp 0.5s ease;
+}
+
+.wizard-step.active {
+  display: block;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-title {
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.step-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  border-radius: 2px;
+}
+
+.form-group {
+  margin-bottom: 2rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-label i {
+  color: var(--primary-color);
+}
+
+.form-control, .form-select {
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  outline: none;
+}
+
+.form-control:hover, .form-select:hover {
+  border-color: #cbd5e0;
+}
+
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.medication-section {
+  background: var(--light-bg);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.medication-form {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.medication-form:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.medication-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.medication-number {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.btn-remove-med {
+  background: linear-gradient(135deg, var(--danger-color) 0%, #ff8a80 100%);
+  border: none;
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.btn-remove-med:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.btn-add-medication {
+  background: linear-gradient(135deg, var(--success-color) 0%, #38ef7d 100%);
+  border: none;
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 25px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto 2rem;
+}
+
+.btn-add-medication:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(17, 153, 142, 0.3);
+}
+
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  padding: 2rem;
+  background: var(--light-bg);
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-nav {
+  padding: 0.75rem 2rem;
+  border-radius: 25px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-prev {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-prev:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+.btn-next {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+}
+
+.btn-next:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-finish {
+  background: linear-gradient(135deg, var(--success-color) 0%, #38ef7d 100%);
+  color: white;
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+}
+
+.btn-finish:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(17, 153, 142, 0.3);
+}
+
+.row {
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+}
+
+.row > * {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    margin: 1rem;
+  }
+  
+  .header-section {
+    padding: 1.5rem;
+  }
+  
+  .wizard-step {
+    padding: 1rem;
+  }
+  
+  .navigation-buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .step-indicators {
+    gap: 0.5rem;
+  }
+  
+  .step-indicator {
+    width: 35px;
+    height: 35px;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="main-container">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-content">
+        <h2 class="mb-0">
+          <i class="bi bi-clipboard-heart me-2"></i>
+          Atención Médica
+        </h2>
+        <div class="patient-info">
+          <h4 class="mb-1">{{ consulta.paciente.nombre_completo }}</h4>
+          <p class="mb-0">
+            <i class="bi bi-calendar-event me-1"></i>
+            {{ consulta.fecha_hora|date:"d/m/Y H:i" }} - {{ consulta.fecha_hora|date:"l" }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="progress-container">
+      <div class="custom-progress">
+        <div class="custom-progress-bar" id="wiz-progress" style="width: 33%"></div>
+      </div>
+      <div class="step-indicators">
+        <div class="step-indicator active" data-step="1">
+          <i class="bi bi-clipboard-data"></i>
+        </div>
+        <div class="step-indicator pending" data-step="2">
+          <i class="bi bi-file-earmark-medical"></i>
+        </div>
+        <div class="step-indicator pending" data-step="3">
+          <i class="bi bi-capsule"></i>
+        </div>
+      </div>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+
+      <!-- Paso 1: Motivo y Diagnóstico -->
+      <div class="wizard-step active" data-step="1">
+        <h3 class="step-title">
+          <i class="bi bi-clipboard-data me-2"></i>
+          Motivo y Diagnóstico
+        </h3>
+        
+        {{ consulta_form.non_field_errors }}
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-chat-text"></i>
+                Motivo de Consulta
+              </label>
+              {{ consulta_form.motivo_consulta }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-search"></i>
+                Diagnóstico
+              </label>
+              {{ consulta_form.diagnostico }}
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-bandaid"></i>
+                Tratamiento
+              </label>
+              {{ consulta_form.tratamiento }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-journal-text"></i>
+                Observaciones
+              </label>
+              {{ consulta_form.observaciones }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 2: Receta -->
+      <div class="wizard-step" data-step="2">
+        <h3 class="step-title">
+          <i class="bi bi-file-earmark-medical me-2"></i>
+          Receta Médica
+        </h3>
+        
+        <div class="row">
+          <div class="col-md-8">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-list-ul"></i>
+                Indicaciones Generales
+              </label>
+              {{ receta_form.indicaciones_generales }}
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-calendar-check"></i>
+                Válido Hasta
+              </label>
+              {{ receta_form.valido_hasta }}
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">
+            <i class="bi bi-sticky"></i>
+            Notas Adicionales
+          </label>
+          {{ receta_form.notas }}
+        </div>
+      </div>
+
+      <!-- Paso 3: Medicamentos -->
+      <div class="wizard-step" data-step="3">
+        <h3 class="step-title">
+          <i class="bi bi-capsule me-2"></i>
+          Medicamentos Recetados
+        </h3>
+        
+        {{ med_formset.management_form }}
+        
+        <div class="medication-section">
+          <div id="med-container">
+            {% for form in med_formset %}
+              <div class="medication-form">
+                <div class="medication-header">
+                  <div class="medication-number">{{ forloop.counter }}</div>
+                  <button type="button" class="btn-remove-med">
+                    <i class="bi bi-trash me-1"></i>Eliminar
+                  </button>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="bi bi-capsule"></i>
+                        Nombre del Medicamento
+                      </label>
+                      {{ form.nombre }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="bi bi-molecule"></i>
+                        Principio Activo
+                      </label>
+                      {{ form.principio_activo }}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="bi bi-speedometer2"></i>
+                        Dosis
+                      </label>
+                      {{ form.dosis }}
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="bi bi-clock"></i>
+                        Frecuencia
+                      </label>
+                      {{ form.frecuencia }}
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="bi bi-arrow-right"></i>
+                        Vía
+                      </label>
+                      {{ form.via_administracion }}
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="bi bi-hourglass"></i>
+                        Duración
+                      </label>
+                      {{ form.duracion }}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="bi bi-123"></i>
+                        Cantidad
+                      </label>
+                      {{ form.cantidad }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label">
+                        <i class="bi bi-info-circle"></i>
+                        Indicaciones Específicas
+                      </label>
+                      {{ form.indicaciones_especificas }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          
+          <button type="button" class="btn-add-medication" id="add-med-btn">
+            <i class="bi bi-plus-circle"></i>
+            Agregar Medicamento
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="navigation-buttons">
+        <button type="button" class="btn-nav btn-prev" style="display: none;">
+          <i class="bi bi-arrow-left"></i>
+          Anterior
+        </button>
+        <div></div>
+        <button type="button" class="btn-nav btn-next">
+          Siguiente
+          <i class="bi bi-arrow-right"></i>
+        </button>
+        <button type="submit" name="action" value="finish" class="btn-nav btn-finish" style="display: none;">
+          <i class="bi bi-check-circle"></i>
+          Terminar Consulta
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const steps = Array.from(document.querySelectorAll('.wizard-step'));
+  const indicators = Array.from(document.querySelectorAll('.step-indicator'));
+  const progressBar = document.getElementById('wiz-progress');
+  const btnPrev = document.querySelector('.btn-prev');
+  const btnNext = document.querySelector('.btn-next');
+  const btnFinish = document.querySelector('.btn-finish');
+  
+  let currentStep = 0;
+  
+  function updateStep(step) {
+    // Hide all steps
+    steps.forEach(s => s.classList.remove('active'));
+    
+    // Show current step
+    steps[step].classList.add('active');
+    
+    // Update indicators
+    indicators.forEach((indicator, index) => {
+      indicator.classList.remove('active', 'completed', 'pending');
+      if (index < step) {
+        indicator.classList.add('completed');
+      } else if (index === step) {
+        indicator.classList.add('active');
+      } else {
+        indicator.classList.add('pending');
+      }
+    });
+    
+    // Update progress bar
+    const progress = ((step + 1) / steps.length) * 100;
+    progressBar.style.width = progress + '%';
+    
+    // Update navigation buttons
+    btnPrev.style.display = step === 0 ? 'none' : 'flex';
+    btnNext.style.display = step === steps.length - 1 ? 'none' : 'flex';
+    btnFinish.style.display = step === steps.length - 1 ? 'flex' : 'none';
+  }
+  
+  btnNext.addEventListener('click', () => {
+    if (currentStep < steps.length - 1) {
+      currentStep++;
+      updateStep(currentStep);
+    }
+  });
+  
+  btnPrev.addEventListener('click', () => {
+    if (currentStep > 0) {
+      currentStep--;
+      updateStep(currentStep);
+    }
+  });
+  
+  // Medication formset management
+  const addBtn = document.getElementById("add-med-btn");
+  const medContainer = document.getElementById("med-container");
+  
+  function bindRemove(btn) {
+    btn.addEventListener('click', () => {
+      const form = btn.closest('.medication-form');
+      const del = form.querySelector('input[type="checkbox"][name$="-DELETE"]');
+      if (del) del.checked = true;
+      form.style.display = 'none';
+      updateMedicationNumbers();
+    });
+  }
+  
+  function updateMedicationNumbers() {
+    const visibleForms = medContainer.querySelectorAll('.medication-form:not([style*="display: none"])');
+    visibleForms.forEach((form, index) => {
+      const numberEl = form.querySelector('.medication-number');
+      if (numberEl) {
+        numberEl.textContent = index + 1;
+      }
+    });
+  }
+  
+  document.querySelectorAll('.btn-remove-med').forEach(bindRemove);
+  
+  addBtn.addEventListener("click", function() {
+    const totalFormsInput = document.querySelector('input[name$="-TOTAL_FORMS"]');
+    let total = parseInt(totalFormsInput.value);
+    
+    const lastForm = medContainer.querySelector('.medication-form:last-of-type');
+    const newForm = lastForm.cloneNode(true);
+    
+    // Update form indices and clear values
+    newForm.querySelectorAll('input, textarea, select').forEach(field => {
+      if (!field.name) return;
+      
+      const name = field.name.replace(`-${total - 1}-`, `-${total}-`);
+      field.name = name;
+      
+      if (field.id) {
+        field.id = field.id.replace(`_${total - 1}_`, `_${total}_`);
+      }
+      
+      if (field.type === 'hidden') {
+        field.value = '';
+      } else if (field.type === "text" || field.tagName === "TEXTAREA" || field.type === "date" || field.type === "number") {
+        field.value = '';
+      }
+      if (field.type === "checkbox") {
+        field.checked = false;
+      }
+    });
+    
+    totalFormsInput.value = total + 1;
+    medContainer.appendChild(newForm);
+    bindRemove(newForm.querySelector('.btn-remove-med'));
+    updateMedicationNumbers();
+  });
+  
+  // Initialize
+  updateStep(currentStep);
+  updateMedicationNumbers();
+});
+</script>
+{% endblock %}

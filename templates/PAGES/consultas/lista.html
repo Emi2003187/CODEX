@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gestión de Consultas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- HEADER CON BREADCRUMB -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'dashboard_asistente' %}{% endif %}">
+              Dashboard
+            </a>
+          </li>
+          <li class="breadcrumb-item active">Consultas</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- CABECERA PRINCIPAL -->
+  <div class="row align-items-center mb-4">
+    <div class="col-md-6">
+      <h1 class="fw-bold text-primary mb-0">
+        <i class="bi bi-clipboard-pulse me-2"></i>Gestión de Consultas
+      </h1>
+      <p class="text-muted mb-0">Administra y supervisa todas las consultas médicas</p>
+    </div>
+    <div class="col-md-6 d-flex justify-content-md-end mt-3 mt-md-0 gap-2">
+      <div class="input-group" style="max-width: 300px;">
+        <input type="text" id="searchInput" class="form-control" 
+               placeholder="Buscar paciente..." autocomplete="off">
+        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      <div class="dropdown">
+        <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          <i class="bi bi-plus-circle me-1"></i>Nueva Consulta
+        </button>
+        <ul class="dropdown-menu">
+          <li>
+            <a class="dropdown-item" href="{% url 'consultas_crear_sin_cita' %}">
+              <i class="bi bi-clipboard-plus me-2"></i>Consulta Sin Cita
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{% url 'citas_crear' %}">
+              <i class="bi bi-calendar-plus me-2"></i>Programar Cita
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <!-- BOTÓN PARA RECARGAR PÁGINA -->
+      <button class="btn btn-outline-primary" onclick="location.reload()">
+        <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- ESTADÍSTICAS RÁPIDAS -->
+  <div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm bg-gradient-warning">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="me-3">
+                        <i class="bi bi-hourglass-split text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">{{ stats.pendientes|default:0 }}</h4>
+                        <p class="mb-0 text-muted small">Pendientes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm bg-gradient-primary">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="me-3">
+                        <i class="bi bi-activity text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">{{ stats.en_progreso|default:0 }}</h4>
+                        <p class="mb-0 text-muted small">En Progreso</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm bg-gradient-success">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="me-3">
+                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">{{ stats.finalizadas|default:0 }}</h4>
+                        <p class="mb-0 text-muted small">Finalizadas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm bg-gradient-danger">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="me-3">
+                        <i class="bi bi-x-circle text-danger" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">{{ stats.canceladas|default:0 }}</h4>
+                        <p class="mb-0 text-muted small">Canceladas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm bg-gradient-info">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="me-3">
+                        <i class="bi bi-calendar-check text-info" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">{{ stats.con_cita|default:0 }}</h4>
+                        <p class="mb-0 text-muted small">Con Cita</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card border-0 shadow-sm bg-gradient-secondary">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="me-3">
+                        <i class="bi bi-clipboard text-secondary" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">{{ stats.sin_cita|default:0 }}</h4>
+                        <p class="mb-0 text-muted small">Sin Cita</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+  <!-- PANEL PRINCIPAL -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 p-0">
+      <!-- PESTAÑAS DE NAVEGACIÓN -->
+      <ul class="nav nav-tabs card-header-tabs" id="consultaTabs" role="tablist">
+        <li class="nav-item">
+          <button class="nav-link active fw-medium py-3 px-4" id="pendientes-tab"
+                  data-bs-toggle="tab" data-bs-target="#pendientes"
+                  type="button" role="tab">
+            <i class="bi bi-hourglass me-2"></i>Pendientes
+            <span class="badge bg-warning ms-2">{{ stats.pendientes|default:0 }}</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link fw-medium py-3 px-4" id="en-progreso-tab"
+                  data-bs-toggle="tab" data-bs-target="#en-progreso"
+                  type="button" role="tab">
+            <i class="bi bi-activity me-2"></i>En Progreso
+            <span class="badge bg-primary ms-2">{{ stats.en_progreso|default:0 }}</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link fw-medium py-3 px-4" id="finalizadas-tab"
+                  data-bs-toggle="tab" data-bs-target="#finalizadas"
+                  type="button" role="tab">
+            <i class="bi bi-check-circle me-2"></i>Finalizadas
+            <span class="badge bg-success ms-2">{{ stats.finalizadas|default:0 }}</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link fw-medium py-3 px-4" id="canceladas-tab"
+                  data-bs-toggle="tab" data-bs-target="#canceladas"
+                  type="button" role="tab">
+            <i class="bi bi-x-circle me-2"></i>Canceladas
+            <span class="badge bg-danger ms-2">{{ stats.canceladas|default:0 }}</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card-body p-4">
+      <!-- FILTROS AVANZADOS -->
+      <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+          <div class="d-flex flex-wrap align-items-center gap-3">
+            <div class="d-flex align-items-center">
+              <label class="form-label mb-0 me-2 fw-medium">
+                <i class="bi bi-funnel me-1"></i>Filtros:
+              </label>
+            </div>
+            <select id="filtro-tipo" class="form-select" style="width: auto;" onchange="applyFilters()">
+              <option value="">Todos los tipos</option>
+              <option value="consulta_general">Consulta General</option>
+              <option value="especialidad">Especialidad</option>
+              <option value="control">Control</option>
+              <option value="urgencia">Urgencia</option>
+            </select>
+            <select id="filtro-medico" class="form-select" style="width: auto;" onchange="applyFilters()">
+              <option value="">Todos los médicos</option>
+              {% for medico in medicos %}
+                <option value="{{ medico.id }}">{{ medico.get_full_name }}</option>
+              {% endfor %}
+            </select>
+            <input type="date" id="filtro-fecha" class="form-control" style="width: auto;" onchange="applyFilters()">
+            <button class="btn btn-outline-secondary" onclick="clearAllFilters()">
+              <i class="bi bi-x"></i> Limpiar
+            </button>
+          </div>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+          <div class="d-flex flex-wrap justify-content-md-end gap-2">
+            <span class="badge bg-info p-2">
+              <i class="bi bi-calendar-check me-1"></i>Con Cita
+            </span>
+            <span class="badge bg-warning p-2">
+              <i class="bi bi-clipboard me-1"></i>Sin Cita
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTENIDO DE PESTAÑAS -->
+      <div class="tab-content" id="consultaTabsContent">
+        <!-- PENDIENTES -->
+        <div class="tab-pane fade show active" id="pendientes" role="tabpanel">
+          <div class="row row-cols-1 row-cols-lg-2 row-cols-xxl-3 g-4" id="pendientes-container">
+            {% for consulta in consultas_pendientes %}
+              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario %}
+            {% empty %}
+              <div class="col-12">
+                <div class="text-center py-5">
+                  <i class="bi bi-clipboard-x text-muted" style="font-size: 4rem;"></i>
+                  <h5 class="text-muted mt-3">No hay consultas pendientes</h5>
+                  <p class="text-muted">Todas las consultas están al día</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- EN PROGRESO -->
+        <div class="tab-pane fade" id="en-progreso" role="tabpanel">
+          <div class="row row-cols-1 row-cols-lg-2 row-cols-xxl-3 g-4" id="progreso-container">
+            {% for consulta in consultas_en_progreso %}
+              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario %}
+            {% empty %}
+              <div class="col-12">
+                <div class="text-center py-5">
+                  <i class="bi bi-activity text-muted" style="font-size: 4rem;"></i>
+                  <h5 class="text-muted mt-3">No hay consultas en progreso</h5>
+                  <p class="text-muted">No hay consultas siendo atendidas actualmente</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- FINALIZADAS -->
+        <div class="tab-pane fade" id="finalizadas" role="tabpanel">
+          <div class="row row-cols-1 row-cols-lg-2 row-cols-xxl-3 g-4" id="finalizadas-container">
+            {% for consulta in consultas_finalizadas %}
+              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario %}
+            {% empty %}
+              <div class="col-12">
+                <div class="text-center py-5">
+                  <i class="bi bi-check-circle text-muted" style="font-size: 4rem;"></i>
+                  <h5 class="text-muted mt-3">No hay consultas finalizadas</h5>
+                  <p class="text-muted">Aún no se han completado consultas</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- CANCELADAS -->
+        <div class="tab-pane fade" id="canceladas" role="tabpanel">
+          <div class="row row-cols-1 row-cols-lg-2 row-cols-xxl-3 g-4" id="canceladas-container">
+            {% for consulta in consultas_canceladas %}
+              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario %}
+            {% empty %}
+              <div class="col-12">
+                <div class="text-center py-5">
+                  <i class="bi bi-x-circle text-muted" style="font-size: 4rem;"></i>
+                  <h5 class="text-muted mt-3">No hay consultas canceladas</h5>
+                  <p class="text-muted">Excelente, no hay cancelaciones</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ESTILOS ADICIONALES -->
+<style>
+  .bg-gradient-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  }
+  
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #cce7ff 0%, #74b9ff 100%);
+  }
+  
+  .bg-gradient-success {
+    background: linear-gradient(135deg, #d4edda 0%, #00b894 100%);
+  }
+  
+  .bg-gradient-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #e17055 100%);
+  }
+
+  .bg-gradient-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #17a2b8 100%);
+  }
+
+  .bg-gradient-secondary {
+    background: linear-gradient(135deg, #e2e3e5 0%, #6c757d 100%);
+  }
+  
+  .consultation-card {
+    transition: all 0.3s ease;
+  }
+  
+  .consultation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+  
+  .search-highlight {
+    background-color: #fff3cd;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+  }
+  
+  .nav-tabs .nav-link {
+    border: none;
+    color: #6c757d;
+    transition: all 0.3s ease;
+  }
+  
+  .nav-tabs .nav-link:hover {
+    border-color: transparent;
+    color: #495057;
+    background-color: #f8f9fa;
+  }
+  
+  .nav-tabs .nav-link.active {
+    background-color: white;
+    border-color: #dee2e6 #dee2e6 white;
+    color: #495057;
+    font-weight: 600;
+  }
+  
+  .card {
+    transition: all 0.3s ease;
+  }
+  
+  .badge {
+    font-weight: 500;
+  }
+  
+  .btn {
+    transition: all 0.2s ease;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+</style>
+
+<!-- JAVASCRIPT SIMPLIFICADO -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar búsqueda en tiempo real
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performSearch(this.value);
+        }, 300);
+    });
+    
+    // Configurar filtros
+    setupFilters();
+    
+    // Configurar pestañas con URL hash
+    setupTabs();
+    
+    // Configurar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+function performSearch(searchTerm) {
+    const cards = document.querySelectorAll('.consultation-card');
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    cards.forEach(card => {
+        const patientName = card.querySelector('.patient-name');
+        const originalText = patientName.dataset.originalText || patientName.textContent;
+        
+        if (!patientName.dataset.originalText) {
+            patientName.dataset.originalText = originalText;
+        }
+        
+        if (searchTermLower === '') {
+            card.style.display = '';
+            patientName.innerHTML = originalText;
+        } else if (originalText.toLowerCase().includes(searchTermLower)) {
+            card.style.display = '';
+            // Resaltar término de búsqueda
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            const highlightedText = originalText.replace(regex, '<span class="search-highlight">$1</span>');
+            patientName.innerHTML = highlightedText;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    updateEmptyStates();
+}
+
+function applyFilters() {
+    const tipoFilter = document.getElementById('filtro-tipo').value;
+    const medicoFilter = document.getElementById('filtro-medico').value;
+    const fechaFilter = document.getElementById('filtro-fecha').value;
+    
+    const cards = document.querySelectorAll('.consultation-card');
+    
+    cards.forEach(card => {
+        let showCard = true;
+        
+        // Filtro por tipo
+        if (tipoFilter && card.dataset.tipo !== tipoFilter) {
+            showCard = false;
+        }
+        
+        // Filtro por médico
+        if (medicoFilter && card.dataset.medico !== medicoFilter) {
+            showCard = false;
+        }
+        
+        // Filtro por fecha
+        if (fechaFilter && card.dataset.fecha !== fechaFilter) {
+            showCard = false;
+        }
+        
+        card.style.display = showCard ? '' : 'none';
+    });
+    
+    updateEmptyStates();
+}
+
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    performSearch('');
+}
+
+function clearAllFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filtro-tipo').value = '';
+    document.getElementById('filtro-medico').value = '';
+    document.getElementById('filtro-fecha').value = '';
+    
+    performSearch('');
+    applyFilters();
+}
+
+function setupFilters() {
+    const filterElements = ['filtro-tipo', 'filtro-medico', 'filtro-fecha'];
+    filterElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('change', applyFilters);
+        }
+    });
+}
+
+function setupTabs() {
+    const hash = window.location.hash || '#pendientes';
+    const tabButtons = document.querySelectorAll('#consultaTabs button[data-bs-target]');
+    
+    tabButtons.forEach(btn => {
+        if (btn.dataset.bsTarget === hash) {
+            btn.click();
+        }
+        
+        btn.addEventListener('shown.bs.tab', function(e) {
+            const targetId = e.target.dataset.bsTarget;
+            history.replaceState(null, null, targetId);
+        });
+    });
+}
+
+function updateEmptyStates() {
+    const containers = ['pendientes-container', 'progreso-container', 'finalizadas-container', 'canceladas-container'];
+    
+    containers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (container) {
+            const visibleCards = container.querySelectorAll('.consultation-card:not([style*="display: none"])');
+            const emptyState = container.querySelector('.empty-state');
+            
+            if (visibleCards.length === 0 && !emptyState) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'col-12 empty-state';
+                emptyDiv.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+                        <h5 class="text-muted mt-3">No se encontraron resultados</h5>
+                        <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
+                    </div>
+                `;
+                container.appendChild(emptyDiv);
+            } else if (visibleCards.length > 0 && emptyState) {
+                emptyState.remove();
+            }
+        }
+    });
+}
+
+// Funciones para acciones de consultas - SOLO URLs EXISTENTES
+function atenderConsulta(consultaId) {
+    window.location.href = `/consultas/${consultaId}/atencion/`;
+}
+
+function registrarSignos(consultaId) {
+    window.location.href = `/consultas/${consultaId}/precheck/`;
+}
+
+function verDetalleConsulta(consultaId) {
+    alert(`Ver detalle de consulta ID: ${consultaId}\n\nEsta función mostrará un modal con toda la información de la consulta.`);
+}
+
+function editarConsulta(consultaId) {
+    alert(`Editar consulta ID: ${consultaId}\n\nFunción de edición en desarrollo.`);
+}
+
+function cancelarConsulta(consultaId) {
+    if (confirm('¿Está seguro de cancelar esta consulta?')) {
+        alert(`Consulta ID: ${consultaId} marcada como cancelada.\n\nFunción de cancelación en desarrollo.`);
+    }
+}
+
+function eliminarConsulta(consultaId) {
+    if (confirm('¿Está seguro de eliminar esta consulta? Esta acción no se puede deshacer.')) {
+        alert(`Consulta ID: ${consultaId} eliminada.\n\nFunción de eliminación en desarrollo.`);
+    }
+}
+
+function verSignosVitales(consultaId) {
+    window.location.href = `/signos/${consultaId}`;
+}
+</script>
+{% endblock %}

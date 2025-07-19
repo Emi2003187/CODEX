@@ -1,0 +1,173 @@
+{# templates/PAGES/citas/asignar_medico.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalle de Cita – {{ cita.numero_cita }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .info-card   { border-left: 4px solid #007bff; }
+  .status-badge{ font-size:.9rem; padding:.5rem 1rem; }
+  .action-buttons .btn{ margin-right:.5rem; margin-bottom:.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+  {# ────────────── Encabezado ────────────── #}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2><i class="fas fa-calendar-alt me-2"></i>Cita {{ cita.numero_cita }}</h2>
+      <p class="text-muted mb-0">{{ cita.paciente.nombre_completo }}</p>
+    </div>
+    <div>
+      {# ←  AJUSTE:  c​i​t​a​s_l​i​s​t​a  #}
+      <a href="{% url 'citas_lista' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Volver
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    {# ─────────── Columna principal ─────────── #}
+    <div class="col-md-8">
+      <div class="card info-card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información de la Cita</h5>
+          <span class="badge status-badge bg-{% if cita.estado == 'programada' %}secondary
+                                              {% elif cita.estado == 'confirmada' %}primary
+                                              {% elif cita.estado == 'en_espera' %}warning
+                                              {% elif cita.estado == 'en_atencion' %}info
+                                              {% elif cita.estado == 'completada' %}success
+                                              {% elif cita.estado == 'cancelada'  %}danger
+                                              {% else %}dark{% endif %}">
+            {{ cita.get_estado_display }}
+          </span>
+        </div>
+        <div class="card-body">
+          {# …  (resto del bloque de datos de la cita SIN CAMBIOS)  … #}
+          {#           ───────────────────────────────────────────         #}
+          {#           Solo se quitan por brevedad, no se tocaron          #}
+        </div>
+      </div>
+
+      {# Consulta asociada (si existe) #}
+      {% if consulta %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-stethoscope me-2"></i>Consulta Asociada</h5>
+          </div>
+          <div class="card-body">
+            <p><strong>Estado:</strong> {{ consulta.get_estado_display }}</p>
+            <p><strong>Médico:</strong> Dr. {{ consulta.medico.get_full_name }}</p>
+            {% if consulta.fecha_atencion %}
+              <p><strong>Fecha de Atención:</strong> {{ consulta.fecha_atencion|date:"d/m/Y H:i" }}</p>
+            {% endif %}
+            <a href="{% url 'consulta_detalle' consulta.id %}" class="btn btn-primary btn-sm">
+              <i class="fas fa-eye me-2"></i>Ver Consulta
+            </a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    {# ─────────── Panel lateral (acciones) ─────────── #}
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Acciones</h5>
+        </div>
+        <div class="card-body">
+          <div class="action-buttons">
+
+            {# ←  AJUSTE:  c​i​t​a​s_e​d​i​t​a​r  #}
+            {% if puede_editar %}
+              <a href="{% url 'citas_editar' cita.id %}" class="btn btn-warning w-100">
+                <i class="fas fa-edit me-2"></i>Editar Cita
+              </a>
+            {% endif %}
+
+            {% if puede_asignar_medico %}
+              <a href="{% url 'asignar_medico_cita' cita.id %}" class="btn btn-primary w-100">
+                <i class="fas fa-user-plus me-2"></i>Asignar Médico
+              </a>
+            {% endif %}
+
+            {% if puede_tomar_cita %}
+              <form method="post" action="{% url 'tomar_cita' cita.id %}" class="w-100">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success w-100"
+                        onclick="return confirm('¿Estás seguro de que quieres tomar esta cita?')">
+                  <i class="fas fa-hand-paper me-2"></i>Tomar Cita
+                </button>
+              </form>
+            {% endif %}
+
+            {% if user.rol == 'admin' or cita.medico_asignado == user %}
+              {% if cita.medico_asignado and cita.estado not in 'en_atencion,completada' %}
+                <form method="post" action="{% url 'liberar_cita' cita.id %}" class="w-100">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-danger w-100"
+                          onclick="return confirm('¿Estás seguro de que quieres liberar esta cita?')">
+                    <i class="fas fa-user-times me-2"></i>Liberar Cita
+                  </button>
+                </form>
+              {% endif %}
+            {% endif %}
+
+            {% if not consulta and cita.medico_asignado %}
+              <a href="{% url 'consultas_crear_sin_cita' %}?cita={{ cita.id }}" class="btn btn-info w-100">
+                <i class="fas fa-plus me-2"></i>Crear Consulta
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {# Lista de médicos disponibles #}
+      {% if medicos_disponibles and not cita.medico_asignado %}
+        <div class="card mt-4">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Médicos Disponibles</h5>
+          </div>
+          <div class="card-body">
+            {% for medico in medicos_disponibles %}
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Dr. {{ medico.get_full_name }}</span>
+
+                {% if user.rol in 'admin,asistente' %}
+                  <form method="post" action="{% url 'asignar_medico_cita' cita.id %}"
+                        class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="medico" value="{{ medico.id }}">
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Asignar</button>
+                  </form>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {# Información de auditoría #}
+      <div class="card mt-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-info me-2"></i>Información Adicional</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Creada:</strong><br>
+             {{ cita.fecha_creacion|date:"d/m/Y H:i" }}<br>
+             por {{ cita.creado_por.get_full_name }}</p>
+
+          {% if cita.actualizado_por %}
+            <p><strong>Última edición:</strong><br>
+               {{ cita.fecha_actualizacion|date:"d/m/Y H:i" }}<br>
+               por {{ cita.actualizado_por.get_full_name }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

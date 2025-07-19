@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Eliminar paciente{% endblock %}
+
+{% block content %}
+<h3 class="mb-4 text-danger">Eliminar paciente</h3>
+<p>¿Seguro que deseas eliminar a <strong>{{ object.nombre_completo }}</strong>?  
+Esta acción no se puede deshacer.</p>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="text-end">
+    <a href="{% url 'pacientes_lista' %}" class="btn btn-link">Cancelar</a>
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+  </div>
+</form>
+{% endblock %}

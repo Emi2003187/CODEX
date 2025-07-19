@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Liberar Cita - {{ cita.numero_cita }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.liberar-card {
+    border-left: 4px solid #ffc107;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.warning-icon {
+    color: #ffc107;
+    font-size: 3rem;
+}
+
+.cita-info {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.btn-liberar {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-liberar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    color: white;
+}
+
+.btn-cancelar {
+    background: #6c757d;
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-cancelar:hover {
+    background: #5a6268;
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card liberar-card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-unlock me-2"></i>
+                        Liberar Cita - {{ cita.numero_cita }}
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-exclamation-triangle warning-icon"></i>
+                        <h5 class="mt-3">¿Estás seguro de liberar esta cita?</h5>
+                        <p class="text-muted">
+                            La cita será liberada y estará disponible para otros médicos del consultorio.
+                        </p>
+                    </div>
+                    
+                    <!-- Información de la cita -->
+                    <div class="cita-info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-user me-2"></i>Paciente</h6>
+                                <p class="fw-bold">{{ cita.paciente.nombre_completo }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-calendar me-2"></i>Fecha y Hora</h6>
+                                <p class="fw-bold">{{ cita.fecha_hora|date:"d/m/Y H:i" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-user-md me-2"></i>Médico Actual</h6>
+                                <p class="fw-bold">{{ cita.medico_asignado.get_full_name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-building me-2"></i>Consultorio</h6>
+                                <p class="fw-bold">{{ cita.consultorio.nombre }}</p>
+                            </div>
+                            {% if cita.motivo %}
+                            <div class="col-12">
+                                <h6><i class="fas fa-comment me-2"></i>Motivo</h6>
+                                <p>{{ cita.motivo }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Formulario de liberación -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="motivo" class="form-label fw-bold">
+                                <i class="fas fa-edit me-2"></i>Motivo de liberación (opcional)
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="motivo" 
+                                name="motivo" 
+                                rows="3"
+                                placeholder="Ingresa el motivo por el cual liberas esta cita..."
+                            ></textarea>
+                            <div class="form-text">
+                                Este motivo será registrado en el historial de la cita.
+                            </div>
+                        </div>
+                        
+                        <!-- Advertencias -->
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-info-circle me-2"></i>Ten en cuenta:</h6>
+                            <ul class="mb-0">
+                                <li>La cita volverá al estado "Programada"</li>
+                                <li>Otros médicos del consultorio podrán tomarla</li>
+                                {% if cita.consulta %}
+                                <li class="text-danger">
+                                    <strong>La consulta asociada también será liberada</strong>
+                                </li>
+                                {% endif %}
+                                <li>Se enviará una notificación a los médicos disponibles</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Botones de acción -->
+                        <div class="d-flex justify-content-end gap-3">
+                            <a href="{% url 'citas_detalle' cita.id %}" class="btn btn-cancelar">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-liberar" onclick="return confirm('¿Confirmas que deseas liberar esta cita?');">
+                                <i class="fas fa-unlock me-2"></i>Liberar Cita
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus en el textarea
+    document.getElementById('motivo').focus();
+    
+    // Confirmación adicional para citas con consulta
+    {% if cita.consulta %}
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const confirmed = confirm(
+            '⚠️ ATENCIÓN: Esta cita tiene una consulta asociada.\n\n' +
+            'Al liberar la cita, la consulta también será liberada.\n\n' +
+            '¿Estás completamente seguro de continuar?'
+        );
+        if (!confirmed) {
+            e.preventDefault();
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

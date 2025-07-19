@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Eliminar Signos Vitales - {{ paciente.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- BREADCRUMB -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'dashboard_asistente' %}{% endif %}">
+              Dashboard
+            </a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'pacientes_lista' %}">Pacientes</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'paciente_detalle' paciente.pk %}">{{ paciente.nombre_completo }}</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'signos_detalle' signos.pk %}">Signos Vitales</a>
+          </li>
+          <li class="breadcrumb-item active">Eliminar</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="row align-items-center mb-4">
+    <div class="col-md-8">
+      <h1 class="fw-bold text-danger mb-0">
+        <i class="bi bi-trash me-2"></i>Eliminar Signos Vitales
+      </h1>
+      <p class="text-muted mb-0">
+        Paciente: <strong>{{ paciente.nombre_completo }}</strong> 
+        ({{ paciente.edad }} años - {{ paciente.get_sexo_display }})
+      </p>
+      <p class="text-muted mb-0">
+        Consulta: <strong>{{ consulta.get_tipo_display }}</strong> - 
+        Registrado: {{ signos.fecha_registro|date:"d/m/Y H:i" }}
+      </p>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+      <a href="{{ next }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Cancelar
+      </a>
+    </div>
+  </div>
+
+  <!-- CONFIRMACIÓN DE ELIMINACIÓN -->
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+          <h4 class="mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Confirmar Eliminación
+          </h4>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-danger">
+            <h5 class="alert-heading">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              ¡Atención! Esta acción no se puede deshacer
+            </h5>
+            <p class="mb-0">
+              Está a punto de eliminar permanentemente los signos vitales de 
+              <strong>{{ paciente.nombre_completo }}</strong>. 
+              Todos los datos registrados se perderán definitivamente.
+            </p>
+          </div>
+
+          <!-- RESUMEN DE DATOS A ELIMINAR -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <h5 class="text-primary border-bottom pb-2 mb-3">
+                <i class="bi bi-clipboard-data me-2"></i>Datos que se eliminarán:
+              </h5>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <div class="card bg-light">
+                <div class="card-body py-2">
+                  <h6 class="card-title text-primary mb-2">Signos Vitales Básicos</h6>
+                  <ul class="list-unstyled mb-0 small">
+                    <li><strong>T.A.:</strong> {{ signos.tension_arterial|default:"No registrado" }}</li>
+                    <li><strong>F.C.:</strong> {{ signos.frecuencia_cardiaca|default:"No registrado" }} lpm</li>
+                    <li><strong>F.R.:</strong> {{ signos.frecuencia_respiratoria|default:"No registrado" }} rpm</li>
+                    <li><strong>Temp.:</strong> {{ signos.temperatura|default:"No registrado" }}°C</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <div class="card bg-light">
+                <div class="card-body py-2">
+                  <h6 class="card-title text-success mb-2">Medidas Antropométricas</h6>
+                  <ul class="list-unstyled mb-0 small">
+                    <li><strong>Peso:</strong> {{ signos.peso|default:"No registrado" }} kg</li>
+                    <li><strong>Talla:</strong> {{ signos.talla|default:"No registrado" }} m</li>
+                    <li><strong>IMC:</strong> {{ signos.imc|default:"No calculado" }}</li>
+                    <li><strong>Circ. Abd.:</strong> {{ signos.circunferencia_abdominal|default:"No registrado" }} cm</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            {% if signos.alergias or signos.sintomas %}
+            <div class="col-12 mb-3">
+              <div class="card bg-light">
+                <div class="card-body py-2">
+                  <h6 class="card-title text-warning mb-2">Información Clínica</h6>
+                  {% if signos.alergias %}
+                    <p class="mb-1 small"><strong>Alergias:</strong> {{ signos.alergias }}</p>
+                  {% endif %}
+                  {% if signos.sintomas %}
+                    <p class="mb-0 small"><strong>Síntomas:</strong> {{ signos.sintomas }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- FORMULARIO DE CONFIRMACIÓN -->
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <small class="text-muted">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Solo los médicos y administradores pueden eliminar signos vitales
+                </small>
+              </div>
+              <div class="d-flex gap-2">
+                <a href="{{ next }}" class="btn btn-secondary px-4">
+                  <i class="bi bi-x-circle me-1"></i>Cancelar
+                </a>
+                <button type="submit" class="btn btn-danger px-4" onclick="return confirm('¿Está completamente seguro de que desea eliminar estos signos vitales? Esta acción no se puede deshacer.')">
+                  <i class="bi bi-trash me-1"></i>Eliminar Definitivamente
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.card-danger {
+  border-color: #dc3545 !important;
+}
+
+.alert-danger {
+  border-left: 4px solid #dc3545;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.card.bg-light {
+  background-color: #f8f9fa !important;
+  border: 1px solid #e9ecef;
+}
+</style>
+{% endblock %}

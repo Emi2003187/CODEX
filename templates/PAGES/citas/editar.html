@@ -1,0 +1,191 @@
+{# ───────────────────────────────────────────────────────────────
+  PAGES/citas/editar.html
+  ─────────────────────────────────────────────────────────────── #}
+{% extends "base.html" %}
+{% load static widget_tweaks %}
+
+{% block title %}Editar Cita — {{ cita.paciente.nombre_completo }}{% endblock %}
+
+{# ———————  CSS  ——————— #}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<style>
+  .loading-horarios{display:none;text-align:center;color:#6c757d;font-style:italic}
+  .error-horarios{display:none;color:#e03131;background:#ffe3e3;border:1px solid #ffcccc;border-radius:.25rem;padding:.5rem;margin-top:.25rem;font-size:.875rem}
+  .field-error{color:#e03131;font-size:.875rem;margin-top:.2rem}
+</style>
+{% endblock %}
+
+{# ———————  CONTENIDO  ——————— #}
+{% block content %}
+<div class="container-fluid my-4">
+  <h2 class="mb-4 text-primary">
+    <i class="bi bi-pencil-square me-2"></i>Editar Cita {{ cita.numero_cita }}
+  </h2>
+
+  <form id="citaForm" method="post" class="card shadow-sm p-4" novalidate>
+    {% csrf_token %}
+    <div class="row g-3">
+
+      {# Paciente #}
+      <div class="col-md-6">
+        {{ form.paciente.label_tag }}{{ form.paciente|add_class:"form-select select2" }}
+        {% for err in form.paciente.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Consultorio #}
+      <div class="col-md-6">
+        {{ form.consultorio.label_tag }}{{ form.consultorio|add_class:"form-select select2" }}
+        {% for err in form.consultorio.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Médico preferido (opcional) #}
+      <div class="col-md-6">
+        {{ form.medico_preferido.label_tag }}{{ form.medico_preferido|add_class:"form-select select2" }}
+        {% for err in form.medico_preferido.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Médico asignado #}
+      <div class="col-md-6">
+        {{ form.medico_asignado.label_tag }}{{ form.medico_asignado|add_class:"form-select select2" }}
+        {% for err in form.medico_asignado.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Estado #}
+      <div class="col-md-4">
+        {{ form.estado.label_tag }}{{ form.estado|add_class:"form-select" }}
+        {% for err in form.estado.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Tipo de cita #}
+      <div class="col-md-4">
+        {{ form.tipo_cita.label_tag }}{{ form.tipo_cita|add_class:"form-select" }}
+        {% for err in form.tipo_cita.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Prioridad #}
+      <div class="col-md-4">
+        {{ form.prioridad.label_tag }}{{ form.prioridad|add_class:"form-select" }}
+        {% for err in form.prioridad.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Fecha #}
+      <div class="col-md-4">
+        {{ form.fecha.label_tag }}{{ form.fecha|add_class:"form-control" }}
+        {% for err in form.fecha.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Hora #}
+      <div class="col-md-4">
+        {{ form.hora.label_tag }}
+        <div id="loadingHorarios" class="loading-horarios">
+          <i class="fas fa-spinner fa-spin me-1"></i>Cargando horarios…
+        </div>
+        {{ form.hora|add_class:"form-select" }}
+        <div id="errorHorarios" class="error-horarios"></div>
+        {% for err in form.hora.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Duración #}
+      <div class="col-md-4">
+        {{ form.duracion.label_tag }}{{ form.duracion|add_class:"form-select" }}
+        {% for err in form.duracion.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Motivo #}
+      <div class="col-12">
+        {{ form.motivo.label_tag }}{{ form.motivo|add_class:"form-control" }}
+        {% for err in form.motivo.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+      {# Notas #}
+      <div class="col-12">
+        {{ form.notas.label_tag }}{{ form.notas|add_class:"form-control" }}
+        {% for err in form.notas.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
+
+    </div>
+
+    {# errores no asociados a campo (conflictos de horario, etc.) #}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger mt-3">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="mt-4 d-flex justify-content-between">
+      <a href="{% url 'citas_lista' %}" class="btn btn-secondary">
+        <i class="bi bi-x-lg me-1"></i>Cancelar
+      </a>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save me-1"></i>Actualizar
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{# ———————  JS (Select2 + Horarios dinámicos)  ——————— #}
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+/* util → YYYY-MM-DD a Date */
+const parseFecha = iso=>{const[p,m,d]=iso.split('-').map(Number);return new Date(p,m-1,d);};
+
+$(function(){
+  /* Select2 */
+  $('.select2').select2({theme:'bootstrap-5',width:'100%',placeholder:'Seleccione…'});
+
+  const $h  = $('#id_hora');
+  const $d  = $('#id_duracion');
+  const $ld = $('#loadingHorarios');
+  const $eb = $('#errorHorarios');
+
+  const showLoad=()=>{$ld.show();$h.hide();$eb.hide();};
+  const hideLoad=()=>{$ld.hide();$h.show();};
+  const err     = msg=>{$eb.text(msg).show();};
+
+  /* ── Duraciones adaptativas ── */
+  function fitDuraciones(){
+    const lst = $h.data('horarios')||[], sel=$h.val();
+    if(!sel) return;
+    const idx = lst.findIndex(h=>h.value===sel); if(idx==-1) return;
+    let libres=0;
+    for(let i=idx;i<lst.length;i++){if(lst[i].estado==='libre') libres++; else break;}
+    const maxMin=libres*15;
+    $d.empty();
+    for(let m=15;m<=120&&m<=maxMin;m+=15){$d.append(`<option value="${m}">${m} min</option>`);}
+    if(parseInt($d.val()||0)>maxMin){$d.val(Math.max(15,maxMin).toString());}
+  }
+
+  /* ── Ajax horarios ── */
+  function cargar(){
+    const cons=$('#id_consultorio').val(), f=$('#id_fecha').val(), dur=$d.val();
+    if(!cons||!f||!dur){$h.html('<option>Seleccione consultorio, fecha y duración</option>'); return;}
+    if(parseFecha(f)<(new Date()).setHours(0,0,0,0)){err('Fecha en el pasado');return;}
+    showLoad();
+    $.getJSON("{% url 'ajax_horarios_disponibles' %}",{
+      consultorio_id:cons,fecha:f,duracion:dur,cita_id:"{{ cita.id }}"
+    })
+    .done(r=>{
+      const lst=r.horarios||[];
+      $h.data('horarios',lst).empty().append('<option value="">Seleccione una hora</option>');
+      if(!lst.length){$h.append('<option>No hay horarios disponibles</option>');err('No hay horarios disponibles');return;}
+      lst.forEach(h=>{$h.append(`<option value="${h.value}"${h.estado==='ocupado'?' disabled':''}>${h.text}</option>`);});
+      if(!$h.val()){const l=lst.find(h=>h.estado==='libre');if(l)$h.val(l.value);}
+      fitDuraciones();
+    })
+    .fail(()=>err('Error interno al cargar horarios'))
+    .always(hideLoad);
+  }
+
+  $('#id_consultorio,#id_fecha,#id_duracion').on('change',()=>setTimeout(cargar,120));
+  $h.on('change',fitDuraciones);
+  $('#citaForm').on('submit',e=>{if(!$h.val()){e.preventDefault();alert('Seleccione una hora disponible.');}});
+
+  /* carga inicial */
+  setTimeout(cargar,150);
+});
+</script>
+{% endblock %}

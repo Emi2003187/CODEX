@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Citas Disponibles{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cita-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #ffc107;
+    }
+    .cita-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .cita-urgente {
+        border-left-color: #dc3545;
+        background-color: #fff5f5;
+    }
+    .cita-hoy {
+        border-left-color: #28a745;
+        background-color: #f8fff8;
+    }
+    .btn-tomar-cita {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        border: none;
+        color: white;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    .btn-tomar-cita:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        color: white;
+    }
+    .stats-widget {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+    }
+    .filter-card {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>
+                        <i class="fas fa-hand-paper text-success"></i> 
+                        Citas Disponibles
+                        {% if usuario.consultorio %}
+                            - {{ usuario.consultorio.nombre }}
+                        {% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Citas sin médico asignado que puedes tomar
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'citas_lista' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> Ver Todas las Citas
+                    </a>
+                    {% if usuario.rol == 'medico' %}
+                        <a href="{% url 'mis_citas_asignadas' %}" class="btn btn-info">
+                            <i class="fas fa-user-md"></i> Mis Citas
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-widget">
+                <div class="card-body text-center">
+                    <h3>{{ stats.total_disponibles }}</h3>
+                    <p class="mb-0">Total Disponibles</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body text-center">
+                    <h3>{{ stats.urgentes }}</h3>
+                    <p class="mb-0">Urgentes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h3>{{ stats.hoy }}</h3>
+                    <p class="mb-0">Para Hoy</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h3>{{ stats.esta_semana }}</h3>
+                    <p class="mb-0">Esta Semana</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card filter-card">
+                <div class="card-body">
+                    <form method="get" class="row align-items-end">
+                        <div class="col-md-3">
+                            <label for="fecha">Fecha:</label>
+                            <input type="date" name="fecha" class="form-control" value="{{ filtros.fecha }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="tipo_cita">Tipo:</label>
+                            <select name="tipo_cita" class="form-control">
+                                <option value="">Todos</option>
+                                {% for value, label in tipos_cita %}
+                                <option value="{{ value }}" {% if filtros.tipo_cita == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="prioridad">Prioridad:</label>
+                            <select name="prioridad" class="form-control">
+                                <option value="">Todas</option>
+                                {% for value, label in prioridades %}
+                                <option value="{{ value }}" {% if filtros.prioridad == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if usuario.rol == 'admin' %}
+                        <div class="col-md-3">
+                            <label for="consultorio">Consultorio:</label>
+                            <select name="consultorio" class="form-control">
+                                <option value="">Todos</option>
+                                {% for consultorio in consultorios %}
+                                <option value="{{ consultorio.id }}" {% if filtros.consultorio == consultorio.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ consultorio.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-search"></i> Filtrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pestañas de agrupación -->
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-tabs mb-4" id="gruposTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="urgentes-tab" data-toggle="tab" href="#urgentes" role="tab">
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                        Urgentes <span class="badge badge-danger">{{ grupos.urgentes.count }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="hoy-tab" data-toggle="tab" href="#hoy" role="tab">
+                        <i class="fas fa-calendar-day text-success"></i>
+                        Hoy <span class="badge badge-success">{{ grupos.hoy.count }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="proximas-tab" data-toggle="tab" href="#proximas" role="tab">
+                        <i class="fas fa-calendar-alt text-info"></i>
+                        Próximas <span class="badge badge-info">{{ grupos.proximas.count }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="todas-tab" data-toggle="tab" href="#todas" role="tab">
+                        <i class="fas fa-list"></i>
+                        Todas <span class="badge badge-secondary">{{ citas_disponibles.count }}</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="gruposTabContent">
+                <!-- Citas Urgentes -->
+                <div class="tab-pane fade show active" id="urgentes" role="tabpanel">
+                    {% include 'PAGES/citas/partials/grid_citas_disponibles.html' with citas=grupos.urgentes tipo='urgentes' %}
+                </div>
+
+                <!-- Citas de Hoy -->
+                <div class="tab-pane fade" id="hoy" role="tabpanel">
+                    {% include 'PAGES/citas/partials/grid_citas_disponibles.html' with citas=grupos.hoy tipo='hoy' %}
+                </div>
+
+                <!-- Citas Próximas -->
+                <div class="tab-pane fade" id="proximas" role="tabpanel">
+                    {% include 'PAGES/citas/partials/grid_citas_disponibles.html' with citas=grupos.proximas tipo='proximas' %}
+                </div>
+
+                <!-- Todas las Citas -->
+                <div class="tab-pane fade" id="todas" role="tabpanel">
+                    {% include 'PAGES/citas/partials/grid_citas_disponibles.html' with citas=citas_disponibles tipo='todas' %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para tomar cita -->
+<div class="modal fade" id="tomarCitaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-hand-paper"></i> Confirmar Tomar Cita
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="citaInfo"></div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Al tomar esta cita, se te asignará automáticamente y cambiará a estado "Confirmada".
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <a href="#" id="confirmarTomarCita" class="btn btn-success">
+                    <i class="fas fa-check"></i> Sí, Tomar Cita
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Manejar clic en botón "Tomar Cita"
+    $('.btn-tomar-cita').click(function(e) {
+        e.preventDefault();
+        
+        const citaId = $(this).data('cita-id');
+        const paciente = $(this).data('paciente');
+        const fecha = $(this).data('fecha');
+        const hora = $(this).data('hora');
+        const motivo = $(this).data('motivo');
+        const url = $(this).attr('href');
+        
+        // Llenar información en el modal
+        $('#citaInfo').html(`
+            <div class="row">
+                <div class="col-md-6"><strong>Paciente:</strong></div>
+                <div class="col-md-6">${paciente}</div>
+                <div class="col-md-6"><strong>Fecha:</strong></div>
+                <div class="col-md-6">${fecha}</div>
+                <div class="col-md-6"><strong>Hora:</strong></div>
+                <div class="col-md-6">${hora}</div>
+                <div class="col-md-6"><strong>Motivo:</strong></div>
+                <div class="col-md-6">${motivo}</div>
+            </div>
+        `);
+        
+        $('#confirmarTomarCita').attr('href', url);
+        $('#tomarCitaModal').modal('show');
+    });
+
+    // Auto-refresh cada 2 minutos para citas disponibles
+    setInterval(function() {
+        // Solo refresh si no hay modales abiertos
+        if (!$('.modal').hasClass('show')) {
+            location.reload();
+        }
+    }, 120000);
+
+    // Notificación de nuevas citas disponibles
+    function checkNuevasCitas() {
+        $.get('/api/citas-disponibles-count/', function(data) {
+            const currentCount = parseInt($('#todas-tab .badge').text());
+            if (data.count > currentCount) {
+                // Mostrar notificación
+                if (Notification.permission === 'granted') {
+                    new Notification('Nueva cita disponible', {
+                        body: `Hay ${data.count - currentCount} nueva(s) cita(s) disponible(s)`,
+                        icon: '/static/img/notification-icon.png'
+                    });
+                }
+                
+                // Actualizar badges
+                $('#todas-tab .badge').text(data.count);
+                $('#urgentes-tab .badge').text(data.urgentes);
+                $('#hoy-tab .badge').text(data.hoy);
+            }
+        });
+    }
+
+    // Solicitar permisos de notificación
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    // Verificar nuevas citas cada minuto
+    setInterval(checkNuevasCitas, 60000);
+});
+</script>
+{% endblock %}
