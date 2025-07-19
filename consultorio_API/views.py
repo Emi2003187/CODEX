@@ -2367,8 +2367,7 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
     template_name = 'PAGES/consultas/editar.html'
 
     def get_form_class(self):
-        if self.get_object().tipo == 'sin_cita':
-            return ConsultaSinCitaForm
+        """Use the medical form for editing regardless of tipo."""
         return ConsultaMedicoForm
 
     def _get_return_to(self):
