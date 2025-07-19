@@ -987,8 +987,8 @@ class RecetaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Establecer fecha por defecto (30 días desde hoy)
-        if not self.instance.pk:
+        # Establecer fecha por defecto (30 días desde hoy) si no existe
+        if not self.instance.pk or not self.instance.valido_hasta:
             self.fields['valido_hasta'].initial = timezone.now().date() + timedelta(days=30)
 
 
