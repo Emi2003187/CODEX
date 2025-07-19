@@ -3952,6 +3952,16 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
     template_name = 'PAGES/citas/crear.html'
     success_url = reverse_lazy('citas_lista')
 
+    def get_initial(self):
+        initial = super().get_initial()
+        fecha_str = self.request.GET.get('fecha')
+        if fecha_str:
+            try:
+                initial['fecha'] = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        return initial
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user

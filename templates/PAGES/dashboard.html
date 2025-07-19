@@ -155,22 +155,7 @@
     </div>
   </div>
 
-  <!-- Alertas importantes -->
-  <div class="row mb-4" id="alertasContainer">
-    <div class="col-12">
-      <div class="card dashboard-card">
-        <div class="card-header bg-light">
-          <h6 class="mb-0">
-            <i class="bi bi-exclamation-triangle me-2"></i>Alertas Importantes
-            <span class="badge bg-danger ms-2" id="alertCount">0</span>
-          </h6>
-        </div>
-        <div class="card-body" id="alertasBody">
-          <!-- Las alertas se cargarán dinámicamente -->
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Estadísticas principales -->
   <div class="row g-4 mb-4">
@@ -809,7 +794,6 @@ document.addEventListener('DOMContentLoaded', function () {
   );
 
   // Inicializar datos
-  cargarAlertas();
   cargarMetricasAdicionales();
   cargarMedicosWidget();
   calcularEstadisticasGrafica();
@@ -833,54 +817,9 @@ function actualizarDatos() {
         document.getElementById('consultasPendientes').textContent = data.stats.consultas_pendientes || 0;
         document.getElementById('pacientesTotales').textContent = data.stats.pacientes_totales || 0;
       }
-      cargarAlertas();
       cargarMetricasAdicionales();
     })
     .catch(error => console.error('Error actualizando datos:', error));
-}
-
-function cargarAlertas() {
-  // Simular carga de alertas
-  const alertas = [
-    {
-      tipo: 'urgent',
-      titulo: 'Citas sin médico asignado',
-      descripcion: '3 citas programadas para hoy sin médico asignado',
-      icono: 'exclamation-triangle'
-    },
-    {
-      tipo: 'warning',
-      titulo: 'Consultas pendientes',
-      descripcion: '5 consultas en espera de atención',
-      icono: 'clock'
-    },
-    {
-      tipo: 'info',
-      titulo: 'Recordatorio',
-      descripcion: 'Revisar horarios de la próxima semana',
-      icono: 'info-circle'
-    }
-  ];
-
-  const alertasBody = document.getElementById('alertasBody');
-  const alertCount = document.getElementById('alertCount');
-  
-  alertCount.textContent = alertas.length;
-  
-  alertasBody.innerHTML = alertas.map(alerta => `
-    <div class="alert-item alert-${alerta.tipo}">
-      <div class="d-flex align-items-center">
-        <i class="bi bi-${alerta.icono} me-3 fs-5"></i>
-        <div class="flex-grow-1">
-          <strong>${alerta.titulo}</strong>
-          <div class="text-muted">${alerta.descripcion}</div>
-        </div>
-        <button class="btn btn-sm btn-outline-secondary" onclick="this.parentElement.parentElement.remove()">
-          <i class="bi bi-x"></i>
-        </button>
-      </div>
-    </div>
-  `).join('');
 }
 
 function cargarMetricasAdicionales() {
