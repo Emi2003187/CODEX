@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from xhtml2pdf import pisa
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, date
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -434,6 +434,25 @@ class PacienteListView(PacientePermisoMixin, ListView):
                 Q(consultorio_asignado__first_name__icontains=q) |
                 Q(consultorio_asignado__last_name__icontains=q)
             )
+
+        edad_param = self.request.GET.get("edad")
+        if edad_param is not None and edad_param.isdigit():
+            grupos = [
+                (0, 12),
+                (13, 17),
+                (18, 30),
+                (31, 45),
+                (46, 60),
+                (61, 75),
+                (76, 120),
+            ]
+            idx = int(edad_param)
+            if 0 <= idx < len(grupos):
+                min_e, max_e = grupos[idx]
+                hoy = date.today()
+                fecha_max = hoy - timedelta(days=min_e * 365)
+                fecha_min = hoy - timedelta(days=(max_e + 1) * 365)
+                qs = qs.filter(fecha_nacimiento__range=(fecha_min, fecha_max))
 
         if self.request.user.rol == "medico":
             qs = qs.filter(

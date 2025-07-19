@@ -717,12 +717,10 @@ document.addEventListener('DOMContentLoaded', function () {
         onClick: function(event, elements) {
           if (elements.length > 0) {
             const index = elements[0].index;
-            const grupoEdad = edadesData.labels[index];
             // Redirigir a lista de pacientes filtrada por edad
-            alert(`Ver pacientes del grupo: ${grupoEdad}`);
-            // window.location.href = `{% url 'pacientes_lista' %}?edad=${index}`;
-        }
-      },
+            window.location.href = `{% url 'pacientes_lista' %}?edad=${index}`;
+          }
+        },
       onHover: function(event, elements) {
         event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
       },
@@ -978,9 +976,16 @@ function toggleChartType(chartId) {
   }
 }
 
-function exportarGrafica(chartId) {
-  const chart = chartId === 'chartEstados' ? chartEstados : chartDias;
-  const url = chart.toBase64Image();
+  function exportarGrafica(chartId) {
+    const charts = {
+      'chartEstados': chartEstados,
+      'chartEdades': chartEdades,
+      'chartRendimiento': chartRendimiento,
+      'chartHorarios': chartHorarios
+    };
+    const chart = charts[chartId];
+    if (!chart) return;
+    const url = chart.toBase64Image();
   const link = document.createElement('a');
   link.download = `${chartId}.png`;
   link.href = url;
