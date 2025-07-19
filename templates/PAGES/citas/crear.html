@@ -7,43 +7,44 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
     .form-section {
-        background: #f8f9fa;
-        border-left: 4px solid #007bff;
+        background: var(--bg-color);
+        border-left: 4px solid var(--primary-color);
         padding: 1rem;
         margin-bottom: 1rem;
         border-radius: 8px;
+        box-shadow: var(--shadow);
     }
     .required-field {
-        color: #dc3545;
+        color: var(--danger-color);
         font-weight: bold;
     }
     .loading-horarios {
         display: none;
         text-align: center;
         padding: 1rem;
-        color: #6c757d;
+        color: var(--secondary-color);
         font-style: italic;
     }
     .error-horarios {
         display: none;
-        color: #dc3545;
-        background: #f8d7da;
-        border: 1px solid #f5c6cb;
+        color: var(--danger-color);
+        background: #fee2e2;
+        border: 1px solid var(--danger-color);
         border-radius: 4px;
         padding: 0.5rem;
         margin-top: 0.5rem;
         font-size: 0.875rem;
     }
     .info-horarios {
-        background: #e7f3ff;
-        border: 1px solid #b3d9ff;
+        background: #eff6ff;
+        border: 1px solid var(--primary-light);
         border-radius: 4px;
         padding: 0.75rem;
         margin-bottom: 1rem;
         font-size: 0.875rem;
     }
     .info-horarios h6 {
-        color: #0056b3;
+        color: var(--primary-dark);
         margin-bottom: 0.5rem;
         font-size: 0.9rem;
     }
@@ -52,25 +53,25 @@
         padding-left: 1.2rem;
     }
     .info-horarios li {
-        color: #0056b3;
+        color: var(--primary-dark);
         margin-bottom: 0.25rem;
     }
     .form-control option:disabled {
-        color: #6c757d;
-        background-color: #f8f9fa;
+        color: var(--text-secondary);
+        background-color: var(--bg-color);
         font-style: italic;
     }
 
     /* Estilos para horas ocupadas */
     #id_hora option:disabled {
-        color: #dc3545 !important;
-        background-color: #f8d7da !important;
+        color: var(--danger-color) !important;
+        background-color: #fee2e2 !important;
         font-style: italic;
     }
 
     .horario-ocupado {
-        color: #dc3545 !important;
-        background-color: #f8d7da !important;
+        color: var(--danger-color) !important;
+        background-color: #fee2e2 !important;
         font-style: italic;
     }
 
@@ -81,6 +82,14 @@
 
     #id_hora option {
         padding: 5px;
+    }
+    .card {
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+    }
+    .card-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+        color: #fff;
     }
 </style>
 {% endblock %}
@@ -438,6 +447,7 @@
       }
 
       /* Petición AJAX */
+      const previo = $selHora.val();
       showLoader(); cargando = true;
 
       $.getJSON(
@@ -467,8 +477,9 @@
           $selHora.append(`<option value="${h.value}"${disableAttr}>${h.text}</option>`);
         });
 
-        /* Pre-seleccionar la primera libre */
-        if (!$selHora.val()) {
+        if (previo && lista.some(h => h.value === previo)) {
+          $selHora.val(previo);
+        } else if (!$selHora.val()) {
           const libre = lista.find(h => h.estado === 'libre');
           if (libre) $selHora.val(libre.value);
         }

@@ -273,7 +273,7 @@ def editar_cita(request, cita_id):
     def _build_initial(cita_obj):
         fh_local = timezone.localtime(cita_obj.fecha_hora)
         return {
-            "fecha":    fh_local.date(),
+            "fecha":    fh_local.date().isoformat(),
             "hora":     fh_local.strftime("%H:%M"),
             "duracion": str(cita_obj.duracion),
         }
