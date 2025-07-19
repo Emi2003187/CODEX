@@ -478,6 +478,9 @@ class CitaForm(forms.ModelForm):
                 duracion_str=self.instance.duracion or 30,
                 excluir_id=self.instance.pk,
             )
+            self.initial.setdefault(
+                "fecha", self.instance.fecha_hora.date().isoformat()
+            )
             self.initial["hora"] = self.instance.fecha_hora.strftime("%H:%M")
             self.initial["duracion"] = str(self.instance.duracion or 30)
 
