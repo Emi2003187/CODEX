@@ -988,10 +988,12 @@ class RecetaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Mostrar fecha guardada o valor por defecto
+
         self.fields['valido_hasta'].initial = (
             self.instance.valido_hasta
             or timezone.now().date() + timedelta(days=30)
         )
+
 
 
 
