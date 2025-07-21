@@ -4,6 +4,9 @@
 {% block content %}
 <div class="container">
   <h3>Receta para {{ consulta.paciente.nombre_completo }}</h3>
+  <p class="text-muted">
+    Fecha de emisión: {{ receta_form.instance.fecha_emision|date:"d/m/Y" }}
+  </p>
   <form method="post">
     {% csrf_token %}
     <div class="mb-3">

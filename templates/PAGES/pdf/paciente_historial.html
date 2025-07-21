@@ -103,7 +103,7 @@
             <p><strong>Tratamiento:</strong> {{ consulta.tratamiento|default:"-" }}</p>
             <p><strong>Observaciones:</strong> {{ consulta.observaciones|default:"-" }}</p>
             {% if consulta.receta %}
-              <p><strong>Receta:</strong></p>
+              <p><strong>Receta ({{ consulta.receta.fecha_emision|date:"d/m/Y" }}):</strong></p>
               <ul>
                 {% for med in consulta.receta.medicamentos.all %}
                   <li>{{ med.nombre }} - {{ med.dosis }} ({{ med.frecuencia }})</li>

@@ -400,6 +400,10 @@
                           <span class="badge bg-success">
                             <i class="bi bi-file-earmark-medical me-1"></i>Emitida
                           </span>
+                          <br>
+                          <small class="text-muted">
+                            {{ c.receta.fecha_emision|date:"d/m/Y" }}
+                          </small>
                         {% else %}
                           <span class="badge bg-secondary">
                             <i class="bi bi-dash-circle me-1"></i>Sin receta

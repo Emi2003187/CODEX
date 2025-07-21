@@ -222,10 +222,13 @@ class PacienteForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Nombre completo del paciente'
             }),
-            'fecha_nacimiento': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control'
-            }),
+            'fecha_nacimiento': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={
+                    'type': 'date',
+                    'class': 'form-control'
+                }
+            ),
             'sexo': forms.Select(attrs={'class': 'form-select'}),
             'telefono': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -268,10 +271,13 @@ class PacienteForm(forms.ModelForm):
             is_active=True
         )
         self.fields['consultorio_asignado'].empty_label = 'Sin asignar'
-        
+
         # Hacer la foto opcional
         self.fields['foto'].required = False
         self.fields['consultorio_asignado'].required = False
+
+        # Asegurar formato ISO para el input de fecha
+        self.fields['fecha_nacimiento'].input_formats = ['%Y-%m-%d']
 
 
 

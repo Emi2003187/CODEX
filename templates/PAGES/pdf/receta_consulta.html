@@ -281,7 +281,7 @@
         <div class="doctor-date-box bordered-box">
             <div class="info-row">
                 <div class="info-field">
-                    <span class="label">Fecha:</span> {{ consulta.receta.fecha_emision|date:"d/m/Y" }}
+                    <span class="label">Fecha de emisión:</span> {{ consulta.receta.fecha_emision|date:"d/m/Y" }}
                 </div>
                 <div class="info-field" style="text-align: right;">
                     <span class="label">Válido hasta:</span> {{ consulta.receta.valido_hasta|date:"d/m/Y"|default:"___" }}
