@@ -17,7 +17,7 @@
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'dashboard_asistente' %}{% endif %}" class="text-decoration-none">
+                                <a href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'citas_lista' %}{% endif %}" class="text-decoration-none">
                                     <i class="bi bi-house-door me-1"></i>Dashboard
                                 </a>
                             </li>
@@ -269,8 +269,11 @@
 
                         <!-- Botones de acción -->
                         <div class="d-flex flex-wrap justify-content-end gap-3 mt-5">
+                            <a href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'citas_lista' %}{% endif %}" class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
+                            </a>
                             <a href="{% url 'ver_perfil' %}" class="btn btn-outline-secondary btn-lg px-4">
-                                <i class="bi bi-arrow-left me-2"></i>Cancelar
+                                <i class="bi bi-x-lg me-2"></i>Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary btn-lg px-4 shadow-sm">
                                 <i class="bi bi-check-lg me-2"></i>Guardar Cambios
