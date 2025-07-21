@@ -67,6 +67,14 @@
                   <div class="text-danger small">{{ error }}</div>
                 {% endfor %}
               </div>
+              {% if usuario.rol == 'admin' %}
+              <div class="col-md-6 mb-3">
+                {{ form.consultorio_asignado.label_tag }} {{ form.consultorio_asignado }}
+                {% for error in form.consultorio_asignado.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
             </div>
           </div>
         </div>

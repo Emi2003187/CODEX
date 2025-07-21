@@ -222,10 +222,10 @@ class PacienteForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Nombre completo del paciente'
             }),
-            'fecha_nacimiento': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control'
-            }),
+            'fecha_nacimiento': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={'type': 'date', 'class': 'form-control'}
+            ),
             'sexo': forms.Select(attrs={'class': 'form-select'}),
             'telefono': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -259,19 +259,25 @@ class PacienteForm(forms.ModelForm):
             'foto': 'Foto del Paciente',
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user: Usuario | None = None, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         # Filtrar solo usuarios que son médicos o asistentes para consultorio_asignado
         self.fields['consultorio_asignado'].queryset = Usuario.objects.filter(
-            rol__in=['medico', 'asistente'], 
+            rol__in=['medico', 'asistente'],
             is_active=True
         )
         self.fields['consultorio_asignado'].empty_label = 'Sin asignar'
-        
+
         # Hacer la foto opcional
         self.fields['foto'].required = False
         self.fields['consultorio_asignado'].required = False
+
+        if user and user.rol == 'medico':
+            self.fields['consultorio_asignado'].widget = forms.HiddenInput()
+            self.fields['consultorio_asignado'].initial = user
+        elif user and user.rol != 'admin':
+            self.fields['consultorio_asignado'].widget = forms.HiddenInput()
 
 
 

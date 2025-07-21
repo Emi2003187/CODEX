@@ -513,9 +513,17 @@ class PacienteCreateView(NextRedirectMixin, PacientePermisoMixin, CreateView):
     template_name = "PAGES/pacientes/crear.html"
     success_url = reverse_lazy("pacientes_lista")
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         paciente = form.save(commit=False)
-        paciente.consultorio_asignado = self.request.user
+        if self.request.user.rol == "medico":
+            paciente.consultorio_asignado = self.request.user
+        else:
+            paciente.consultorio_asignado = form.cleaned_data.get("consultorio_asignado")
         paciente.save()
         return super().form_valid(form)
 
@@ -530,6 +538,20 @@ class PacienteUpdateView(NextRedirectMixin, PacientePermisoMixin, UpdateView):
     form_class = PacienteForm
     template_name = "PAGES/pacientes/editar.html"
     success_url = reverse_lazy("pacientes_lista")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        paciente = form.save(commit=False)
+        if self.request.user.rol == "medico":
+            paciente.consultorio_asignado = self.request.user
+        else:
+            paciente.consultorio_asignado = form.cleaned_data.get("consultorio_asignado")
+        paciente.save()
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
