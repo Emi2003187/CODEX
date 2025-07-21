@@ -109,11 +109,13 @@
         </div>
         {% else %}
         <div class="btn-group" role="group">
-          {% if consulta.estado != "finalizada" and consulta.estado != "cancelada" %}
-            <a href="{% url 'consultas_atencion' consulta.pk %}"
-               class="btn btn-primary btn-sm">
-              <i class="bi bi-clipboard-plus me-1"></i>Atender
-            </a>
+          {% if consulta.estado == "espera" and usuario.rol == "medico" %}
+            {% if not consulta_activa or consulta_activa.pk == consulta.pk %}
+              <a href="{% url 'consultas_atencion' consulta.pk %}?next={{ request.get_full_path }}"
+                 class="btn btn-primary btn-sm">
+                <i class="bi bi-clipboard-plus me-1"></i>Atender
+              </a>
+            {% endif %}
           {% endif %}
 
           {% if consulta.signos_vitales %}
@@ -185,10 +187,26 @@
             {% if consulta.estado != "cancelada" and consulta.estado != "finalizada" %}
               <li><hr class="dropdown-divider"></li>
               <li>
-                <button class="dropdown-item text-danger" onclick="cancelarConsulta({{ consulta.pk }})">
-                  <i class="bi bi-x-circle me-2"></i>Cancelar
-                </button>
+                <form method="post" action="{% url 'cancelar_consulta' consulta.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="dropdown-item text-danger">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                  </button>
+                </form>
               </li>
+              {% if consulta.estado == "en_progreso" and consulta.medico == usuario %}
+              <li>
+                <form method="post" action="{% url 'consultas_atencion' consulta.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="finish">
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="dropdown-item text-success">
+                    <i class="bi bi-check-circle me-2"></i>Finalizar
+                  </button>
+                </form>
+              </li>
+              {% endif %}
             {% endif %}
             
             {% if consulta.estado == "cancelada" or consulta.estado == "finalizada" %}

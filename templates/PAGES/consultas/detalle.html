@@ -25,8 +25,8 @@
       <p class="text-muted mb-0">{{ consulta.paciente.nombre_completo }}</p>
     </div>
     <div class="col-md-4 text-md-end">
-      {% if consulta.estado == 'espera' and puede_editar %}
-        <a href="{% url 'consultas_atencion' consulta.pk %}" class="btn btn-primary me-1">
+      {% if consulta.estado == 'espera' and puede_editar and (not consulta_activa or consulta_activa.pk == consulta.pk) %}
+        <a href="{% url 'consultas_atencion' consulta.pk %}?next={{ request.get_full_path }}" class="btn btn-primary me-1">
           <i class="bi bi-play me-1"></i>Atender
         </a>
       {% elif puede_editar %}
@@ -254,8 +254,8 @@
         </div>
         <div class="card-body">
           <div class="d-grid gap-2">
-            {% if consulta.estado == 'espera' %}
-              <a href="{% url 'consultas_atencion' consulta.pk %}" class="btn btn-primary btn-sm">
+            {% if consulta.estado == 'espera' and (not consulta_activa or consulta_activa.pk == consulta.pk) %}
+              <a href="{% url 'consultas_atencion' consulta.pk %}?next={{ request.get_full_path }}" class="btn btn-primary btn-sm">
                 <i class="bi bi-play me-1"></i>Iniciar Atención
               </a>
             {% endif %}
@@ -270,6 +270,27 @@
               <a href="{% url 'consulta_editar' consulta.pk %}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-pencil me-1"></i>Editar Consulta
               </a>
+            {% endif %}
+
+            {% if consulta.estado in 'espera en_progreso'.split %}
+              <form method="post" action="{% url 'cancelar_consulta' consulta.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                  <i class="bi bi-x-circle me-1"></i>Cancelar Consulta
+                </button>
+              </form>
+            {% endif %}
+
+            {% if consulta.estado == 'en_progreso' and consulta.medico == usuario %}
+              <form method="post" action="{% url 'consultas_atencion' consulta.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="finish">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-success btn-sm">
+                  <i class="bi bi-check-circle me-1"></i>Finalizar Consulta
+                </button>
+              </form>
             {% endif %}
           </div>
         </div>

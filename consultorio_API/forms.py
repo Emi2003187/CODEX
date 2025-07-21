@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 # ───── Modelos / utilidades internas ───────────────────────────────────
-from .models import Cita, Consultorio, Paciente, Usuario
+from .models import Cita, Consultorio, Paciente, Usuario, Consulta
 from .utils_horarios import obtener_horarios_disponibles_para_select
 
 
@@ -742,6 +742,10 @@ class ConsultaSinCitaForm(forms.ModelForm):
                 raise ValidationError(
                     f"El médico {medico.get_full_name()} no pertenece a tu consultorio."
                 )
+
+        # Bloquear si el médico ya tiene una consulta en progreso
+        if medico and Consulta.objects.filter(medico=medico, estado="en_progreso").exists():
+            raise ValidationError("El doctor seleccionado ya tiene una consulta activa.")
         
         return cleaned_data
 
