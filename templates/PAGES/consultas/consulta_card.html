@@ -109,11 +109,17 @@
         </div>
         {% else %}
         <div class="btn-group" role="group">
-          {% if consulta.estado != "finalizada" and consulta.estado != "cancelada" %}
-            <a href="{% url 'consultas_atencion' consulta.pk %}"
-               class="btn btn-primary btn-sm">
-              <i class="bi bi-clipboard-plus me-1"></i>Atender
-            </a>
+          {% if consulta.estado == "espera" %}
+            {% if not tiene_en_progreso %}
+              <a href="{% url 'consultas_atencion' consulta.pk %}"
+                 class="btn btn-primary btn-sm">
+                <i class="bi bi-clipboard-plus me-1"></i>Atender
+              </a>
+            {% else %}
+              <button class="btn btn-primary btn-sm" disabled>
+                <i class="bi bi-clipboard-plus me-1"></i>Atender
+              </button>
+            {% endif %}
           {% endif %}
 
           {% if consulta.signos_vitales %}

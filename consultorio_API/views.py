@@ -1698,6 +1698,14 @@ class ConsultaListView(LoginRequiredMixin, ListView):
         usuario = self.request.user
         consultas = self.get_queryset()
 
+        # Verificar si el médico tiene alguna consulta en progreso
+        tiene_en_progreso = False
+        if usuario.rol == "medico":
+            tiene_en_progreso = Consulta.objects.filter(
+                medico=usuario,
+                estado="en_progreso",
+            ).exists()
+
         # 2. Mostrar consultas con y sin cita / 3. Indicar origen
         consultas_con_cita = consultas.filter(cita__isnull=False)
         consultas_sin_cita = consultas.filter(cita__isnull=True)
@@ -1748,6 +1756,7 @@ class ConsultaListView(LoginRequiredMixin, ListView):
             "origen_filter": self.request.GET.get("origen", ""),
             # 4. Permitir crear consultas sin cita
             "puede_crear_sin_cita": usuario.rol in ['medico', 'asistente', 'admin'],
+            "tiene_en_progreso": tiene_en_progreso,
         })
         
         return ctx
@@ -2102,13 +2111,22 @@ class ConsultaDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         consulta = self.get_object()
-        
+
+        # Verificar si el médico tiene otra consulta en progreso
+        tiene_en_progreso = False
+        if self.request.user.rol == "medico":
+            tiene_en_progreso = Consulta.objects.filter(
+                medico=self.request.user,
+                estado="en_progreso",
+            ).exclude(pk=consulta.pk).exists()
+
         context.update({
             'usuario': self.request.user,
             'signos_vitales': getattr(consulta, 'signos_vitales', None),
             'receta': getattr(consulta, 'receta', None),
             'cita': consulta.cita,
             'puede_editar': self.request.user == consulta.medico or self.request.user.rol == 'admin',
+            'tiene_en_progreso': tiene_en_progreso,
         })
         
         return context
@@ -2341,6 +2359,16 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
         consulta = get_object_or_404(Consulta, pk=pk)
         # Al acceder por primera vez se marca como "en progreso" si estaba en espera
         if consulta.estado == "espera":
+            ya_en_progreso = Consulta.objects.filter(
+                medico=request.user,
+                estado="en_progreso",
+            ).exclude(pk=consulta.pk).exists()
+            if ya_en_progreso:
+                messages.error(
+                    request,
+                    "Ya tienes una consulta en progreso; finalízala o cancélala antes de atender otra."
+                )
+                return redirect(request.GET.get("next") or "consultas_lista")
             consulta.estado = "en_progreso"
             consulta.fecha_atencion = timezone.now()
             consulta.save()
@@ -2367,6 +2395,16 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             consulta = consulta_form.save(commit=False)
 
             if action == "start" and consulta.estado == "espera":
+                ya_en_progreso = Consulta.objects.filter(
+                    medico=request.user,
+                    estado="en_progreso",
+                ).exclude(pk=consulta.pk).exists()
+                if ya_en_progreso:
+                    messages.error(
+                        request,
+                        "Ya tienes una consulta en progreso; finalízala o cancélala antes de atender otra."
+                    )
+                    return redirect(request.POST.get("next") or "consultas_lista")
                 consulta.estado = "en_progreso"
                 consulta.fecha_atencion = timezone.now()
                 messages.success(request, "Consulta iniciada.")
