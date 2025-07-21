@@ -1288,9 +1288,11 @@ class UsuarioForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         # Si es edición, hacer la contraseña opcional
         if self.instance.pk:
+            self.fields['password1'].label = 'Nueva contraseña'
+            self.fields['password2'].label = 'Confirmar contraseña'
             self.fields['password1'].help_text = "Dejar en blanco para mantener la contraseña actual"
             self.fields['password2'].help_text = "Dejar en blanco para mantener la contraseña actual"
 
