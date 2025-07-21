@@ -63,6 +63,7 @@
 
                 <form method="post">
                     {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
                     
                     <div class="row">
                         <div class="col-md-6">
@@ -182,7 +183,6 @@
                         {{ form.observaciones_iniciales }}
                     </div>
 
-                    <input type="hidden" name="next" value="{{ next }}">
                     <!-- Asegurar que es sin cita -->
                     <input type="hidden" name="tipo" value="sin_cita">
 
@@ -198,9 +198,15 @@
                     </div>
 
                     <div class="d-flex justify-content-between">
-                        <a href="{{ next }}" class="btn btn-outline-secondary">
+                        {% if request.GET.next %}
+                        <a href="{{ request.GET.next }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Cancelar
                         </a>
+                        {% else %}
+                        <a href="{% url 'consultas_lista' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Cancelar
+                        </a>
+                        {% endif %}
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-circle me-1"></i>Crear Consulta
                         </button>
