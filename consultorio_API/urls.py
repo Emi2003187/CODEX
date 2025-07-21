@@ -44,7 +44,7 @@ urlpatterns = [
     path('consultas/crear-sin-cita/', views.ConsultaSinCitaCreateView.as_view(), name='consultas_crear_sin_cita'),
     path('consultas/<int:pk>/precheck/', views.ConsultaPrecheckView.as_view(), name='consultas_precheck'),
     path('consultas/<int:pk>/atencion/', views.ConsultaAtencionView.as_view(), name='consultas_atencion'),
-    path('consultas/<int:pk>/cancelar/', views.ConsultaCancelarView.as_view(), name='consulta_cancelar'),
+    path('consultas/<int:pk>/cancelar/', views.cancelar_consulta, name='consulta_cancelar'),
     
     # HORARIOS
     path('horarios/', views.HorarioListView.as_view(), name='horarios_lista'),

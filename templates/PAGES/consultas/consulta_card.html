@@ -185,9 +185,13 @@
             {% if consulta.estado != "cancelada" and consulta.estado != "finalizada" %}
               <li><hr class="dropdown-divider"></li>
               <li>
-                <button class="dropdown-item text-danger" onclick="cancelarConsulta({{ consulta.pk }})">
-                  <i class="bi bi-x-circle me-2"></i>Cancelar
-                </button>
+                <form method="post" action="{% url 'consulta_cancelar' consulta.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.path }}">
+                  <button class="dropdown-item text-danger">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar consulta
+                  </button>
+                </form>
               </li>
             {% endif %}
             
@@ -295,11 +299,6 @@ function verSignosVitales(consultaId) {
 }
 
 // Otras funciones existentes...
-function cancelarConsulta(consultaId) {
-    if (confirm('¿Está seguro de cancelar esta consulta?')) {
-        alert(`Consulta ID: ${consultaId} marcada como cancelada.\n\nFunción de cancelación en desarrollo.`);
-    }
-}
 
 function eliminarConsulta(consultaId) {
     if (confirm('¿Está seguro de eliminar esta consulta? Esta acción no se puede deshacer.')) {

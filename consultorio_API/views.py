@@ -1,5 +1,6 @@
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.auth import logout
@@ -2140,8 +2141,9 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     success_url = reverse_lazy('consultas_lista')
 
     def get_form_kwargs(self):
-        """Return form kwargs without extra user param."""
-        return super().get_form_kwargs()
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def form_valid(self, form):
         user = self.request.user
@@ -2236,7 +2238,7 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
                 f'No hay conflictos de horario.'
             )
         
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2522,25 +2524,25 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
 
 
 @login_required
-def consulta_cancelar(request, pk):
-    """Marca la consulta como 'cancelada'"""
+@require_POST
+def cancelar_consulta(request, pk):
+    """Marca la consulta como cancelada."""
     if request.user.rol not in ("admin", "medico", "asistente"):
         messages.error(request, "No tienes permiso para cancelar consultas.")
         return redirect("consultas_lista")
 
     consulta = get_object_or_404(Consulta, pk=pk)
-    if consulta.estado == "cancelada":
-        messages.info(request, "La consulta ya estaba cancelada.")
-    else:
-        consulta.estado = "cancelada"
-        consulta.save()
-        messages.success(request, "Consulta cancelada correctamente.")
+    consulta.estado = "cancelada"
+    consulta.save()
 
-        if consulta.cita:
-            consulta.cita.estado = "cancelada"
-            consulta.cita.save()
+    if consulta.cita:
+        consulta.cita.estado = "cancelada"
+        consulta.cita.save()
 
-    return redirect("consultas_lista")
+    messages.success(request, "Consulta cancelada correctamente.")
+
+    next_url = request.POST.get("next") or reverse("consultas_lista")
+    return redirect(next_url)
 
 
 # ═══════════════════════════════════════════════════════════════
