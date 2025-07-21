@@ -114,6 +114,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'es',
+        timeZone: 'local',
+        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -141,9 +143,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Aplicar clases CSS según si tiene médico o no
                     data.forEach(event => {
                         if (event.extendedProps.sin_medico) {
-                            event.className = 'fc-event-sin-medico';
+                            event.classNames = ['fc-event-sin-medico'];
                         } else {
-                            event.className = 'fc-event-con-medico';
+                            event.classNames = ['fc-event-con-medico'];
                         }
                     });
                     successCallback(data);

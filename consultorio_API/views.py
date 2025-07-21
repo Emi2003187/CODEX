@@ -3862,8 +3862,7 @@ def citas_calendario_data(request):
             'title': f"{cita.paciente.nombre_completo}",
             'start': cita.fecha_hora.isoformat(),
             'end': (cita.fecha_hora + timedelta(minutes=cita.duracion)).isoformat(),
-            'backgroundColor': color,
-            'borderColor': color,
+            'color': color,
             'extendedProps': {
                 'numero_cita': cita.numero_cita,
                 'paciente': cita.paciente.nombre_completo,
