@@ -262,18 +262,15 @@ class PacienteForm(forms.ModelForm):
     def __init__(self, *args, user: Usuario | None = None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        qs = Consultorio.objects.none()
-        if user:
-            if user.rol == "medico" and user.consultorio:
-                qs = Consultorio.objects.filter(pk=user.consultorio.pk)
-            elif user.rol == "admin":
-                qs = Consultorio.objects.all().distinct()
-
-        self.fields["consultorio_asignado"].queryset = qs.order_by("nombre")
-        self.fields["consultorio_asignado"].empty_label = "Sin asignar"
-        self.fields["consultorio_asignado"].label_from_instance = (
-            lambda obj: obj.nombre
+        # Filtrar solo usuarios que son médicos o asistentes para consultorio_asignado
+        self.fields['consultorio_asignado'].queryset = Usuario.objects.filter(
+            rol__in=['medico', 'asistente'],
+            is_active=True
         )
+        self.fields['consultorio_asignado'].empty_label = 'Sin asignar'
+        self.fields["consultorio_asignado"].label_from_instance = (
+        lambda obj: obj.consultorio.nombre if obj.consultorio else obj.get_full_name()
+         )
 
         # Hacer la foto opcional
         self.fields['foto'].required = False
