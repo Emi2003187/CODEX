@@ -82,16 +82,21 @@ class PacienteAdmin(admin.ModelAdmin):
         "edad",
         "telefono",
         "correo",
-        "consultorio_asignado",
+        "consultorio_nombre",
     )
     list_filter = ("sexo", "consultorio_asignado")
     search_fields = (
         "nombre_completo",
         "telefono",
         "correo",
-        "consultorio_asignado__first_name",
-        "consultorio_asignado__last_name",
+        "consultorio_asignado__consultorio__nombre",
     )
+
+    def consultorio_nombre(self, obj):
+        if obj.consultorio_asignado and obj.consultorio_asignado.consultorio:
+            return obj.consultorio_asignado.consultorio.nombre
+        return "Sin asignar"
+    consultorio_nombre.short_description = "Consultorio"
 
 
 admin.site.register(Paciente, PacienteAdmin)
