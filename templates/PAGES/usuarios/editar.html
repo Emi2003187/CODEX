@@ -71,6 +71,18 @@
                 {% endfor %}
               </div>
               <div class="col-md-6 mb-3">
+                {{ form.password1.label_tag }} {{ form.password1 }}
+                {% for error in form.password1.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 mb-3">
+                {{ form.password2.label_tag }} {{ form.password2 }}
+                {% for error in form.password2.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-6 mb-3">
                 {{ form.cedula_profesional.label_tag }} {{ form.cedula_profesional }}
                 {% for error in form.cedula_profesional.errors %}
                   <div class="text-danger small">{{ error }}</div>
