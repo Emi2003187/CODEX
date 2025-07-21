@@ -268,6 +268,9 @@ class PacienteForm(forms.ModelForm):
             is_active=True
         )
         self.fields['consultorio_asignado'].empty_label = 'Sin asignar'
+   self.fields["consultorio_asignado"].label_from_instance = (
+    lambda obj: obj.consultorio.nombre if obj.consultorio else obj.get_full_name()
+    )
 
         # Hacer la foto opcional
         self.fields['foto'].required = False
