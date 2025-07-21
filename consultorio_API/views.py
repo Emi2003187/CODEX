@@ -2124,33 +2124,61 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     def form_valid(self, form):
         user = self.request.user
         consulta = form.save(commit=False)
-        
+
         # ✅ CONFIGURACIÓN BÁSICA - SIN CITA
         consulta.tipo = 'sin_cita'
         consulta.cita = None  # IMPORTANTE: Asegurar que NO tenga cita
         consulta.fecha_creacion = timezone.now()
-        
+
         # ✅ DETERMINAR SI ES INSTANTÁNEA O PROGRAMADA
         programar_para = form.cleaned_data.get('programar_para', 'ahora')
-        
         if form.es_consulta_instantanea():
             # CONSULTA INSTANTÁNEA - Sin validaciones de horario
             consulta.estado = 'espera'  # Lista para atender ahora
             consulta.fecha_atencion = None  # Se asignará cuando inicie
             mensaje_tipo = "instantánea"
-            
+            fecha_objetivo = timezone.now()
+
         else:
             # CONSULTA PROGRAMADA - Con fecha/hora específica
             consulta.estado = 'espera'  # Programada para más tarde
             fecha_hora_programada = form.get_fecha_hora_cita()
-            
+
             # Guardar la fecha/hora programada en observaciones o campo personalizado
             if consulta.observaciones:
                 consulta.observaciones += f"\n\nProgramada para: {fecha_hora_programada.strftime('%d/%m/%Y a las %H:%M')}"
             else:
                 consulta.observaciones = f"Consulta programada para: {fecha_hora_programada.strftime('%d/%m/%Y a las %H:%M')}"
-            
+
             mensaje_tipo = f"programada para {fecha_hora_programada.strftime('%d/%m/%Y a las %H:%M')}"
+            fecha_objetivo = fecha_hora_programada
+
+        # Validar que no exista cita o consulta con cita en esa franja
+        consultorio = None
+        if consulta.medico and consulta.medico.consultorio:
+            consultorio = consulta.medico.consultorio
+        elif user.consultorio:
+            consultorio = user.consultorio
+
+        if consultorio:
+            inicio = fecha_objetivo
+            fin = fecha_objetivo + timedelta(minutes=30)
+            solapa_cita = Cita.objects.filter(
+                consultorio=consultorio,
+                fecha_hora__lt=fin,
+                fecha_hora__gte=inicio,
+                estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+            ).exists()
+
+            solapa_consulta = Consulta.objects.filter(
+                cita__consultorio=consultorio,
+                cita__fecha_hora__lt=fin,
+                cita__fecha_hora__gte=inicio
+            ).exists()
+
+            if solapa_cita or solapa_consulta:
+                form.add_error(None, 'Existe una cita en ese horario. No se puede crear la consulta.')
+                return self.form_invalid(form)
         
         # ✅ ASIGNACIÓN DE ROLES
         if user.rol == 'asistente':
@@ -2283,6 +2311,20 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             or request.GET.get("next")
             or reverse("consulta_detalle", args=[consulta_pk])
         )
+
+        # Evitar que un médico inicie múltiples consultas simultáneamente
+        if request.user.rol == "medico":
+            activa = Consulta.objects.filter(
+                medico=request.user,
+                estado="en_progreso"
+            ).exclude(pk=consulta_pk).first()
+            if activa:
+                messages.error(
+                    request,
+                    "Ya tienes una consulta en progreso. Finalízala antes de iniciar otra."
+                )
+                return redirect("consultas_atencion", pk=activa.pk)
+
         return super().dispatch(request, *args, **kwargs)
 
     def _setup_forms(self, consulta, post_data=None):
