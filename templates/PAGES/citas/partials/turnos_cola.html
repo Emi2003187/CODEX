@@ -147,7 +147,7 @@
 
                             <!-- Liberar cita -->
                             {% if cita.estado in 'programada,confirmada,en_espera' %}
-                            <a href="{% url 'liberar_cita' cita_id=cita.id %}"
+                            <a href="{% url 'liberar_cita' cita_id=cita.id %}?next={{ request.get_full_path }}"
                                 class="btn-action btn-secondary-action"
                                data-bs-toggle="tooltip"
                                 title="Liberar cita">
@@ -210,7 +210,7 @@
                     <!-- Acciones para admin -->
                     {% if usuario.rol == 'admin' %}
                         <!-- Editar cita -->
-                        <a href="{% url 'citas_editar' pk=cita.id %}"
+                        <a href="{% url 'citas_editar' pk=cita.id %}?next={{ request.get_full_path }}"
                             class="btn-action btn-secondary-action"
                            data-bs-toggle="tooltip"
                             title="Editar cita">
@@ -220,7 +220,7 @@
 
                         <!-- Asignar médico si no tiene -->
                         {% if not cita.medico_asignado %}
-                        <a href="{% url 'asignar_medico_cita' cita_id=cita.id %}"
+                        <a href="{% url 'asignar_medico_cita' cita_id=cita.id %}?next={{ request.get_full_path }}"
                             class="btn-action btn-primary-action"
                            data-bs-toggle="tooltip"
                             title="Asignar médico">
@@ -232,7 +232,7 @@
 
                     <!-- Crear consulta desde cita -->
                     {% if cita.estado in 'en_espera,en_atencion' and not cita.consulta %}
-                    <a href="{% url 'crear_consulta_desde_cita' cita_id=cita.id %}"
+                    <a href="{% url 'crear_consulta_desde_cita' cita_id=cita.id %}?next={{ request.get_full_path }}"
                         class="btn-action btn-success-action"
                        data-bs-toggle="tooltip"
                         title="Crear consulta médica">
@@ -243,7 +243,7 @@
 
                     <!-- Ver consulta si existe -->
                     {% if cita.consulta %}
-                    <a href="{% url 'consulta_detalle' pk=cita.consulta.id %}"
+                    <a href="{% url 'consulta_detalle' pk=cita.consulta.id %}?next={{ request.get_full_path }}"
                         class="btn-action btn-success-action"
                        data-bs-toggle="tooltip"
                         title="Ver consulta médica">
@@ -325,6 +325,37 @@ function asignarMedico(citaId, medicoId, medicoNombre) {
         if (data.success) {
             showNotification(`Médico ${data.medico_nombre} asignado exitosamente`, 'success');
             // Actualizar la cola virtual
+            if (typeof actualizarCola === 'function') {
+                actualizarCola();
+            } else {
+                location.reload();
+            }
+        } else {
+            showNotification('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+function cambiarEstadoCita(citaId, nuevoEstado) {
+    const formData = new FormData();
+    formData.append('estado', nuevoEstado);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch(`/citas/${citaId}/cambiar-estado/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
             if (typeof actualizarCola === 'function') {
                 actualizarCola();
             } else {

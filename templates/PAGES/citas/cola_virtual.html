@@ -315,130 +315,76 @@
     <div class="row mb-4">
         <div class="col-md-2 col-6 mb-3">
             <div class="stats-card total">
-                <div class="stats-number">{{ stats.total }}</div>
+                <div id="stats-total" class="stats-number">{{ stats.total }}</div>
                 <div class="stats-label">Total Citas</div>
             </div>
         </div>
         <div class="col-md-2 col-6 mb-3">
             <div class="stats-card sin-asignar">
-                <div class="stats-number">{{ stats.sin_asignar }}</div>
+                <div id="stats-sin-asignar" class="stats-number">{{ stats.sin_asignar }}</div>
                 <div class="stats-label">Sin Médico</div>
             </div>
         </div>
         <div class="col-md-2 col-6 mb-3">
             <div class="stats-card asignadas">
-                <div class="stats-number">{{ stats.asignadas }}</div>
+                <div id="stats-asignadas" class="stats-number">{{ stats.asignadas }}</div>
                 <div class="stats-label">Asignadas</div>
             </div>
         </div>
         <div class="col-md-2 col-6 mb-3">
             <div class="stats-card en-espera">
-                <div class="stats-number">{{ stats.en_espera }}</div>
+                <div id="stats-en-espera" class="stats-number">{{ stats.en_espera }}</div>
                 <div class="stats-label">En Espera</div>
             </div>
         </div>
         <div class="col-md-2 col-6 mb-3">
             <div class="stats-card en-atencion">
-                <div class="stats-number">{{ stats.en_atencion }}</div>
+                <div id="stats-en-atencion" class="stats-number">{{ stats.en_atencion }}</div>
                 <div class="stats-label">En Atención</div>
             </div>
         </div>
         <div class="col-md-2 col-6 mb-3">
             <div class="stats-card completadas">
-                <div class="stats-number">{{ stats.completadas }}</div>
+                <div id="stats-completadas" class="stats-number">{{ stats.completadas }}</div>
                 <div class="stats-label">Completadas</div>
             </div>
         </div>
     </div>
 
     <!-- Cola de Citas -->
-    <div class="cola-section">
-        <div class="cola-header">
-            <h3 class="cola-title">
-                <i class="bi bi-calendar-event"></i>
-                Próximas Citas
-            </h3>
-        </div>
-        
-        <div class="citas-timeline">
-            {% for cita in citas_proximas %}
-                <div class="cita-item estado-{{ cita.estado }}">
-                    <div class="cita-time-marker"></div>
-                    <div class="cita-card">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <div class="cita-time">{{ cita.fecha_hora|date:"H:i" }}</div>
-                                <small class="text-muted">{{ cita.duracion }} min</small>
-                            </div>
-                            <small class="text-muted">#{{ cita.numero_cita }}</small>
-                        </div>
-                        
-                        <div class="cita-paciente">
-                            <i class="bi bi-person-circle me-2"></i>
-                            {{ cita.paciente.nombre_completo }}
-                        </div>
-                        
-                        <div class="cita-estado estado-{{ cita.estado }}">
-                            <i class="bi bi-circle-fill"></i>
-                            {{ cita.get_estado_display }}
-                        </div>
-                        
-                        <div class="cita-info">
-                            {% if cita.medico_asignado %}
-                            <div class="cita-info-item">
-                                <i class="bi bi-person-badge"></i>
-                                <span>Dr. {{ cita.medico_asignado.get_full_name }}</span>
-                            </div>
-                            {% else %}
-                            <div class="cita-info-item">
-                                <i class="bi bi-person-x"></i>
-                                <span>Sin médico asignado</span>
-                            </div>
-                            {% endif %}
-                            
-                            <div class="cita-info-item">
-                                <i class="bi bi-building"></i>
-                                <span>{{ cita.consultorio.nombre }}</span>
-                            </div>
-                            
-                            <div class="cita-info-item">
-                                <i class="bi bi-calendar-date"></i>
-                                <span>{{ cita.fecha_hora|date:"d/m/Y" }}</span>
-                            </div>
-                            
-                            {% if cita.tipo_cita %}
-                            <div class="cita-info-item">
-                                <i class="bi bi-tag"></i>
-                                <span>{{ cita.get_tipo_cita_display }}</span>
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        {% if cita.motivo %}
-                        <div class="mt-3">
-                            <strong>Motivo:</strong>
-                            <p class="mb-0 text-muted">{{ cita.motivo }}</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            {% empty %}
-                <div class="empty-state">
-                    <i class="bi bi-calendar-check"></i>
-                    <h4>No hay citas próximas</h4>
-                    <p class="text-muted">No se encontraron citas programadas próximas en este consultorio.</p>
-                </div>
-            {% endfor %}
-        </div>
+    <div id="cola-contenido">
+        {% include 'PAGES/citas/partials/turnos_cola.html' with citas_proximas=citas_proximas usuario=usuario %}
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Auto-refresh cada 60 segundos
-setInterval(function() {
-    location.reload();
-}, 60000);
+function actualizarCola() {
+    const params = new URLSearchParams({
+        fecha: '{{ fecha|date:"Y-m-d" }}',
+        consultorio: '{{ consultorio.id }}'
+    });
+
+    fetch('{% url "cola_virtual_data" %}?'+params.toString(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('cola-contenido').innerHTML = data.html;
+            document.getElementById('stats-total').innerText = data.stats.total;
+            document.getElementById('stats-sin-asignar').innerText = data.stats.sin_asignar;
+            document.getElementById('stats-asignadas').innerText = data.stats.asignadas;
+            document.getElementById('stats-en-espera').innerText = data.stats.en_espera;
+            document.getElementById('stats-en-atencion').innerText = data.stats.en_atencion;
+            document.getElementById('stats-completadas').innerText = data.stats.completadas;
+        }
+    });
+}
+
+// Inicial y auto-refresh cada 60 segundos
+document.addEventListener('DOMContentLoaded', actualizarCola);
+setInterval(actualizarCola, 60000);
 </script>
 {% endblock %}
