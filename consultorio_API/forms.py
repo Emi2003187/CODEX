@@ -1000,7 +1000,9 @@ class SignosVitalesForm(forms.ModelForm):
 
 class RecetaForm(forms.ModelForm):
     """Formulario para recetas médicas"""
-    
+
+    valido_hasta_input_formats = ["%Y-%m-%d", "%d/%m/%Y"]
+
     class Meta:
         model = Receta
         fields = ['indicaciones_generales', 'valido_hasta', 'notas']
@@ -1010,10 +1012,10 @@ class RecetaForm(forms.ModelForm):
                 'rows': 3,
                 'placeholder': 'Indicaciones generales para el paciente...'
             }),
-            'valido_hasta': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control'
-            }),
+            'valido_hasta': forms.DateInput(
+                attrs={'type': 'date', 'class': 'form-control'},
+                format="%Y-%m-%d",
+            ),
             'notas': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 2,
@@ -1028,12 +1030,15 @@ class RecetaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Mostrar fecha guardada o valor por defecto
 
-        self.fields['valido_hasta'].initial = (
-            self.instance.valido_hasta
-            or timezone.now().date() + timedelta(days=30)
-        )
+        # Mostrar fecha guardada o valor por defecto
+        if self.instance and self.instance.pk and self.instance.valido_hasta:
+            self.initial["valido_hasta"] = self.instance.valido_hasta.strftime("%Y-%m-%d")
+        else:
+            self.fields['valido_hasta'].initial = (
+                self.instance.valido_hasta
+                or timezone.now().date() + timedelta(days=30)
+            )
 
 
 
