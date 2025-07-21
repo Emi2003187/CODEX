@@ -16,6 +16,7 @@ from typing import Any
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Min
 
 # ───── Modelos / utilidades internas ───────────────────────────────────
 from .models import Cita, Consultorio, Paciente, Usuario
@@ -263,10 +264,37 @@ class PacienteForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         qs = Usuario.objects.none()
+        qs = Usuario.objects.none()
         if user:
+            if user.rol == "medico" and user.consultorio:
+                qs = Usuario.objects.filter(pk=user.pk)
             if user.rol == "medico":
                 qs = Usuario.objects.filter(pk=user.pk)
             elif user.rol == "admin":
+                medico_ids = (
+                    Usuario.objects.filter(
+                        rol="medico",
+                        is_active=True,
+                        consultorio__isnull=False,
+                    )
+                    .values("consultorio")
+                    .annotate(first_id=Min("id"))
+                    .values_list("first_id", flat=True)
+                )
+                qs = Usuario.objects.filter(pk__in=medico_ids)
+            elif user.rol == "asistente" and user.consultorio:
+                medico_id = (
+                    Usuario.objects.filter(
+                        rol="medico",
+                        consultorio=user.consultorio,
+                        is_active=True,
+                    ).aggregate(first_id=Min("id"))["first_id"]
+                )
+                qs = (
+                    Usuario.objects.filter(pk=medico_id)
+                    if medico_id
+                    else Usuario.objects.none()
+                )
                 qs = Usuario.objects.filter(rol="medico", is_active=True)
             elif user.rol == "asistente" and user.consultorio:
                 qs = Usuario.objects.filter(
@@ -275,12 +303,16 @@ class PacienteForm(forms.ModelForm):
                     is_active=True,
                 )
 
+        self.fields["consultorio_asignado"].queryset = qs.select_related(
+            "consultorio"
+        ).order_by("consultorio__nombre")
         self.fields["consultorio_asignado"].queryset = qs.order_by(
             "first_name",
             "last_name",
         )
         self.fields["consultorio_asignado"].empty_label = "Sin asignar"
         self.fields["consultorio_asignado"].label_from_instance = (
+            lambda obj: obj.consultorio.nombre if obj.consultorio else obj.get_full_name()
             lambda obj: obj.get_full_name()
         )
 
