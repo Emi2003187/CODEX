@@ -275,7 +275,7 @@
             {% if consulta.estado in 'espera en_progreso'.split %}
               <form method="post" action="{% url 'cancelar_consulta' consulta.pk %}">
                 {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
                 <button type="submit" class="btn btn-outline-danger btn-sm">
                   <i class="bi bi-x-circle me-1"></i>Cancelar Consulta
                 </button>

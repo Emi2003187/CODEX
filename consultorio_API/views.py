@@ -2120,8 +2120,9 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     success_url = reverse_lazy('consultas_lista')
 
     def get_form_kwargs(self):
-        """Return form kwargs without extra user param."""
-        return super().get_form_kwargs()
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def form_valid(self, form):
         user = self.request.user
@@ -2244,7 +2245,7 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
                 f'No hay conflictos de horario.'
             )
         
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2582,18 +2583,24 @@ def consulta_cancelar(request, pk):
 
 @login_required
 def cancelar_consulta(request, pk):
-    """Maneja la cancelación de una consulta via POST"""
+    """Cancela una consulta y la cita asociada."""
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    if request.user.rol not in ("admin", "medico", "asistente"):
+        messages.error(request, "No tienes permiso para cancelar consultas.")
+        return redirect(request.POST.get("next") or reverse("consultas_lista"))
+
     consulta = get_object_or_404(Consulta, pk=pk)
+    consulta.estado = "cancelada"
+    consulta.save()
+    if consulta.cita:
+        consulta.cita.estado = "cancelada"
+        consulta.cita.save()
 
-    if request.method == "POST":
-        consulta.estado = "cancelada"
-        consulta.save()
-        if consulta.cita:
-            consulta.cita.estado = "cancelada"
-            consulta.cita.save()
-        messages.success(request, "Consulta cancelada correctamente.")
+    messages.success(request, "Consulta cancelada correctamente.")
 
-    next_url = request.POST.get("next") or request.GET.get("next") or reverse("consultas_lista")
+    next_url = request.POST.get("next") or reverse("consultas_lista")
     return redirect(next_url)
 
 

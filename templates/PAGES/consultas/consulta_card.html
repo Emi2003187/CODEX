@@ -189,7 +189,7 @@
               <li>
                 <form method="post" action="{% url 'cancelar_consulta' consulta.pk %}">
                   {% csrf_token %}
-                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <input type="hidden" name="next" value="{{ request.path }}">
                   <button type="submit" class="dropdown-item text-danger">
                     <i class="bi bi-x-circle me-2"></i>Cancelar
                   </button>
