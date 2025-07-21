@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'consultorio_API.middleware.NextRedirectMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'consultorio_API.views.AuditMiddleware',
 ]
