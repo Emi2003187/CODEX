@@ -39,9 +39,24 @@
           <i class="bi bi-printer me-1"></i>Imprimir
         </a>
       {% endif %}
-      <a href="{% url 'consulta_eliminar' consulta.pk %}?next={% url 'consultas_lista' %}" class="btn btn-danger me-1">
-        <i class="bi bi-trash me-1"></i>Eliminar
-      </a>
+      {% if consulta.estado in ['espera', 'en_progreso'] %}
+      <form method="post" action="{% url 'consulta_cancelar' consulta.pk %}" class="d-inline">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="btn btn-warning me-1">
+          <i class="bi bi-x-circle me-1"></i>Cancelar
+        </button>
+      </form>
+      {% endif %}
+      {% if consulta.estado != 'en_progreso' %}
+      <form method="post" action="{% url 'consulta_eliminar' consulta.pk %}" class="d-inline">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="btn btn-danger me-1">
+          <i class="bi bi-trash me-1"></i>Eliminar
+        </button>
+      </form>
+      {% endif %}
       <a href="{% url 'consultas_lista' %}" class="btn btn-secondary">
         <i class="bi bi-arrow-left me-1"></i>Volver
       </a>

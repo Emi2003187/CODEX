@@ -182,21 +182,29 @@
               {% endif %}
             {% endif %}
             
-            {% if consulta.estado != "cancelada" and consulta.estado != "finalizada" %}
+            {% if consulta.estado in ["espera", "en_progreso"] %}
               <li><hr class="dropdown-divider"></li>
               <li>
-                <button class="dropdown-item text-danger" onclick="cancelarConsulta({{ consulta.pk }})">
-                  <i class="bi bi-x-circle me-2"></i>Cancelar
-                </button>
+                <form method="post" action="{% url 'consulta_cancelar' consulta.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="dropdown-item text-warning">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                  </button>
+                </form>
               </li>
             {% endif %}
-            
-            {% if consulta.estado == "cancelada" or consulta.estado == "finalizada" %}
+
+            {% if consulta.estado != "en_progreso" %}
               <li><hr class="dropdown-divider"></li>
               <li>
-                <button class="dropdown-item text-danger" onclick="eliminarConsulta({{ consulta.pk }})">
-                  <i class="bi bi-trash me-2"></i>Eliminar
-                </button>
+                <form method="post" action="{% url 'consulta_eliminar' consulta.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="dropdown-item text-danger">
+                    <i class="bi bi-trash me-2"></i>Eliminar
+                  </button>
+                </form>
               </li>
             {% endif %}
           </ul>
@@ -295,15 +303,5 @@ function verSignosVitales(consultaId) {
 }
 
 // Otras funciones existentes...
-function cancelarConsulta(consultaId) {
-    if (confirm('¿Está seguro de cancelar esta consulta?')) {
-        alert(`Consulta ID: ${consultaId} marcada como cancelada.\n\nFunción de cancelación en desarrollo.`);
-    }
-}
-
-function eliminarConsulta(consultaId) {
-    if (confirm('¿Está seguro de eliminar esta consulta? Esta acción no se puede deshacer.')) {
-        alert(`Consulta ID: ${consultaId} eliminada.\n\nFunción de eliminación en desarrollo.`);
-    }
-}
+// Las acciones de cancelar y eliminar se realizan mediante formularios POST
 </script>

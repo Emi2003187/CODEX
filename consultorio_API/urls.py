@@ -2,7 +2,7 @@ from django.urls import path
 from .views import *
 from django.contrib.auth.views import LogoutView
 from .views import CitaCreateView, Receta
-from consultorio_API import views, viewscitas 
+from consultorio_API import views, viewscitas, views_consultas
 
 urlpatterns = [
       # LOGIN Y LOGOUT
@@ -40,11 +40,11 @@ urlpatterns = [
     path('consultas/', views.ConsultaListView.as_view(), name='consultas_lista'),
     path('consultas/<int:pk>/', views.ConsultaDetailView.as_view(), name='consulta_detalle'),
     path('consultas/<int:pk>/editar/', views.ConsultaUpdateView.as_view(), name='consulta_editar'),
-    path('consultas/<int:pk>/eliminar/', views.ConsultaDeleteView.as_view(), name='consulta_eliminar'),
+    path('consultas/<int:pk>/eliminar/', views_consultas.eliminar_consulta, name='consulta_eliminar'),
     path('consultas/crear-sin-cita/', views.ConsultaSinCitaCreateView.as_view(), name='consultas_crear_sin_cita'),
     path('consultas/<int:pk>/precheck/', views.ConsultaPrecheckView.as_view(), name='consultas_precheck'),
     path('consultas/<int:pk>/atencion/', views.ConsultaAtencionView.as_view(), name='consultas_atencion'),
-    path('consultas/<int:pk>/cancelar/', views.ConsultaCancelarView.as_view(), name='consulta_cancelar'),
+    path('consultas/<int:pk>/cancelar/', views_consultas.cancelar_consulta, name='consulta_cancelar'),
     
     # HORARIOS
     path('horarios/', views.HorarioListView.as_view(), name='horarios_lista'),
