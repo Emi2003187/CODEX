@@ -3646,21 +3646,30 @@ class ConsultaCancelarView(LoginRequiredMixin, View):
         consulta = get_object_or_404(Consulta, pk=pk)
         
         if consulta.estado == 'cancelada':
-            messages.info(request, 'Esta consulta ya estaba cancelada.')
+            msg = 'Esta consulta ya estaba cancelada.'
+            messages.info(request, msg)
+            success = False
         elif consulta.estado == 'finalizada':
-            messages.error(request, 'No se puede cancelar una consulta finalizada.')
+            msg = 'No se puede cancelar una consulta finalizada.'
+            messages.error(request, msg)
+            success = False
         else:
             # Cancelar la consulta
             consulta.estado = 'cancelada'
             consulta.save()
-            
+
             # Si tiene cita asociada, también cancelarla
             if consulta.cita:
                 consulta.cita.estado = 'cancelada'
                 consulta.cita.save()
-            
-            messages.success(request, f'Consulta de {consulta.paciente.nombre_completo} cancelada exitosamente.')
-        
+
+            msg = f'Consulta de {consulta.paciente.nombre_completo} cancelada exitosamente.'
+            messages.success(request, msg)
+            success = True
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': success, 'message': msg})
+
         # Redirigir según el parámetro 'next' o a la lista de consultas
         next_url = request.POST.get('next') or request.GET.get('next') or reverse('consultas_lista')
         return redirect(next_url)
