@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Eliminar Consultorio{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'consultorios_lista' %}">Consultorios</a></li>
+      <li class="breadcrumb-item active">Eliminar</li>
+    </ol>
+  </nav>
+
+  <div class="card border-danger">
+    <div class="card-body">
+      <h4 class="text-danger">¿Seguro que deseas eliminar?</h4>
+      <p class="mb-3">{{ object.nombre }}</p>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{{ next|default:request.META.HTTP_REFERER|default:'#' }}" class="btn btn-secondary">Cancelar</a>
+          <button type="submit" class="btn btn-danger">Confirmar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
