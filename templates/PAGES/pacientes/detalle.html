@@ -454,10 +454,13 @@
                             
                             {% if c.estado == "finalizada" or c.estado == "cancelada" %}
                               <li>
-                                <a class="dropdown-item text-danger" href="{% url 'consulta_eliminar' c.pk %}?next={{ request.path }}"
-                                   onclick="return confirm('¿Está seguro de eliminar esta consulta?')">
-                                  <i class="bi bi-trash3 me-2"></i>Eliminar
-                                </a>
+                                <form method="post" action="{% url 'consulta_eliminar' c.pk %}" onsubmit="return confirm('¿Estás seguro de eliminar?');">
+                                  {% csrf_token %}
+                                  <input type="hidden" name="next" value="{{ request.path }}">
+                                  <button class="dropdown-item text-danger" type="submit">
+                                    <i class="bi bi-trash3 me-2"></i>Eliminar
+                                  </button>
+                                </form>
                               </li>
                             {% endif %}
                           </ul>
