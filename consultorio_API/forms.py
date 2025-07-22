@@ -745,13 +745,26 @@ class ConsultaSinCitaForm(forms.ModelForm):
                 is_active=True
             ).order_by('first_name', 'last_name')
         elif self.user and self.user.rol == 'admin':
-            # Admin puede seleccionar cualquier médico
-            self.fields['medico'].queryset = Usuario.objects.filter(
-                rol='medico',
-                is_active=True
-            ).order_by('first_name', 'last_name')
+            # Admin puede seleccionar médicos de su consultorio o todos si no tiene
+            if self.user.consultorio:
+                queryset = Usuario.objects.filter(
+                    rol='medico',
+                    consultorio=self.user.consultorio,
+                    is_active=True
+                )
+            else:
+                queryset = Usuario.objects.filter(
+                    rol='medico',
+                    is_active=True
+                )
+            self.fields['medico'].queryset = queryset.order_by('first_name', 'last_name')
         else:
             self.fields['medico'].queryset = Usuario.objects.none()
+
+        # Auto-asignación para médicos y asistentes
+        if self.user and self.user.rol in ("medico", "asistente"):
+            self.initial["medico"] = self.user.pk
+            self.fields["medico"].widget = forms.HiddenInput()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -780,8 +793,29 @@ class ConsultaSinCitaForm(forms.ModelForm):
                 raise ValidationError(
                     f"El médico {medico.get_full_name()} no pertenece a tu consultorio."
                 )
-        
+
+        # Verificar que el médico no tenga otra consulta en progreso
+        if medico and Consulta.objects.filter(
+                medico=medico, estado="en_progreso"
+        ).exclude(pk=getattr(self.instance, "pk", None)).exists():
+            raise ValidationError(
+                "El doctor seleccionado ya atiende otra consulta."
+            )
+
         return cleaned_data
+
+    def clean_medico(self):
+        medico = self.cleaned_data.get("medico")
+        posted = self.data.get("medico")
+        if (
+            not medico
+            and posted
+            and self.user
+            and str(self.user.pk) == str(posted)
+        ):
+            # Aceptar valor auto-asignado aunque no esté en el queryset
+            medico = self.user
+        return medico
 
     def es_consulta_instantanea(self):
         """Determina si la consulta es instantánea (para atender ahora)"""
