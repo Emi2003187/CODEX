@@ -202,6 +202,21 @@ def auditar_cambios_consulta(sender, instance, **kwargs):
     except Consulta.DoesNotExist:
         pass
 
+
+@receiver(post_delete, sender=Consulta)
+def auditar_consulta_delete(sender, instance, **kwargs):
+    """Registrar eliminación de consultas."""
+    usuario_actual = get_current_user()
+    request = get_current_request()
+    if usuario_actual:
+        registrar(
+            usuario_actual,
+            "eliminar_consulta",
+            instance,
+            f"Consulta de {instance.paciente.nombre_completo} eliminada",
+            request,
+        )
+
 # ═══════════════════════════════════════════════════════════════
 # 📊 SEÑALES DE SIGNOS VITALES
 # ═══════════════════════════════════════════════════════════════
