@@ -25,7 +25,9 @@
             {% endfor %}
           </div>
         {% endfor %}
-        <input type="hidden" name="next" value="{{ next }}">
+        {% if request.GET.next %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+        {% endif %}
         <div class="d-flex justify-content-end">
           <a href="{{ next|default:request.META.HTTP_REFERER|default:'#' }}" class="btn btn-secondary me-2">Cancelar</a>
           <button type="submit" class="btn btn-primary">Guardar</button>

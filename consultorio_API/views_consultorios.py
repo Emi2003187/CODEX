@@ -53,8 +53,12 @@ class ConsultorioCreateView(NextRedirectMixin, AdminRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["usuario"] = self.request.user
-        ctx["next"] = self.get_next_url()
+        ctx["next"] = self.request.GET.get("next") or self.request.POST.get("next")
         return ctx
+
+    def get_success_url(self):
+        next_url = self.request.GET.get("next") or self.request.POST.get("next")
+        return next_url or reverse_lazy("consultorios_lista")
 
 
 @method_decorator(login_required, name="dispatch")
