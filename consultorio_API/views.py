@@ -38,6 +38,11 @@ from .forms import *
 from .utils import redirect_next
 
 
+def doctor_tiene_consulta_en_progreso(medico):
+    """Devuelve True si el médico tiene otra consulta en progreso."""
+    return Consulta.objects.filter(medico=medico, estado="en_progreso").exists()
+
+
 class NextRedirectMixin:
     """Mixin para manejar redirecciones basadas en ?next."""
 
@@ -1738,6 +1743,16 @@ class ConsultaListView(LoginRequiredMixin, ListView):
             "consultas_sin_cita": consultas_sin_cita,
         })
 
+        # Médicos con consulta en progreso para ocultar botón "Atender"
+        medicos_ocupados = set(
+            consultas.filter(estado="en_progreso", medico__isnull=False)
+            .values_list("medico_id", flat=True)
+        )
+        for con in consultas:
+            con.medico_en_otro_progreso = (
+                con.medico_id in medicos_ocupados and con.estado != "en_progreso"
+            )
+
         # Médicos disponibles para filtros
         if usuario.consultorio and usuario.rol != "admin":
             medicos = Usuario.objects.filter(
@@ -2155,8 +2170,9 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     success_url = reverse_lazy('consultas_lista')
 
     def get_form_kwargs(self):
-        """Return form kwargs without extra user param."""
-        return super().get_form_kwargs()
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         user = self.request.user
@@ -2356,6 +2372,9 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
         consulta = get_object_or_404(Consulta, pk=pk)
         # Al acceder por primera vez se marca como "en progreso" si estaba en espera
         if consulta.estado == "espera":
+            if consulta.medico and doctor_tiene_consulta_en_progreso(consulta.medico):
+                messages.error(request, "El médico ya tiene otra consulta en progreso.")
+                return redirect(self.next_url)
             consulta.estado = "en_progreso"
             consulta.fecha_atencion = timezone.now()
             consulta.save()
@@ -2382,6 +2401,9 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             consulta = consulta_form.save(commit=False)
 
             if action == "start" and consulta.estado == "espera":
+                if consulta.medico and doctor_tiene_consulta_en_progreso(consulta.medico):
+                    messages.error(request, "El médico ya tiene otra consulta en progreso.")
+                    return redirect(self.next_url)
                 consulta.estado = "en_progreso"
                 consulta.fecha_atencion = timezone.now()
                 messages.success(request, "Consulta iniciada.")

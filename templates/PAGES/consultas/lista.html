@@ -243,7 +243,7 @@
         <div class="tab-pane fade show active" id="pendientes" role="tabpanel">
           <div class="row row-cols-1 row-cols-lg-2 row-cols-xxl-3 g-4" id="pendientes-container">
             {% for consulta in consultas_pendientes %}
-              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario %}
+              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario medico_en_otro_progreso=consulta.medico_en_otro_progreso %}
             {% empty %}
               <div class="col-12">
                 <div class="text-center py-5">
@@ -260,7 +260,7 @@
         <div class="tab-pane fade" id="en-progreso" role="tabpanel">
           <div class="row row-cols-1 row-cols-lg-2 row-cols-xxl-3 g-4" id="progreso-container">
             {% for consulta in consultas_en_progreso %}
-              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario %}
+              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario medico_en_otro_progreso=consulta.medico_en_otro_progreso %}
             {% empty %}
               <div class="col-12">
                 <div class="text-center py-5">
@@ -277,7 +277,7 @@
         <div class="tab-pane fade" id="finalizadas" role="tabpanel">
           <div class="row row-cols-1 row-cols-lg-2 row-cols-xxl-3 g-4" id="finalizadas-container">
             {% for consulta in consultas_finalizadas %}
-              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario %}
+              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario medico_en_otro_progreso=consulta.medico_en_otro_progreso %}
             {% empty %}
               <div class="col-12">
                 <div class="text-center py-5">
@@ -294,7 +294,7 @@
         <div class="tab-pane fade" id="canceladas" role="tabpanel">
           <div class="row row-cols-1 row-cols-lg-2 row-cols-xxl-3 g-4" id="canceladas-container">
             {% for consulta in consultas_canceladas %}
-              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario %}
+              {% include 'PAGES/consultas/consulta_card.html' with consulta=consulta usuario=usuario medico_en_otro_progreso=consulta.medico_en_otro_progreso %}
             {% empty %}
               <div class="col-12">
                 <div class="text-center py-5">
