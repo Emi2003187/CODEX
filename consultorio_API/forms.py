@@ -16,7 +16,7 @@ from typing import Any
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Min
+from django.db.models import Min, Q
 
 # ───── Modelos / utilidades internas ───────────────────────────────────
 from .models import Cita, Consultorio, Paciente, Usuario
@@ -733,25 +733,19 @@ class ConsultaSinCitaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        
-        # Configurar pacientes
+
         self.fields['paciente'].queryset = Paciente.objects.all().order_by('nombre_completo')
-        
-        # Configurar médicos según consultorio del usuario
-        if self.user and self.user.consultorio:
-            self.fields['medico'].queryset = Usuario.objects.filter(
-                rol='medico',
-                consultorio=self.user.consultorio,
-                is_active=True
-            ).order_by('first_name', 'last_name')
-        elif self.user and self.user.rol == 'admin':
-            # Admin puede seleccionar cualquier médico
-            self.fields['medico'].queryset = Usuario.objects.filter(
-                rol='medico',
-                is_active=True
-            ).order_by('first_name', 'last_name')
+
+        qs = Usuario.objects.filter(rol='medico', is_active=True)
+        if self.user:
+            if self.user.consultorio:
+                qs = qs.filter(consultorio=self.user.consultorio)
+            elif self.user.rol != 'admin':
+                qs = Usuario.objects.none()
         else:
-            self.fields['medico'].queryset = Usuario.objects.none()
+            qs = Usuario.objects.none()
+
+        self.fields['medico'].queryset = qs.order_by('first_name', 'last_name')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -780,7 +774,43 @@ class ConsultaSinCitaForm(forms.ModelForm):
                 raise ValidationError(
                     f"El médico {medico.get_full_name()} no pertenece a tu consultorio."
                 )
-        
+
+        # Validar solapamientos cuando se programa para "ahora"
+        if programar_para == 'ahora':
+            consultorio = None
+            if medico and medico.consultorio:
+                consultorio = medico.consultorio
+            elif self.user and self.user.consultorio:
+                consultorio = self.user.consultorio
+
+            if consultorio:
+                inicio = timezone.now()
+                fin = inicio + timedelta(minutes=30)
+
+                # Revisar citas existentes
+                citas = Cita.objects.filter(
+                    consultorio=consultorio,
+                    fecha_hora__lt=fin,
+                    estado__in=[e[0] for e in Cita.ESTADO_CHOICES if e[0] != 'cancelada']
+                )
+                for c in citas:
+                    c_fin = c.fecha_hora + timedelta(minutes=c.duracion)
+                    if inicio < c_fin and fin > c.fecha_hora:
+                        raise ValidationError('El horario se solapa con otra cita.')
+
+                # Revisar consultas en espera o en progreso
+                consultas = Consulta.objects.filter(
+                    Q(medico__consultorio=consultorio) |
+                    Q(cita__consultorio=consultorio) |
+                    Q(asistente__consultorio=consultorio),
+                    estado__in=['espera', 'en_progreso']
+                )
+                for con in consultas:
+                    ini = con.fecha_atencion or (con.cita.fecha_hora if con.cita else con.fecha_creacion)
+                    fin_con = ini + timedelta(minutes=30)
+                    if inicio < fin_con and fin > ini:
+                        raise ValidationError('El horario se solapa con otra consulta.')
+
         return cleaned_data
 
     def es_consulta_instantanea(self):
