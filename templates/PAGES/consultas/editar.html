@@ -431,7 +431,7 @@ label[for*="DELETE"] {
 
     <form method="post">
       {% csrf_token %}
-      <input type="hidden" name="next" value="{{ return_to }}">
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
       
       <div class="content-section">
         <div class="row">

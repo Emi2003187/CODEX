@@ -7,7 +7,7 @@
     <p>Consulta de {{ object.paciente.nombre_completo }} ({{ object.get_tipo_display }})</p>
     <form method="post">
       {% csrf_token %}
-        <input type="hidden" name="next" value="{{ next }}">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
       <a href="{{ next }}" class="btn btn-secondary">Cancelar</a>
       <button type="submit" class="btn btn-danger">Eliminar</button>
     </form>

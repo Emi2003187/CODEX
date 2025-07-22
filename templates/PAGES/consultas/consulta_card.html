@@ -182,21 +182,21 @@
               {% endif %}
             {% endif %}
             
-            {% if consulta.estado != "cancelada" and consulta.estado != "finalizada" %}
+            {% if consulta.estado == "espera" or consulta.estado == "en_progreso" %}
               <li><hr class="dropdown-divider"></li>
               <li>
-                <button class="dropdown-item text-danger" onclick="cancelarConsulta({{ consulta.pk }})">
+                <a class="dropdown-item text-danger" href="{% url 'consulta_cancelar' consulta.pk %}?next={{ request.get_full_path }}">
                   <i class="bi bi-x-circle me-2"></i>Cancelar
-                </button>
+                </a>
               </li>
             {% endif %}
-            
-            {% if consulta.estado == "cancelada" or consulta.estado == "finalizada" %}
+
+            {% if usuario.rol == 'admin' %}
               <li><hr class="dropdown-divider"></li>
               <li>
-                <button class="dropdown-item text-danger" onclick="eliminarConsulta({{ consulta.pk }})">
+                <a class="dropdown-item text-danger" href="{% url 'consulta_eliminar' consulta.pk %}?next={{ request.get_full_path }}">
                   <i class="bi bi-trash me-2"></i>Eliminar
-                </button>
+                </a>
               </li>
             {% endif %}
           </ul>
@@ -288,22 +288,9 @@ function verSignosVitales(consultaId) {
             const modal = new bootstrap.Modal(document.getElementById('signosModal'));
             modal.show();
         })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al cargar los signos vitales');
-        });
-}
-
-// Otras funciones existentes...
-function cancelarConsulta(consultaId) {
-    if (confirm('¿Está seguro de cancelar esta consulta?')) {
-        alert(`Consulta ID: ${consultaId} marcada como cancelada.\n\nFunción de cancelación en desarrollo.`);
-    }
-}
-
-function eliminarConsulta(consultaId) {
-    if (confirm('¿Está seguro de eliminar esta consulta? Esta acción no se puede deshacer.')) {
-        alert(`Consulta ID: ${consultaId} eliminada.\n\nFunción de eliminación en desarrollo.`);
-    }
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al cargar los signos vitales');
+    });
 }
 </script>

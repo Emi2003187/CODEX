@@ -2144,6 +2144,15 @@ class ConsultaDeleteView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
         ctx['usuario'] = self.request.user
         ctx['next'] = self.request.GET.get("next", self.request.META.get("HTTP_REFERER", ""))
         return ctx
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        cita = self.object.cita
+        response = super().delete(request, *args, **kwargs)
+        if cita:
+            cita.delete()
+        messages.success(request, "Consulta eliminada correctamente.")
+        return redirect_next(request, 'consultas_lista')
     
     
   
@@ -2240,9 +2249,8 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
         # ✅ MENSAJE DE ÉXITO FINAL
         if form.es_consulta_instantanea():
             messages.success(
-                self.request, 
-                f'✅ Consulta instantánea creada exitosamente para {consulta.paciente.nombre_completo}. '
-                f'Estado: {consulta.get_estado_display()}. Lista para atención inmediata.'
+                self.request,
+                "Consulta creada y lista para atender."
             )
         else:
             messages.success(
@@ -2356,6 +2364,17 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
         consulta = get_object_or_404(Consulta, pk=pk)
         # Al acceder por primera vez se marca como "en progreso" si estaba en espera
         if consulta.estado == "espera":
+            medico = consulta.medico or request.user
+            existente = Consulta.objects.filter(
+                medico=medico, estado="en_progreso"
+            ).exclude(pk=consulta.pk)
+            if existente.exists():
+                messages.error(
+                    request,
+                    "Ya tienes una consulta en progreso; finalízala o cancélala primero.",
+                )
+                return redirect_next(request, "consultas_lista")
+
             consulta.estado = "en_progreso"
             consulta.fecha_atencion = timezone.now()
             consulta.save()
@@ -2382,6 +2401,17 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             consulta = consulta_form.save(commit=False)
 
             if action == "start" and consulta.estado == "espera":
+                medico = consulta.medico or request.user
+                existente = Consulta.objects.filter(
+                    medico=medico, estado="en_progreso"
+                ).exclude(pk=consulta.pk)
+                if existente.exists():
+                    messages.error(
+                        request,
+                        "Ya tienes una consulta en progreso; finalízala o cancélala primero.",
+                    )
+                    return redirect_next(request, "consultas_lista")
+
                 consulta.estado = "en_progreso"
                 consulta.fecha_atencion = timezone.now()
                 messages.success(request, "Consulta iniciada.")
@@ -2541,21 +2571,20 @@ def consulta_cancelar(request, pk):
     """Marca la consulta como 'cancelada'"""
     if request.user.rol not in ("admin", "medico", "asistente"):
         messages.error(request, "No tienes permiso para cancelar consultas.")
-        return redirect("consultas_lista")
+        return redirect_next(request, "consultas_lista")
 
     consulta = get_object_or_404(Consulta, pk=pk)
-    if consulta.estado == "cancelada":
-        messages.info(request, "La consulta ya estaba cancelada.")
-    else:
+    if consulta.estado != "cancelada":
         consulta.estado = "cancelada"
         consulta.save()
-        messages.success(request, "Consulta cancelada correctamente.")
-
         if consulta.cita:
             consulta.cita.estado = "cancelada"
             consulta.cita.save()
+        messages.success(request, "Consulta cancelada correctamente.")
+    else:
+        messages.info(request, "La consulta ya estaba cancelada.")
 
-    return redirect("consultas_lista")
+    return redirect_next(request, "consultas_lista")
 
 
 # ═══════════════════════════════════════════════════════════════

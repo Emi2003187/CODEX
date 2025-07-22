@@ -428,7 +428,7 @@ textarea.form-control {
 
     <form method="post">
       {% csrf_token %}
-      <input type="hidden" name="next" value="{{ next }}">
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
 
       <!-- Paso 1: Motivo y Diagnóstico -->
       <div class="wizard-step active" data-step="1">

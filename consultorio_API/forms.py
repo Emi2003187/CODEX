@@ -780,6 +780,18 @@ class ConsultaSinCitaForm(forms.ModelForm):
                 raise ValidationError(
                     f"El médico {medico.get_full_name()} no pertenece a tu consultorio."
                 )
+
+        # No permitir seleccionar médico con otra consulta en progreso
+        if medico:
+            en_progreso = Consulta.objects.filter(
+                medico=medico, estado="en_progreso"
+            )
+            if self.instance.pk:
+                en_progreso = en_progreso.exclude(pk=self.instance.pk)
+            if en_progreso.exists():
+                raise ValidationError(
+                    "El doctor seleccionado ya atiende otra consulta."
+                )
         
         return cleaned_data
 

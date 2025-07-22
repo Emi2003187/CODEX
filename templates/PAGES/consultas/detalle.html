@@ -39,9 +39,18 @@
           <i class="bi bi-printer me-1"></i>Imprimir
         </a>
       {% endif %}
-      <a href="{% url 'consulta_eliminar' consulta.pk %}?next={% url 'consultas_lista' %}" class="btn btn-danger me-1">
-        <i class="bi bi-trash me-1"></i>Eliminar
-      </a>
+
+      {% if consulta.estado == 'espera' or consulta.estado == 'en_progreso' %}
+        <a href="{% url 'consulta_cancelar' consulta.pk %}?next={{ request.get_full_path }}" class="btn btn-danger me-1">
+          <i class="bi bi-x-circle me-1"></i>Cancelar
+        </a>
+      {% endif %}
+
+      {% if usuario.rol == 'admin' %}
+        <a href="{% url 'consulta_eliminar' consulta.pk %}?next={{ request.get_full_path }}" class="btn btn-danger me-1">
+          <i class="bi bi-trash me-1"></i>Eliminar
+        </a>
+      {% endif %}
       <a href="{% url 'consultas_lista' %}" class="btn btn-secondary">
         <i class="bi bi-arrow-left me-1"></i>Volver
       </a>
@@ -174,7 +183,7 @@
               <a href="{% url 'signos_detalle' signos_vitales.pk %}" class="btn btn-sm btn-outline-info">
                 <i class="bi bi-eye me-1"></i>Ver Detalles
               </a>
-              {% if usuario.rol in 'medico,asistente,admin' %}
+              {% if usuario.rol == 'medico' or usuario.rol == 'asistente' or usuario.rol == 'admin' %}
                 <a href="{% url 'consultas_precheck' consulta.pk %}?next={{ request.get_full_path }}" class="btn btn-sm btn-outline-warning">
                   <i class="bi bi-pencil me-1"></i>Editar Signos
                 </a>
