@@ -1749,7 +1749,16 @@ class ConsultaListView(LoginRequiredMixin, ListView):
             # 4. Permitir crear consultas sin cita
             "puede_crear_sin_cita": usuario.rol in ['medico', 'asistente', 'admin'],
         })
-        
+
+        # Consulta del usuario actualmente en progreso (si existe)
+        consulta_en_progreso = Consulta.objects.filter(
+            medico=usuario,
+            estado="en_progreso",
+        ).first()
+        ctx["consulta_en_progreso_pk"] = (
+            consulta_en_progreso.pk if consulta_en_progreso else None
+        )
+
         return ctx
 
 
@@ -2110,7 +2119,19 @@ class ConsultaDetailView(LoginRequiredMixin, DetailView):
             'cita': consulta.cita,
             'puede_editar': self.request.user == consulta.medico or self.request.user.rol == 'admin',
         })
-        
+
+        # Consulta del usuario actualmente en progreso (si existe y es distinta)
+        consulta_en_progreso_pk = (
+            Consulta.objects.filter(
+                medico=self.request.user,
+                estado="en_progreso",
+            )
+            .exclude(pk=consulta.pk)
+            .values_list("pk", flat=True)
+            .first()
+        )
+        context["consulta_en_progreso_pk"] = consulta_en_progreso_pk
+
         return context
 
 
@@ -2140,8 +2161,10 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     success_url = reverse_lazy('consultas_lista')
 
     def get_form_kwargs(self):
-        """Return form kwargs without extra user param."""
-        return super().get_form_kwargs()
+        """Pass the request user to the form."""
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         user = self.request.user
@@ -2225,15 +2248,13 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
         # ✅ MENSAJE DE ÉXITO FINAL
         if form.es_consulta_instantanea():
             messages.success(
-                self.request, 
-                f'✅ Consulta instantánea creada exitosamente para {consulta.paciente.nombre_completo}. '
-                f'Estado: {consulta.get_estado_display()}. Lista para atención inmediata.'
+                self.request,
+                "Consulta creada y lista para atender."
             )
         else:
             messages.success(
-                self.request, 
-                f'✅ Consulta {mensaje_tipo} creada exitosamente para {consulta.paciente.nombre_completo}. '
-                f'No hay conflictos de horario.'
+                self.request,
+                f'Consulta {mensaje_tipo} creada exitosamente para {consulta.paciente.nombre_completo}.'
             )
         
         return redirect(self.success_url)
@@ -2341,6 +2362,15 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
         consulta = get_object_or_404(Consulta, pk=pk)
         # Al acceder por primera vez se marca como "en progreso" si estaba en espera
         if consulta.estado == "espera":
+            if Consulta.objects.filter(
+                medico=request.user,
+                estado="en_progreso"
+            ).exclude(pk=consulta.pk).exists():
+                messages.error(
+                    request,
+                    "Ya tienes una consulta en progreso; finalízala o cancélala primero."
+                )
+                return redirect("consultas_lista")
             consulta.estado = "en_progreso"
             consulta.fecha_atencion = timezone.now()
             consulta.save()
@@ -2367,6 +2397,15 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             consulta = consulta_form.save(commit=False)
 
             if action == "start" and consulta.estado == "espera":
+                if Consulta.objects.filter(
+                    medico=request.user,
+                    estado="en_progreso"
+                ).exclude(pk=consulta.pk).exists():
+                    messages.error(
+                        request,
+                        "Ya tienes una consulta en progreso; finalízala o cancélala primero."
+                    )
+                    return redirect("consultas_lista")
                 consulta.estado = "en_progreso"
                 consulta.fecha_atencion = timezone.now()
                 messages.success(request, "Consulta iniciada.")

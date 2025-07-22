@@ -25,10 +25,24 @@
       <p class="text-muted mb-0">{{ consulta.paciente.nombre_completo }}</p>
     </div>
     <div class="col-md-4 text-md-end">
-      {% if consulta.estado == 'espera' and puede_editar %}
-        <a href="{% url 'consultas_atencion' consulta.pk %}" class="btn btn-primary me-1">
-          <i class="bi bi-play me-1"></i>Atender
-        </a>
+      {% if consulta.estado == 'espera' and puede_editar and (not consulta_en_progreso_pk or consulta_en_progreso_pk == consulta.pk) %}
+        <form method="post" action="{% url 'consultas_atencion' consulta.pk %}" class="d-inline">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="start">
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="btn btn-primary me-1">
+            <i class="bi bi-play me-1"></i>Atender
+          </button>
+        </form>
+      {% elif consulta.estado == 'en_progreso' and usuario == consulta.medico %}
+        <form method="post" action="{% url 'consultas_atencion' consulta.pk %}" class="d-inline">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="finish">
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="btn btn-success me-1">
+            <i class="bi bi-check-circle me-1"></i>Finalizar
+          </button>
+        </form>
       {% elif puede_editar %}
         <a href="{% url 'consulta_editar' consulta.pk %}" class="btn btn-warning me-1">
           <i class="bi bi-pencil me-1"></i>Editar
@@ -254,18 +268,44 @@
         </div>
         <div class="card-body">
           <div class="d-grid gap-2">
-            {% if consulta.estado == 'espera' %}
-              <a href="{% url 'consultas_atencion' consulta.pk %}" class="btn btn-primary btn-sm">
-                <i class="bi bi-play me-1"></i>Iniciar Atención
-              </a>
+            {% if consulta.estado == 'espera' and (not consulta_en_progreso_pk or consulta_en_progreso_pk == consulta.pk) %}
+              <form method="post" action="{% url 'consultas_atencion' consulta.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="start">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-primary btn-sm">
+                  <i class="bi bi-play me-1"></i>Iniciar Atención
+                </button>
+              </form>
             {% endif %}
-            
+
             {% if not signos_vitales %}
               <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-warning btn-sm">
                 <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
               </a>
             {% endif %}
             
+            {% if consulta.estado in ['espera', 'en_progreso'] %}
+              <form method="post" action="{% url 'consulta_cancelar' consulta.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-danger btn-sm">
+                  <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+              </form>
+            {% endif %}
+
+            {% if consulta.estado == 'en_progreso' and usuario == consulta.medico %}
+              <form method="post" action="{% url 'consultas_atencion' consulta.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="finish">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-success btn-sm">
+                  <i class="bi bi-check-circle me-1"></i>Finalizar
+                </button>
+              </form>
+            {% endif %}
+
             {% if puede_editar %}
               <a href="{% url 'consulta_editar' consulta.pk %}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-pencil me-1"></i>Editar Consulta

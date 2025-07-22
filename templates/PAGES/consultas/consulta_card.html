@@ -109,11 +109,25 @@
         </div>
         {% else %}
         <div class="btn-group" role="group">
-          {% if consulta.estado != "finalizada" and consulta.estado != "cancelada" %}
-            <a href="{% url 'consultas_atencion' consulta.pk %}"
-               class="btn btn-primary btn-sm">
-              <i class="bi bi-clipboard-plus me-1"></i>Atender
-            </a>
+          {% if consulta.estado == "espera" and (not consulta_en_progreso_pk or consulta_en_progreso_pk == consulta.pk) %}
+            <form method="post" action="{% url 'consultas_atencion' consulta.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="start">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="bi bi-clipboard-plus me-1"></i>Atender
+              </button>
+            </form>
+          {% endif %}
+          {% if usuario == consulta.medico and consulta.estado == "en_progreso" %}
+            <form method="post" action="{% url 'consultas_atencion' consulta.pk %}" class="ms-1">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="finish">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="btn btn-success btn-sm">
+                <i class="bi bi-check-circle me-1"></i>Finalizar
+              </button>
+            </form>
           {% endif %}
 
           {% if consulta.signos_vitales %}
@@ -182,12 +196,16 @@
               {% endif %}
             {% endif %}
             
-            {% if consulta.estado != "cancelada" and consulta.estado != "finalizada" %}
+            {% if consulta.estado in ["espera", "en_progreso"] %}
               <li><hr class="dropdown-divider"></li>
               <li>
-                <button class="dropdown-item text-danger" onclick="cancelarConsulta({{ consulta.pk }})">
-                  <i class="bi bi-x-circle me-2"></i>Cancelar
-                </button>
+                <form method="post" action="{% url 'consulta_cancelar' consulta.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="dropdown-item text-danger">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                  </button>
+                </form>
               </li>
             {% endif %}
             
