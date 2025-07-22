@@ -447,15 +447,15 @@ def crear_pacientes(admin_user):
     
     pacientes = []
 
-    # Obtener cualquier médico para asignar como consultorio_asignado
-    medico_asignado = Usuario.objects.filter(rol="medico").first()
+    # Obtener cualquier médico para asignar como consultorio por defecto
+    medico_asignado = Usuario.objects.filter(rol="medico", consultorio__isnull=False).first()
     if not medico_asignado:
         print("❌ No hay médicos disponibles para asignar a los pacientes.")
         return []
 
     for data in pacientes_data:
         try:
-            paciente = Paciente(**data, consultorio_asignado=medico_asignado)
+            paciente = Paciente(**data, consultorio=medico_asignado.consultorio)
             paciente.save()
 
             # Auditoría

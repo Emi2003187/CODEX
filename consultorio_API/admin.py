@@ -82,15 +82,14 @@ class PacienteAdmin(admin.ModelAdmin):
         "edad",
         "telefono",
         "correo",
-        "consultorio_asignado",
+        "consultorio",
     )
-    list_filter = ("sexo", "consultorio_asignado")
+    list_filter = ("sexo", "consultorio")
     search_fields = (
         "nombre_completo",
         "telefono",
         "correo",
-        "consultorio_asignado__first_name",
-        "consultorio_asignado__last_name",
+        "consultorio__nombre",
     )
 
 
