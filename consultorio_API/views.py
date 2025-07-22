@@ -331,6 +331,21 @@ class AdminRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.is_authenticated and self.request.user.rol == 'admin'
 
+    def handle_no_permission(self):
+        from .utils import redirect_next
+        user = self.request.user
+        if user.is_authenticated:
+            if user.rol == 'medico':
+                dashboard = 'dashboard_medico'
+            elif user.rol == 'asistente':
+                dashboard = 'dashboard_asistente'
+            else:
+                dashboard = 'dashboard_admin'
+        else:
+            dashboard = 'login'
+        messages.error(self.request, 'No tienes permisos de administrador.')
+        return redirect_next(self.request, dashboard)
+
 
 class UsuarioListView(AdminRequiredMixin, ListView):
     model = Usuario

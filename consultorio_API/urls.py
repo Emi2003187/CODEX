@@ -1,5 +1,12 @@
 from django.urls import path
 from .views import *
+from .views_consultorios import (
+    ConsultorioListView,
+    ConsultorioCreateView,
+    ConsultorioDetailView,
+    ConsultorioUpdateView,
+    ConsultorioDeleteView,
+)
 from django.contrib.auth.views import LogoutView
 from .views import CitaCreateView, Receta
 from consultorio_API import views, viewscitas 
@@ -19,6 +26,13 @@ urlpatterns = [
     path('usuarios/crear/', views.UsuarioCreateView.as_view(), name='usuarios_crear'),
     path('usuarios/<int:pk>/editar/', views.UsuarioUpdateView.as_view(), name='usuarios_editar'),
     path('usuarios/<int:pk>/eliminar/', views.UsuarioDeleteView.as_view(), name='usuarios_eliminar'),
+
+    # CONSULTORIOS
+    path('consultorios/', ConsultorioListView.as_view(), name='consultorios_lista'),
+    path('consultorios/crear/', ConsultorioCreateView.as_view(), name='consultorio_crear'),
+    path('consultorios/<int:pk>/', ConsultorioDetailView.as_view(), name='consultorio_detalle'),
+    path('consultorios/<int:pk>/editar/', ConsultorioUpdateView.as_view(), name='consultorio_editar'),
+    path('consultorios/<int:pk>/eliminar/', ConsultorioDeleteView.as_view(), name='consultorio_eliminar'),
     
     # PACIENTES
     path('pacientes/', views.PacienteListView.as_view(), name='pacientes_lista'),

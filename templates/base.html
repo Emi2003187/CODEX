@@ -522,6 +522,10 @@
                     <i class="bi bi-clock"></i>
                     <span class="menu-item-text">Horarios Médicos</span>
                 </a>
+                <a href="{% url 'consultorios_lista' %}" class="menu-item {% if 'consultorios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultorios">
+                    <i class="bi bi-hospital"></i>
+                    <span class="menu-item-text">Consultorios</span>
+                </a>
             </div>
             {% endif %}
 

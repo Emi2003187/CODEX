@@ -1,12 +1,12 @@
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from django.contrib.auth.signals import user_logged_in, user_logged_out, user_login_failed
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 
 from .models import (
-    Paciente, Expediente, Auditoria, Cita, Consulta, 
-    SignosVitales, Usuario
+    Paciente, Expediente, Auditoria, Cita, Consulta,
+    SignosVitales, Usuario, Consultorio
 )
 from .auditoria_utils import registrar
 from .notifications import NotificationManager
@@ -237,6 +237,27 @@ def procesar_signos_vitales(sender, instance, created, **kwargs):
                 instance,
                 f"Signos vitales actualizados para {instance.consulta.paciente.nombre_completo}"
             )
+
+# ═══════════════════════════════════════════════════════════════
+# 🏥 SEÑALES DE CONSULTORIOS
+# ═══════════════════════════════════════════════════════════════
+
+@receiver(post_save, sender=Consultorio)
+def auditar_consultorio_save(sender, instance, created, **kwargs):
+    usuario_actual = get_current_user()
+    request = get_current_request()
+    if usuario_actual:
+        accion = "CREAR" if created else "EDITAR"
+        descripcion = f"{accion.capitalize()} consultorio {instance.nombre}"
+        registrar(usuario_actual, accion, instance, descripcion, request)
+
+
+@receiver(post_delete, sender=Consultorio)
+def auditar_consultorio_delete(sender, instance, **kwargs):
+    usuario_actual = get_current_user()
+    request = get_current_request()
+    if usuario_actual:
+        registrar(usuario_actual, "ELIMINAR", instance, f"Eliminar consultorio {instance.nombre}", request)
 
 # ═══════════════════════════════════════════════════════════════
 # 👤 SEÑALES DE USUARIOS

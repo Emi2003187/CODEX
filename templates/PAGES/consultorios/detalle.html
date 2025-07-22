@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Consultorio {{ object.nombre }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard_admin' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'consultorios_lista' %}">Consultorios</a></li>
+      <li class="breadcrumb-item active">{{ object.nombre }}</li>
+    </ol>
+  </nav>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h3 class="card-title">{{ object.nombre }}</h3>
+      <p class="mb-1"><strong>Ubicación:</strong> {{ object.ubicacion|default:"-" }}</p>
+      <p class="mb-1"><strong>Capacidad diaria:</strong> {{ object.capacidad_diaria }}</p>
+      <p class="mb-3"><strong>Horario:</strong> {{ object.horario_apertura|time:'H:i' }} - {{ object.horario_cierre|time:'H:i' }}</p>
+      <div class="d-flex gap-2">
+        <a href="{% url 'consultorio_editar' object.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-primary">
+          <i class="bi bi-pencil me-1"></i> Editar
+        </a>
+        <a href="{% url 'consultorio_eliminar' object.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-danger">
+          <i class="bi bi-trash me-1"></i> Eliminar
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
