@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 # ───── Modelos / utilidades internas ───────────────────────────────────
-from .models import Cita, Consultorio, Paciente, Usuario
+from .models import Cita, Consultorio, Paciente, Usuario, Consulta
 from .utils_horarios import obtener_horarios_disponibles_para_select
 
 
@@ -693,27 +693,31 @@ class ConsultaSinCitaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)
+        request = kwargs.pop("request", None)
+        self.user = request.user if request else kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
-        
+
         # Configurar pacientes
-        self.fields['paciente'].queryset = Paciente.objects.all().order_by('nombre_completo')
-        
-        # Configurar médicos según consultorio del usuario
-        if self.user and self.user.consultorio:
-            self.fields['medico'].queryset = Usuario.objects.filter(
-                rol='medico',
-                consultorio=self.user.consultorio,
-                is_active=True
-            ).order_by('first_name', 'last_name')
-        elif self.user and self.user.rol == 'admin':
-            # Admin puede seleccionar cualquier médico
-            self.fields['medico'].queryset = Usuario.objects.filter(
-                rol='medico',
-                is_active=True
-            ).order_by('first_name', 'last_name')
+        self.fields["paciente"].queryset = Paciente.objects.all().order_by("nombre_completo")
+
+        if not self.user:
+            self.fields["medico"].queryset = Usuario.objects.none()
+            return
+
+        # Admin: solo médicos sin consulta en progreso
+        if self.user.rol == "admin":
+            self.fields["medico"].queryset = (
+                Usuario.objects.filter(rol="medico", is_active=True)
+                .exclude(consultas_medico__estado="en_progreso")
+                .order_by("first_name", "last_name")
+            )
+        elif self.user.rol in ["medico", "asistente"]:
+            # Autoasignar al usuario actual y ocultar campo
+            self.fields["medico"].queryset = Usuario.objects.filter(pk=self.user.pk)
+            self.fields["medico"].initial = self.user
+            self.fields["medico"].widget = forms.HiddenInput()
         else:
-            self.fields['medico'].queryset = Usuario.objects.none()
+            self.fields["medico"].queryset = Usuario.objects.none()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -742,8 +746,33 @@ class ConsultaSinCitaForm(forms.ModelForm):
                 raise ValidationError(
                     f"El médico {medico.get_full_name()} no pertenece a tu consultorio."
                 )
-        
+
+        # Bloquear si el médico ya tiene una consulta en progreso
+        if medico and Consulta.objects.filter(medico=medico, estado="en_progreso").exists():
+            raise ValidationError("El doctor seleccionado ya tiene una consulta activa.")
+
         return cleaned_data
+
+    def clean_medico(self):
+        medico = self.cleaned_data.get("medico")
+
+        # Permitir valor auto-asignado aunque no esté en queryset
+        if (
+            medico
+            and self.user
+            and self.user.rol in ["medico", "asistente"]
+            and medico.pk == self.user.pk
+        ):
+            return medico
+
+        qs = self.fields["medico"].queryset
+        if medico not in qs:
+            raise ValidationError("Escoja una opción válida.")
+
+        if Consulta.objects.filter(medico=medico, estado="en_progreso").exists():
+            raise ValidationError("El doctor seleccionado ya atiende otra consulta.")
+
+        return medico
 
     def es_consulta_instantanea(self):
         """Determina si la consulta es instantánea (para atender ahora)"""

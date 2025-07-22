@@ -1718,6 +1718,7 @@ class ConsultaListView(LoginRequiredMixin, ListView):
             "medicos": medicos,
             "usuario": usuario,
             "consultorio": getattr(usuario, "consultorio", None),
+            "consulta_activa": Consulta.objects.filter(medico=usuario, estado="en_progreso").first() if usuario.rol == "medico" else None,
             # Valores actuales de los filtros
             "search_query": self.request.GET.get("search", ""),
             "tipo_filter": self.request.GET.get("tipo", ""),
@@ -2087,6 +2088,7 @@ class ConsultaDetailView(LoginRequiredMixin, DetailView):
             'receta': getattr(consulta, 'receta', None),
             'cita': consulta.cita,
             'puede_editar': self.request.user == consulta.medico or self.request.user.rol == 'admin',
+            'consulta_activa': Consulta.objects.filter(medico=self.request.user, estado='en_progreso').first() if self.request.user.rol == 'medico' else None,
         })
         
         return context
@@ -2118,39 +2120,68 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     success_url = reverse_lazy('consultas_lista')
 
     def get_form_kwargs(self):
-        """Return form kwargs without extra user param."""
-        return super().get_form_kwargs()
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def form_valid(self, form):
         user = self.request.user
         consulta = form.save(commit=False)
-        
+
         # ✅ CONFIGURACIÓN BÁSICA - SIN CITA
         consulta.tipo = 'sin_cita'
         consulta.cita = None  # IMPORTANTE: Asegurar que NO tenga cita
         consulta.fecha_creacion = timezone.now()
-        
+
         # ✅ DETERMINAR SI ES INSTANTÁNEA O PROGRAMADA
         programar_para = form.cleaned_data.get('programar_para', 'ahora')
-        
         if form.es_consulta_instantanea():
             # CONSULTA INSTANTÁNEA - Sin validaciones de horario
             consulta.estado = 'espera'  # Lista para atender ahora
             consulta.fecha_atencion = None  # Se asignará cuando inicie
             mensaje_tipo = "instantánea"
-            
+            fecha_objetivo = timezone.now()
+
         else:
             # CONSULTA PROGRAMADA - Con fecha/hora específica
             consulta.estado = 'espera'  # Programada para más tarde
             fecha_hora_programada = form.get_fecha_hora_cita()
-            
+
             # Guardar la fecha/hora programada en observaciones o campo personalizado
             if consulta.observaciones:
                 consulta.observaciones += f"\n\nProgramada para: {fecha_hora_programada.strftime('%d/%m/%Y a las %H:%M')}"
             else:
                 consulta.observaciones = f"Consulta programada para: {fecha_hora_programada.strftime('%d/%m/%Y a las %H:%M')}"
-            
+
             mensaje_tipo = f"programada para {fecha_hora_programada.strftime('%d/%m/%Y a las %H:%M')}"
+            fecha_objetivo = fecha_hora_programada
+
+        # Validar que no exista cita o consulta con cita en esa franja
+        consultorio = None
+        if consulta.medico and consulta.medico.consultorio:
+            consultorio = consulta.medico.consultorio
+        elif user.consultorio:
+            consultorio = user.consultorio
+
+        if consultorio:
+            inicio = fecha_objetivo
+            fin = fecha_objetivo + timedelta(minutes=30)
+            solapa_cita = Cita.objects.filter(
+                consultorio=consultorio,
+                fecha_hora__lt=fin,
+                fecha_hora__gte=inicio,
+                estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+            ).exists()
+
+            solapa_consulta = Consulta.objects.filter(
+                cita__consultorio=consultorio,
+                cita__fecha_hora__lt=fin,
+                cita__fecha_hora__gte=inicio
+            ).exists()
+
+            if solapa_cita or solapa_consulta:
+                form.add_error(None, 'Existe una cita en ese horario. No se puede crear la consulta.')
+                return self.form_invalid(form)
         
         # ✅ ASIGNACIÓN DE ROLES
         if user.rol == 'asistente':
@@ -2214,7 +2245,7 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
                 f'No hay conflictos de horario.'
             )
         
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2283,6 +2314,20 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             or request.GET.get("next")
             or reverse("consulta_detalle", args=[consulta_pk])
         )
+
+        # Evitar que un médico inicie múltiples consultas simultáneamente
+        if request.user.rol == "medico":
+            activa = Consulta.objects.filter(
+                medico=request.user,
+                estado="en_progreso"
+            ).exclude(pk=consulta_pk).first()
+            if activa:
+                messages.error(
+                    request,
+                    "Ya tienes una consulta en progreso; primero finalízala o cancélala."
+                )
+                return redirect("consultas_atencion", pk=activa.pk)
+
         return super().dispatch(request, *args, **kwargs)
 
     def _setup_forms(self, consulta, post_data=None):
@@ -2345,11 +2390,26 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             consulta = consulta_form.save(commit=False)
 
             if action == "start" and consulta.estado == "espera":
+                activa = Consulta.objects.filter(
+                    medico=request.user,
+                    estado="en_progreso",
+                ).exclude(pk=consulta.pk).first()
+                if activa:
+                    messages.error(
+                        request,
+                        "Ya tienes una consulta en progreso; primero finalízala o cancélala."
+                    )
+                    return redirect("consultas_atencion", pk=activa.pk)
+
                 consulta.estado = "en_progreso"
                 consulta.fecha_atencion = timezone.now()
                 messages.success(request, "Consulta iniciada.")
 
             elif action == "finish":
+                if consulta.medico != request.user:
+                    messages.error(request, "No puedes finalizar una consulta que no te pertenece.")
+                    return redirect("consultas_atencion", pk=consulta.pk)
+
                 consulta.estado = "finalizada"
                 messages.success(request, "Consulta finalizada.")
                 if consulta.cita:
@@ -2519,6 +2579,29 @@ def consulta_cancelar(request, pk):
             consulta.cita.save()
 
     return redirect("consultas_lista")
+
+
+@login_required
+def cancelar_consulta(request, pk):
+    """Cancela una consulta y la cita asociada."""
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    if request.user.rol not in ("admin", "medico", "asistente"):
+        messages.error(request, "No tienes permiso para cancelar consultas.")
+        return redirect(request.POST.get("next") or reverse("consultas_lista"))
+
+    consulta = get_object_or_404(Consulta, pk=pk)
+    consulta.estado = "cancelada"
+    consulta.save()
+    if consulta.cita:
+        consulta.cita.estado = "cancelada"
+        consulta.cita.save()
+
+    messages.success(request, "Consulta cancelada correctamente.")
+
+    next_url = request.POST.get("next") or reverse("consultas_lista")
+    return redirect(next_url)
 
 
 # ═══════════════════════════════════════════════════════════════
