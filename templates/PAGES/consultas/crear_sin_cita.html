@@ -182,7 +182,7 @@
                         {{ form.observaciones_iniciales }}
                     </div>
 
-                    <input type="hidden" name="next" value="{{ next }}">
+                    <input type="hidden" name="next" value="{{ request.POST.next|default:request.GET.next }}">
                     <!-- Asegurar que es sin cita -->
                     <input type="hidden" name="tipo" value="sin_cita">
 
