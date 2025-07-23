@@ -524,7 +524,7 @@ class PacienteDetailView(LoginRequiredMixin, DetailView):
         return ctx
 
 
-class PacienteCreateView(NextRedirectMixin, PacientePermisoMixin, CreateView):
+class PacienteCreateView(PacientePermisoMixin, CreateView):
     model = Paciente
     form_class = PacienteForm
     template_name = "PAGES/pacientes/crear.html"
@@ -537,21 +537,15 @@ class PacienteCreateView(NextRedirectMixin, PacientePermisoMixin, CreateView):
 
     def form_valid(self, form):
         paciente = form.save(commit=False)
-        user = self.request.user
-        if user.rol == "medico":
-            if not user.consultorio:
-                messages.error(self.request, "No tienes consultorio asignado.")
-                return HttpResponseRedirect(self.success_url)
-            paciente.consultorio = user.consultorio
-        else:
-            paciente.consultorio = form.cleaned_data.get("consultorio")
+        if (
+            self.request.user.rol == "medico"
+            and self.request.user.consultorio
+        ):
+            paciente.consultorio = self.request.user.consultorio
         paciente.save()
-        return super().form_valid(form)
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["usuario"] = self.request.user
-        return ctx
+        form.save_m2m()
+        messages.success(self.request, "Paciente creado correctamente.")
+        return redirect(self.success_url)
 
 
 class PacienteUpdateView(NextRedirectMixin, PacientePermisoMixin, UpdateView):

@@ -260,24 +260,22 @@ class PacienteForm(forms.ModelForm):
             'foto': 'Foto del Paciente',
         }
 
-    def __init__(self, *args, user: Usuario | None = None, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # foto opcional
         self.fields['foto'].required = False
-        self.fields['consultorio'].required = False
 
-        if user and user.rol == 'medico':
+        # filtra consultorios según rol
+        if user and user.rol == "medico":
             if user.consultorio:
                 self.fields['consultorio'].queryset = Consultorio.objects.filter(pk=user.consultorio.pk)
                 self.fields['consultorio'].initial = user.consultorio
                 self.fields['consultorio'].widget = forms.HiddenInput()
             else:
                 self.fields['consultorio'].queryset = Consultorio.objects.none()
-        elif user and (user.is_superuser or user.rol == 'admin'):
-            self.fields['consultorio'].queryset = Consultorio.objects.all().order_by('nombre')
-        else:
-            self.fields['consultorio'].queryset = Consultorio.objects.none()
-            self.fields['consultorio'].widget = forms.HiddenInput()
+        elif user and (user.is_superuser or user.rol == "admin"):
+            self.fields['consultorio'].queryset = Consultorio.objects.all().order_by("nombre")
 
 
 
