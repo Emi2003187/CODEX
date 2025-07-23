@@ -4026,11 +4026,14 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
     def get_initial(self):
         initial = super().get_initial()
         fecha_str = self.request.GET.get('fecha')
+        hora_str = self.request.GET.get('hora')
         if fecha_str:
             try:
                 initial['fecha'] = datetime.strptime(fecha_str, '%Y-%m-%d').date()
             except ValueError:
                 pass
+        if hora_str:
+            initial['hora'] = hora_str[:5]
         return initial
 
     def get_form_kwargs(self):
@@ -4039,6 +4042,22 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
         return kwargs
 
     def form_valid(self, form):
+        fecha = form.cleaned_data.get('fecha')
+        hora_str = form.cleaned_data.get('hora')
+
+        if fecha and fecha < date.today():
+            form.add_error('fecha', 'No se puede crear citas en fechas pasadas.')
+            return self.form_invalid(form)
+
+        if hora_str:
+            hora = datetime.strptime(hora_str, '%H:%M').time()
+            if Cita.objects.filter(
+                fecha_hora__date=fecha,
+                fecha_hora__time=hora
+            ).exists():
+                form.add_error('hora', 'Esa hora ya está reservada.')
+                return self.form_invalid(form)
+
         cita = form.save(commit=False)
         user = self.request.user
         

@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, date
 import json
 import csv
 from consultorio_API.utils_horarios import obtener_horarios_disponibles_para_select
@@ -1102,6 +1102,22 @@ def cambiar_estado_cita(request, cita_id):
         
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@login_required
+def citas_json(request):
+    """Retorna citas futuras en formato JSON para FullCalendar."""
+    qs = Cita.objects.filter(fecha_hora__date__gte=date.today())
+    data = [
+        {
+            'id': str(c.pk),
+            'title': f'Cita – {c.paciente.nombre_completo}',
+            'start': c.fecha_hora.isoformat(),
+            'end': (c.fecha_hora + timedelta(minutes=c.duracion)).isoformat(),
+        }
+        for c in qs
+    ]
+    return JsonResponse(data, safe=False)
 
 
 # ═══════════════════════════════════════════════════════════════

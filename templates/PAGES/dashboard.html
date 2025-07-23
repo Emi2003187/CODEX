@@ -587,6 +587,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const calendarEl = document.getElementById('calendar');
   calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
+    selectable: true,
     locale: 'es',
     height: 650,
     headerToolbar: {
@@ -594,8 +595,15 @@ document.addEventListener('DOMContentLoaded', function () {
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay'
     },
+    validRange: {
+      start: new Date().toISOString().slice(0, 10)
+    },
     eventTimeFormat: { hour: '2-digit', minute: '2-digit', meridiem: false },
-    events: {{ eventos_json|safe }},
+    events: '/api/citas-json/',
+    selectOverlap: false,
+    selectAllow: function(selectInfo) {
+      return selectInfo.start >= new Date();
+    },
     eventClick: function(info) {
       mostrarDetalleCita(info.event.id);
     },
@@ -604,11 +612,23 @@ document.addEventListener('DOMContentLoaded', function () {
       info.el.title = info.event.title + ' - ' + (info.event.extendedProps.motivo || 'Consulta general');
     },
     dateClick: function(info) {
-      // Redirigir a crear cita en esa fecha
-      window.location.href = `{% url 'citas_crear' %}?fecha=${info.dateStr}`;
+      redirigirACrearCita(info.dateStr, null);
+    },
+    select: function(info) {
+      const fecha = info.startStr.slice(0, 10);
+      const hora = info.startStr.slice(11, 16);
+      redirigirACrearCita(fecha, hora);
     }
   });
   calendar.render();
+
+  function redirigirACrearCita(fecha, hora) {
+    let url = `/citas/crear/?fecha=${fecha}`;
+    if (hora) {
+      url += `&hora=${hora}`;
+    }
+    window.location.href = url;
+  }
 
   /* ---------- GRÁFICA: ESTADOS ---------- */
   chartEstados = new Chart(
