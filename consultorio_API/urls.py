@@ -7,7 +7,11 @@ from .views_consultorios import (
     ConsultorioUpdateView,
     ConsultorioDeleteView,
 )
-from .views_consultas import cancelar_consulta, eliminar_consulta
+from .views_consultas import (
+    cancelar_consulta,
+    eliminar_consulta,
+    ConsultaCreateFromPacienteView,
+)
 from django.contrib.auth.views import LogoutView
 from .views import CitaCreateView, Receta
 from consultorio_API import views, viewscitas 
@@ -57,6 +61,11 @@ urlpatterns = [
     path('consultas/<int:pk>/editar/', views.ConsultaUpdateView.as_view(), name='consulta_editar'),
     path('consultas/<int:pk>/eliminar/', eliminar_consulta, name='consulta_eliminar'),
     path('consultas/crear-sin-cita/', views.ConsultaSinCitaCreateView.as_view(), name='consultas_crear_sin_cita'),
+    path(
+        'consultas/nueva/<int:paciente_id>/',
+        ConsultaCreateFromPacienteView.as_view(),
+        name='consultas_crear_desde_paciente',
+    ),
     path('consultas/<int:pk>/precheck/', views.ConsultaPrecheckView.as_view(), name='consultas_precheck'),
     path('consultas/<int:pk>/atencion/', views.ConsultaAtencionView.as_view(), name='consultas_atencion'),
     path('consultas/<int:pk>/cancelar/', cancelar_consulta, name='consulta_cancelar'),
