@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'consultorio_medico.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Consultorio',
+        'NAME': 'Consultorio2',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',  

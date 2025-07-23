@@ -216,7 +216,7 @@ class PacienteForm(forms.ModelForm):
         model = Paciente
         fields = [
             'nombre_completo', 'fecha_nacimiento', 'sexo', 'telefono',
-            'correo', 'direccion', 'consultorio_asignado', 'foto'
+            'correo', 'direccion', 'consultorio', 'foto'
         ]
         widgets = {
             'nombre_completo': forms.TextInput(attrs={
@@ -241,7 +241,7 @@ class PacienteForm(forms.ModelForm):
                 'rows': 3,
                 'placeholder': 'Dirección completa'
             }),
-            'consultorio_asignado': forms.Select(attrs={
+            'consultorio': forms.Select(attrs={
                 'class': 'form-select'
             }),
             'foto': forms.FileInput(attrs={
@@ -256,60 +256,28 @@ class PacienteForm(forms.ModelForm):
             'telefono': 'Teléfono',
             'correo': 'Correo Electrónico',
             'direccion': 'Dirección',
-            'consultorio_asignado': 'Consultorio Asignado',
+            'consultorio': 'Consultorio Asignado',
             'foto': 'Foto del Paciente',
         }
 
     def __init__(self, *args, user: Usuario | None = None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        qs = Usuario.objects.none()
-        if user:
-            if user.rol == "medico" and user.consultorio:
-                qs = Usuario.objects.filter(pk=user.pk)
-            elif user.rol == "admin":
-                medico_ids = (
-                    Usuario.objects.filter(
-                        rol="medico",
-                        is_active=True,
-                        consultorio__isnull=False,
-                    )
-                    .values("consultorio")
-                    .annotate(first_id=Min("id"))
-                    .values_list("first_id", flat=True)
-                )
-                qs = Usuario.objects.filter(pk__in=medico_ids)
-            elif user.rol == "asistente" and user.consultorio:
-                medico_id = (
-                    Usuario.objects.filter(
-                        rol="medico",
-                        consultorio=user.consultorio,
-                        is_active=True,
-                    ).aggregate(first_id=Min("id"))["first_id"]
-                )
-                qs = (
-                    Usuario.objects.filter(pk=medico_id)
-                    if medico_id
-                    else Usuario.objects.none()
-                )
-
-        self.fields["consultorio_asignado"].queryset = qs.select_related(
-            "consultorio"
-        ).order_by("consultorio__nombre")
-        self.fields["consultorio_asignado"].empty_label = "Sin asignar"
-        self.fields["consultorio_asignado"].label_from_instance = (
-            lambda obj: obj.consultorio.nombre if obj.consultorio else obj.get_full_name()
-        )
-
-        # Hacer la foto opcional
         self.fields['foto'].required = False
-        self.fields['consultorio_asignado'].required = False
+        self.fields['consultorio'].required = False
 
         if user and user.rol == 'medico':
-            self.fields['consultorio_asignado'].widget = forms.HiddenInput()
-            self.fields['consultorio_asignado'].initial = user
-        elif user and user.rol != 'admin':
-            self.fields['consultorio_asignado'].widget = forms.HiddenInput()
+            if user.consultorio:
+                self.fields['consultorio'].queryset = Consultorio.objects.filter(pk=user.consultorio.pk)
+                self.fields['consultorio'].initial = user.consultorio
+                self.fields['consultorio'].widget = forms.HiddenInput()
+            else:
+                self.fields['consultorio'].queryset = Consultorio.objects.none()
+        elif user and (user.is_superuser or user.rol == 'admin'):
+            self.fields['consultorio'].queryset = Consultorio.objects.all().order_by('nombre')
+        else:
+            self.fields['consultorio'].queryset = Consultorio.objects.none()
+            self.fields['consultorio'].widget = forms.HiddenInput()
 
 
 

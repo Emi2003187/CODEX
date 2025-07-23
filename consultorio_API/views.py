@@ -137,10 +137,10 @@ class BaseDashboardView(LoginRequiredMixin, View):
         
         # Pacientes totales y nuevos este mes
         pacientes_qs = Paciente.objects.all()
-        if user.rol == "medico":
-            pacientes_qs = pacientes_qs.filter(consultorio_asignado=user)
+        if user.rol == "medico" and user.consultorio:
+            pacientes_qs = pacientes_qs.filter(consultorio=user.consultorio)
         elif user.rol == "asistente" and user.consultorio:
-            pacientes_qs = pacientes_qs.filter(consultorio_asignado__consultorio=user.consultorio)
+            pacientes_qs = pacientes_qs.filter(consultorio=user.consultorio)
         
         pacientes_totales = pacientes_qs.count()
         
@@ -451,8 +451,7 @@ class PacienteListView(PacientePermisoMixin, ListView):
                 Q(id__iexact=q) |
                 Q(telefono__icontains=q) |
                 Q(correo__icontains=q) |
-                Q(consultorio_asignado__first_name__icontains=q) |
-                Q(consultorio_asignado__last_name__icontains=q)
+                Q(consultorio__nombre__icontains=q)
             )
 
         edad_param = self.request.GET.get("edad")
@@ -474,10 +473,8 @@ class PacienteListView(PacientePermisoMixin, ListView):
                 fecha_min = hoy - timedelta(days=(max_e + 1) * 365)
                 qs = qs.filter(fecha_nacimiento__range=(fecha_min, fecha_max))
 
-        if self.request.user.rol == "medico":
-            qs = qs.filter(
-                consultorio_asignado__consultorio=self.request.user.consultorio
-            )
+        if self.request.user.rol == "medico" and self.request.user.consultorio:
+            qs = qs.filter(consultorio=self.request.user.consultorio)
 
         return qs.order_by("nombre_completo")
 
@@ -540,10 +537,14 @@ class PacienteCreateView(NextRedirectMixin, PacientePermisoMixin, CreateView):
 
     def form_valid(self, form):
         paciente = form.save(commit=False)
-        if self.request.user.rol == "medico":
-            paciente.consultorio_asignado = self.request.user
+        user = self.request.user
+        if user.rol == "medico":
+            if not user.consultorio:
+                messages.error(self.request, "No tienes consultorio asignado.")
+                return HttpResponseRedirect(self.success_url)
+            paciente.consultorio = user.consultorio
         else:
-            paciente.consultorio_asignado = form.cleaned_data.get("consultorio_asignado")
+            paciente.consultorio = form.cleaned_data.get("consultorio")
         paciente.save()
         return super().form_valid(form)
 
@@ -566,10 +567,14 @@ class PacienteUpdateView(NextRedirectMixin, PacientePermisoMixin, UpdateView):
 
     def form_valid(self, form):
         paciente = form.save(commit=False)
-        if self.request.user.rol == "medico":
-            paciente.consultorio_asignado = self.request.user
+        user = self.request.user
+        if user.rol == "medico":
+            if not user.consultorio:
+                messages.error(self.request, "No tienes consultorio asignado.")
+                return HttpResponseRedirect(self.success_url)
+            paciente.consultorio = user.consultorio
         else:
-            paciente.consultorio_asignado = form.cleaned_data.get("consultorio_asignado")
+            paciente.consultorio = form.cleaned_data.get("consultorio")
         paciente.save()
         return super().form_valid(form)
 

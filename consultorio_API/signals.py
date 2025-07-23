@@ -9,6 +9,7 @@ from .models import (
     SignosVitales, Usuario, Consultorio
 )
 from .auditoria_utils import registrar
+from .audit_generic import get_current_user
 from .notifications import NotificationManager
 
 # ═══════════════════════════════════════════════════════════════
@@ -65,9 +66,10 @@ def crear_expediente_y_auditar(sender, instance, created, **kwargs):
     if created and not hasattr(instance, "expediente"):
         Expediente.objects.create(paciente=instance)
         
-        if instance.consultorio_asignado:
+        usuario = get_current_user()
+        if usuario:
             registrar(
-                instance.consultorio_asignado,   
+                usuario,
                 "crear_paciente",
                 instance,
                 f"Alta de paciente: {instance.nombre_completo}"

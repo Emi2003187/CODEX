@@ -66,10 +66,10 @@
                   <div class="text-danger small">{{ error }}</div>
                 {% endfor %}
               </div>
-              {% if usuario.rol == 'admin' %}
+              {% if not form.consultorio.is_hidden %}
               <div class="col-md-6 mb-3">
-                {{ form.consultorio_asignado.label_tag }} {{ form.consultorio_asignado }}
-                {% for error in form.consultorio_asignado.errors %}
+                {{ form.consultorio.label_tag }} {{ form.consultorio }}
+                {% for error in form.consultorio.errors %}
                   <div class="text-danger small">{{ error }}</div>
                 {% endfor %}
               </div>

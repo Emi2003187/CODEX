@@ -92,9 +92,9 @@
               </td>
 
             <td>
-  {% if p.consultorio_asignado %}
+  {% if p.consultorio %}
     <span class="badge bg-primary-subtle text-primary fw-normal rounded-pill px-3 py-2">
-      {{ p.consultorio_asignado.consultorio.nombre }}
+      {{ p.consultorio.nombre }}
     </span>
   {% else %}
     <span class="badge bg-secondary-subtle text-muted fw-normal rounded-pill px-3 py-2">

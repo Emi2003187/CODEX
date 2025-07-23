@@ -54,8 +54,10 @@ class Paciente(models.Model):
     telefono = models.CharField(max_length=15)
     correo = models.EmailField()
     direccion = models.TextField()
-    consultorio_asignado = models.ForeignKey(
-        'Usuario', on_delete=models.SET_NULL, null=True, related_name='pacientes_asignados'
+    consultorio = models.ForeignKey(
+        'Consultorio',
+        on_delete=models.PROTECT,
+        related_name="pacientes"
     )
     foto = models.ImageField(
     upload_to='pacientes/',
