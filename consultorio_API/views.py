@@ -403,10 +403,10 @@ class UsuarioCreateView(NextRedirectMixin, AdminRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        usuario = form.save(commit=False)
+        self.object = form.save(commit=False)
         if self.request.user.rol == 'medico' and self.request.user.consultorio:
-            usuario.consultorio = self.request.user.consultorio
-        usuario.save()
+            self.object.consultorio = self.request.user.consultorio
+        self.object.save()
         return redirect(self.get_success_url())
 
 
