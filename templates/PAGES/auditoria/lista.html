@@ -10,6 +10,9 @@
     <i class="bi bi-shield-lock me-2"></i>Histórico de Auditoría
   </h2>
 
+  <form id="filtros-auditoria" hx-get="{% url 'auditoria_lista' %}" hx-target="#tabla-auditoria" hx-trigger="keyup changed delay:300ms, submit" class="mb-3">
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar..." class="form-control">
+  </form>
   <div class="table-responsive card shadow-sm">
     <table class="table table-hover mb-0">
       <thead class="table-light">
@@ -20,23 +23,11 @@
           <th>Objeto</th>
           <th>Descripción</th>
         </tr>
-      </thead>
-      <tbody>
-        {% for r in registros %}
-          <tr>
-            <td>{{ r.fecha|date:"d/m/Y H:i" }}</td>
-            <td>{{ r.usuario.get_full_name }}</td>
-            <td>{{ r.accion }}</td>
-            <td>{{ r.objeto }}</td>
-            <td>{{ r.descripcion|default:"—" }}</td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="5" class="text-center py-4 text-muted">Aún no hay registros.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
+        <tbody id="tabla-auditoria">
+            {% include "PAGES/auditoria/_tabla.html" %}
+        </tbody>
     </table>
+<div hx-indicator class="spinner-border text-primary d-none"></div>
   </div>
 
   <!-- PAGINACIÓN -->

@@ -1793,6 +1793,11 @@ class ConsultaListView(LoginRequiredMixin, ListView):
         })
         
         return ctx
+    def render_to_response(self, context, **kwargs):
+        if self.request.headers.get("HX-Request"):
+            return render(self.request, "PAGES/consultas/_tabla.html", context)
+        return super().render_to_response(context, **kwargs)
+
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -3040,7 +3045,7 @@ class AuditMiddleware(MiddlewareMixin):
 
 class AuditoriaListView(AdminRequiredMixin, ListView):
     model = Auditoria
-    template_name = "PAGES/auditoria/panel.html"
+    template_name = "PAGES/auditoria/lista.html"
     context_object_name = "registros"
     paginate_by = 25
 
@@ -3167,6 +3172,11 @@ class AuditoriaListView(AdminRequiredMixin, ListView):
         })
         
         return ctx
+    def render_to_response(self, context, **kwargs):
+        if self.request.headers.get("HX-Request"):
+            return render(self.request, "PAGES/auditoria/_tabla.html", context)
+        return super().render_to_response(context, **kwargs)
+
 
 @login_required
 def auditoria_detalle_ajax(request, auditoria_id):
@@ -3842,6 +3852,11 @@ class CitaListView(CitaPermisoMixin, ListView):
         })
         
         return context
+    def render_to_response(self, context, **kwargs):
+        if self.request.headers.get("HX-Request"):
+            return render(self.request, "PAGES/citas/_tabla.html", context)
+        return super().render_to_response(context, **kwargs)
+
 
 
 @login_required

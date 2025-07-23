@@ -1,0 +1,13 @@
+{% for r in registros %}
+<tr>
+  <td>{{ r.fecha|date:"d/m/Y H:i" }}</td>
+  <td>{{ r.usuario.get_full_name }}</td>
+  <td>{{ r.accion }}</td>
+  <td>{{ r.objeto }}</td>
+  <td>{{ r.descripcion|default:"—" }}</td>
+</tr>
+{% empty %}
+<tr>
+  <td colspan="5" class="text-center py-4 text-muted">Aún no hay registros.</td>
+</tr>
+{% endfor %}
