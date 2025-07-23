@@ -244,7 +244,7 @@ class PacienteForm(forms.ModelForm):
             'consultorio': forms.Select(attrs={
                 'class': 'form-select'
             }),
-            'foto': forms.FileInput(attrs={
+            'foto': forms.ClearableFileInput(attrs={
                 'class': 'form-control',
                 'accept': 'image/*'
             }),
