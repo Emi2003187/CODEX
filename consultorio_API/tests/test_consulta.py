@@ -46,3 +46,38 @@ def test_form_consulta_solapa(db, client):
     resp = client.post(url, data)
     after = Consulta.objects.count()
     assert after == before
+
+
+@pytest.mark.django_db
+def test_crear_consulta_desde_paciente(client):
+    consultorio = Consultorio.objects.create(nombre="C3")
+    medico = Usuario.objects.create(username="med3", rol="medico", first_name="Med", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="P4",
+        fecha_nacimiento="2000-01-01",
+        sexo='M',
+        telefono='1',
+        correo='d@d.com',
+        direccion='x',
+        consultorio=consultorio,
+    )
+
+    client.force_login(medico)
+    url = reverse('consultas_crear_desde_paciente', args=[paciente.pk])
+    resp = client.get(url)
+    content = resp.content.decode()
+    assert f'value="{paciente.pk}"' in content
+    assert 'type="hidden"' in content
+
+    data = {
+        'paciente': paciente.pk,
+        'medico': medico.pk,
+        'motivo_consulta': 'test',
+        'programar_para': 'ahora',
+    }
+    before = Consulta.objects.count()
+    client.post(url, data)
+    after = Consulta.objects.count()
+    assert after == before + 1
+    consulta = Consulta.objects.latest('id')
+    assert consulta.paciente == paciente
