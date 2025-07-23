@@ -75,5 +75,5 @@ class ConsultaCreateFromPacienteView(ConsultaSinCitaCreateView):
         if paciente_id:
             form.fields['paciente'].queryset = Paciente.objects.filter(pk=paciente_id)
             form.fields['paciente'].empty_label = None
-            form.fields['paciente'].widget = forms.HiddenInput()
+            form.fields['paciente'].disabled = True
         return form

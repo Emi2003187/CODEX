@@ -67,7 +67,7 @@ def test_crear_consulta_desde_paciente(client):
     resp = client.get(url)
     content = resp.content.decode()
     assert f'value="{paciente.pk}"' in content
-    assert 'type="hidden"' in content
+    assert 'disabled' in content
 
     data = {
         'paciente': paciente.pk,
