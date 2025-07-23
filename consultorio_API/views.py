@@ -365,9 +365,14 @@ class UsuarioListView(AdminRequiredMixin, ListView):
     paginate_by = 8  
 
     def get_queryset(self):
-        qs = Usuario.objects.exclude(rol='admin')
+        # 1) Traer únicamente administradores
+        qs = Usuario.objects.filter(rol='admin')
 
-        q = self.request.GET.get("q", "").strip()
+        # 2) ...excepto el que está autenticado
+        qs = qs.exclude(pk=self.request.user.pk)
+
+        # 3) Sigue respetando filtros de búsqueda
+        q  = self.request.GET.get("q", "").strip()
         rol = self.request.GET.get("rol", "").strip()
         consultorio_id = self.request.GET.get("consultorio", "").strip()
 
@@ -418,9 +423,16 @@ class UsuarioCreateView(NextRedirectMixin, AdminRequiredMixin, CreateView):
 
 class UsuarioUpdateView(NextRedirectMixin, AdminRequiredMixin, UpdateView):
     model = Usuario
-    form_class = UsuarioForm
+    form_class = EditarUsuarioForm
     template_name = 'PAGES/usuarios/editar.html'
     success_url = reverse_lazy('usuarios_lista')
+
+    def dispatch(self, request, *args, **kwargs):
+        # Bloquear si intenta editarse a sí mismo
+        if kwargs.get("pk") == request.user.pk:
+            messages.warning(request, "No puedes editar tu propia cuenta desde aquí.")
+            return redirect("usuarios_lista")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
