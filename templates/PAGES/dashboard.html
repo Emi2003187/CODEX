@@ -251,7 +251,7 @@
           <div class="row g-3">
             {% if usuario.rol == "admin" or usuario.rol == "medico" or usuario.rol == "asistente" %}
             <div class="col-md-2 col-6">
-              <a href="{% url 'citas_crear' %}" class="btn btn-outline-primary quick-action-btn w-100">
+              <a href="{% url 'citas_crear' %}?next={{ request.path }}" class="btn btn-outline-primary quick-action-btn w-100">
                 <i class="bi bi-calendar-plus fs-3 mb-1"></i>
                 <small>Nueva Cita</small>
               </a>
@@ -260,7 +260,7 @@
             
             {% if usuario.rol == "admin" or usuario.rol == "medico" %}
             <div class="col-md-2 col-6">
-              <a href="{% url 'consultas_crear_sin_cita' %}" class="btn btn-outline-success quick-action-btn w-100">
+              <a href="{% url 'consultas_crear_sin_cita' %}?next={{ request.path }}" class="btn btn-outline-success quick-action-btn w-100">
                 <i class="bi bi-clipboard-plus fs-3 mb-1"></i>
                 <small>Nueva Consulta</small>
               </a>
@@ -605,7 +605,7 @@ document.addEventListener('DOMContentLoaded', function () {
     },
     dateClick: function(info) {
       // Redirigir a crear cita en esa fecha
-      window.location.href = `{% url 'citas_crear' %}?fecha=${info.dateStr}`;
+      window.location.href = `{% url 'citas_crear' %}?fecha=${info.dateStr}&next={{ request.path }}`;
     }
   });
   calendar.render();
