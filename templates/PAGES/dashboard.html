@@ -586,26 +586,38 @@ document.addEventListener('DOMContentLoaded', function () {
   /* ---------- CALENDARIO ---------- */
   const calendarEl = document.getElementById('calendar');
   calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
     locale: 'es',
-    height: 650,
+    initialView: 'dayGridMonth',
+    selectable: true,
+    selectMirror: true,
+    validRange: { start: new Date().toISOString().slice(0, 10) },
+    events: '/api/citas-json/',
+    eventOverlap: false,
+    selectOverlap: false,
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay'
     },
+    slotMinTime: '08:00:00',
+    slotMaxTime: '20:00:00',
     eventTimeFormat: { hour: '2-digit', minute: '2-digit', meridiem: false },
-    events: {{ eventos_json|safe }},
-    eventClick: function(info) {
+    eventClick(info) {
       mostrarDetalleCita(info.event.id);
     },
-    eventMouseEnter: function(info) {
+    eventMouseEnter(info) {
       info.el.style.cursor = 'pointer';
       info.el.title = info.event.title + ' - ' + (info.event.extendedProps.motivo || 'Consulta general');
     },
-    dateClick: function(info) {
-      // Redirigir a crear cita en esa fecha
-      window.location.href = `{% url 'citas_crear' %}?fecha=${info.dateStr}`;
+    dateClick(info) {
+      if (info.allDay) {
+        redirigirACrearCita(info.dateStr, null);
+      }
+    },
+    select(info) {
+      const fecha = info.startStr.slice(0, 10);
+      const hora = info.startStr.slice(11, 16);
+      redirigirACrearCita(fecha, hora);
     }
   });
   calendar.render();
@@ -1000,6 +1012,12 @@ function toggleChartType(chartId) {
 function exportarCalendario() {
   // Implementar exportación del calendario
   alert('Funcionalidad de exportación del calendario');
+}
+
+function redirigirACrearCita(fecha, hora) {
+  let url = `{% url 'citas_crear' %}?fecha=${fecha}`;
+  if (hora) url += `&hora=${hora}`;
+  window.location.href = url;
 }
 
 function actualizarProximasCitas() {

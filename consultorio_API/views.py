@@ -3594,6 +3594,23 @@ def consultas_stats_ajax(request):
 
 
 @login_required
+def citas_json(request):
+    """Devuelve las citas futuras en formato JSON para FullCalendar."""
+    qs = Cita.objects.filter(fecha_hora__date__gte=date.today())
+    datos = []
+    for c in qs.select_related('paciente'):
+        inicio = timezone.localtime(c.fecha_hora)
+        fin = inicio + timedelta(minutes=c.duracion)
+        datos.append({
+            'id': str(c.id),
+            'title': f"Cita – {c.paciente.nombre_completo}",
+            'start': inicio.isoformat(),
+            'end': fin.isoformat(),
+        })
+    return JsonResponse(datos, safe=False)
+
+
+@login_required
 def dashboard_stats(request):
     """Vista para estadísticas del dashboard filtradas por consultorio"""
     usuario = request.user
@@ -4026,11 +4043,14 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
     def get_initial(self):
         initial = super().get_initial()
         fecha_str = self.request.GET.get('fecha')
+        hora_str = self.request.GET.get('hora')
         if fecha_str:
             try:
                 initial['fecha'] = datetime.strptime(fecha_str, '%Y-%m-%d').date()
             except ValueError:
                 pass
+        if hora_str:
+            initial['hora'] = hora_str
         return initial
 
     def get_form_kwargs(self):
@@ -4041,6 +4061,11 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
     def form_valid(self, form):
         cita = form.save(commit=False)
         user = self.request.user
+
+        fecha_hora = form.cleaned_data.get('fecha_hora')
+        if fecha_hora and fecha_hora < timezone.now():
+            form.add_error('fecha', 'No puedes programar en fechas pasadas.')
+            return self.form_invalid(form)
         
         # 1. Asignar automáticamente el consultorio según el usuario
         if user.rol == 'asistente' and user.consultorio:
@@ -4073,18 +4098,13 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
         # Validar conflictos de horario en el consultorio
         conflictos = Cita.objects.filter(
             consultorio=cita.consultorio,
-            fecha_hora__date=cita.fecha_hora.date(),
-            fecha_hora__time=cita.fecha_hora.time(),
+            fecha_hora=fecha_hora,
             estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
         ).exclude(pk=cita.pk if cita.pk else None)
-        
+
         if conflictos.exists():
-            messages.warning(
-                self.request,
-                f'Ya existe una cita programada en {cita.consultorio.nombre} '
-                f'para {cita.fecha_hora.strftime("%d/%m/%Y a las %H:%M")}. '
-                f'Se creará como cita adicional.'
-            )
+            form.add_error('hora', 'Esa hora ya está ocupada.')
+            return self.form_invalid(form)
         
         # Asignar usuario creador
         cita.creado_por = user
