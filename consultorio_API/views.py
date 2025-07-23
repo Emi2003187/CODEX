@@ -2011,10 +2011,18 @@ def cola_virtual(request):
         messages.error(request, 'No tienes consultorio asignado.')
         return redirect_next(request, 'dashboard')
     
+    # Consultas en espera (con y sin cita)
+    consultas = (
+        Consulta.objects
+        .filter(estado='espera')
+        .select_related('paciente', 'medico')
+        .order_by('fecha_creacion')
+    )
+
     # ✅ OBTENER SOLO CITAS PRÓXIMAS - APLICAR TODOS LOS FILTROS ANTES DEL SLICE
     ahora = timezone.now()
     citas = get_citas_queryset(user)
-    
+
     # Aplicar filtros base
     citas_proximas = citas.filter(
         consultorio=consultorio,
@@ -2053,6 +2061,7 @@ def cola_virtual(request):
         'fecha': fecha,
         'consultorio': consultorio,
         'consultorios': consultorios,
+        'consultas': consultas,
         'citas_proximas': citas_proximas,  # ✅ Solo citas próximas
         'stats': stats,
         'usuario': user,
@@ -2082,6 +2091,14 @@ def cola_virtual_data(request):
         if not consultorio:
             return JsonResponse({'success': False, 'error': 'No hay consultorio asignado'})
         
+        # Consultas en espera (con y sin cita)
+        consultas = (
+            Consulta.objects
+            .filter(estado='espera')
+            .select_related('paciente', 'medico')
+            .order_by('fecha_creacion')
+        )
+
         # ✅ OBTENER SOLO CITAS PRÓXIMAS - APLICAR TODOS LOS FILTROS ANTES DEL SLICE
         ahora = timezone.now()
         citas = get_citas_queryset(user)
@@ -2123,6 +2140,7 @@ def cola_virtual_data(request):
         # Renderizar HTML de las citas próximas
         html = render_to_string('PAGES/citas/partials/turnos_cola.html', {
             'citas_proximas': citas_proximas,
+            'consultas': consultas,
             'usuario': user,
         })
         
