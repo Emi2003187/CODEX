@@ -1281,7 +1281,7 @@ class UsuarioForm(forms.ModelForm):
         model = Usuario
         fields = [
             'username', 'first_name', 'last_name', 'email', 'rol',
-            'telefono', 'cedula_profesional', 'institucion_cedula', 'consultorio'
+            'telefono', 'cedula_profesional', 'institucion_cedula', 'consultorio', 'foto'
         ]
         widgets = {
             'username': forms.TextInput(attrs={
@@ -1314,6 +1314,7 @@ class UsuarioForm(forms.ModelForm):
                 'placeholder': 'Institución que otorgó la cédula'
             }),
             'consultorio': forms.Select(attrs={'class': 'form-select'}),
+            'foto': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
         labels = {
             'username': 'Nombre de Usuario',
@@ -1325,6 +1326,7 @@ class UsuarioForm(forms.ModelForm):
             'cedula_profesional': 'Cédula Profesional',
             'institucion_cedula': 'Institución de la Cédula',
             'consultorio': 'Consultorio Asignado',
+            'foto': 'Foto',
         }
 
     def __init__(self, *args, **kwargs):
@@ -1336,6 +1338,9 @@ class UsuarioForm(forms.ModelForm):
             self.fields['password2'].label = 'Confirmar contraseña'
             self.fields['password1'].help_text = "Dejar en blanco para mantener la contraseña actual"
             self.fields['password2'].help_text = "Dejar en blanco para mantener la contraseña actual"
+
+        # El campo de foto es opcional
+        self.fields['foto'].required = False
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
