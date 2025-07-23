@@ -296,7 +296,53 @@
             Programar Nueva Cita
         </a>
     </div>
-    {% endif %}
+{% endif %}
+</div>
+
+<!-- Consultas en espera -->
+<div class="cola-section mt-4">
+    <div class="cola-header">
+        <h3 class="cola-title">
+            <i class="bi bi-clipboard-plus"></i>
+            Consultas en Espera
+        </h3>
+    </div>
+
+    <div class="citas-timeline">
+        {% for consulta in consultas %}
+        <div class="cita-item estado-{{ consulta.estado }}">
+            <div class="cita-time-marker"></div>
+
+            <div class="cita-card">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="cita-time">{{ consulta.fecha_creacion|date:"H:i" }}</div>
+                        <small class="text-muted">{{ consulta.fecha_creacion|date:"d/m/Y" }}</small>
+                    </div>
+                    <small class="text-muted">#{{ consulta.id }}</small>
+                </div>
+
+                <div class="cita-paciente">
+                    <i class="bi bi-person-circle me-2"></i>
+                    {{ consulta.paciente.nombre_completo }}
+                </div>
+
+                <div class="mt-2">
+                    {% if consulta.tipo == 'sin_cita' %}
+                    <span class="badge bg-warning text-dark">Sin cita</span>
+                    {% else %}
+                    <span class="badge bg-primary">Con cita</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="bi bi-clipboard text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+            <h4>No hay consultas en espera</h4>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 
 <!-- JavaScript para acciones AJAX -->
