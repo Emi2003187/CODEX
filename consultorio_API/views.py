@@ -402,6 +402,13 @@ class UsuarioCreateView(NextRedirectMixin, AdminRequiredMixin, CreateView):
         context['usuario'] = self.request.user
         return context
 
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        if self.request.user.rol == 'medico' and self.request.user.consultorio:
+            self.object.consultorio = self.request.user.consultorio
+        self.object.save()
+        return redirect(self.get_success_url())
+
 
 class UsuarioUpdateView(NextRedirectMixin, AdminRequiredMixin, UpdateView):
     model = Usuario
