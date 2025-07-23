@@ -21,6 +21,7 @@ from django.db.models import Min, Q
 # ───── Modelos / utilidades internas ───────────────────────────────────
 from .models import Cita, Consultorio, Paciente, Usuario
 from .utils_horarios import obtener_horarios_disponibles_para_select
+from .utils import horario_ocupado
 
 
 # ───────────────────────────────────────────────
@@ -743,41 +744,47 @@ class ConsultaSinCitaForm(forms.ModelForm):
                     f"El médico {medico.get_full_name()} no pertenece a tu consultorio."
                 )
 
-        # Validar solapamientos cuando se programa para "ahora"
+        consultorio = None
+        if medico and medico.consultorio:
+            consultorio = medico.consultorio
+        elif self.user and self.user.consultorio:
+            consultorio = self.user.consultorio
+
+        # Calcular inicio según la opción seleccionada
+        inicio = None
         if programar_para == 'ahora':
-            consultorio = None
-            if medico and medico.consultorio:
-                consultorio = medico.consultorio
-            elif self.user and self.user.consultorio:
-                consultorio = self.user.consultorio
+            inicio = timezone.now()
+        elif programar_para == '30min':
+            inicio = timezone.now() + timedelta(minutes=30)
+        elif programar_para == '1hora':
+            inicio = timezone.now() + timedelta(hours=1)
+        elif programar_para == '2horas':
+            inicio = timezone.now() + timedelta(hours=2)
+        elif programar_para == 'personalizado':
+            inicio = cleaned_data.get('fecha_hora_programada')
 
-            if consultorio:
-                inicio = timezone.now()
-                fin = inicio + timedelta(minutes=30)
-
-                # Revisar citas existentes
-                citas = Cita.objects.filter(
-                    consultorio=consultorio,
-                    fecha_hora__lt=fin,
-                    estado__in=[e[0] for e in Cita.ESTADO_CHOICES if e[0] != 'cancelada']
+        if inicio and (consultorio or medico):
+            if horario_ocupado(consultorio, medico, inicio, 30):
+                raise ValidationError(
+                    "Hay una cita reservada en este horario; "
+                    "espera a que se complete o elige otro momento."
                 )
-                for c in citas:
-                    c_fin = c.fecha_hora + timedelta(minutes=c.duracion)
-                    if inicio < c_fin and fin > c.fecha_hora:
-                        raise ValidationError('El horario se solapa con otra cita.')
 
-                # Revisar consultas en espera o en progreso
-                consultas = Consulta.objects.filter(
-                    Q(medico__consultorio=consultorio) |
-                    Q(cita__consultorio=consultorio) |
-                    Q(asistente__consultorio=consultorio),
-                    estado__in=['espera', 'en_progreso']
-                )
-                for con in consultas:
-                    ini = con.fecha_atencion or (con.cita.fecha_hora if con.cita else con.fecha_creacion)
-                    fin_con = ini + timedelta(minutes=30)
-                    if inicio < fin_con and fin > ini:
-                        raise ValidationError('El horario se solapa con otra consulta.')
+        # Validar solapamientos con otras consultas cuando se atiende ahora
+        if programar_para == 'ahora' and consultorio:
+            fin = inicio + timedelta(minutes=30)
+
+            consultas = Consulta.objects.filter(
+                Q(medico__consultorio=consultorio) |
+                Q(cita__consultorio=consultorio) |
+                Q(asistente__consultorio=consultorio),
+                estado__in=['espera', 'en_progreso']
+            )
+            for con in consultas:
+                ini = con.fecha_atencion or (con.cita.fecha_hora if con.cita else con.fecha_creacion)
+                fin_con = ini + timedelta(minutes=30)
+                if inicio < fin_con and fin > ini:
+                    raise ValidationError('El horario se solapa con otra consulta.')
 
         return cleaned_data
 

@@ -1,4 +1,5 @@
 from datetime import datetime, time, timedelta
+from django.db.models import Q
 
 def obtener_horarios_disponibles(
     consultorio,
@@ -57,6 +58,27 @@ def obtener_horarios_disponibles(
     return libres
 
 
+def horario_ocupado(consultorio, medico, inicio: datetime, duracion_min: int):
+    """Return True if a Cita overlaps the given interval."""
+    from .models import Cita
+
+    fin = inicio + timedelta(minutes=duracion_min)
+
+    citas = (
+        Cita.objects.filter(
+            estado__in=["programada", "confirmada", "en_espera", "en_atencion"]
+        )
+        .filter(Q(consultorio=consultorio) | Q(medico_asignado=medico))
+        .filter(fecha_hora__lt=fin)
+        .only("fecha_hora", "duracion")
+    )
+
+    for c in citas:
+        c_fin = c.fecha_hora + timedelta(minutes=c.duracion)
+        if c_fin > inicio:
+            return True
+
+    return False
 
 
 from django.shortcuts import redirect
