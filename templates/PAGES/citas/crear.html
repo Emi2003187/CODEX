@@ -121,6 +121,7 @@
                 <div class="card-body">
                     <form method="post" novalidate id="citaForm">
                         {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.GET.next }}">
 
                         <!-- Información del Paciente -->
                         <div class="form-section">
