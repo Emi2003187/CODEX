@@ -36,6 +36,7 @@ from .models import (
 )
 from .forms import *
 from .utils import redirect_next
+from django.utils.http import url_has_allowed_host_and_scheme
 
 
 def doctor_tiene_consulta_en_progreso(medico):
@@ -50,7 +51,12 @@ class NextRedirectMixin:
         return self.request.POST.get("next") or self.request.GET.get("next")
 
     def get_success_url(self):
-        return self.get_next_url() or super().get_success_url()
+        next_url = self.get_next_url()
+        if next_url and url_has_allowed_host_and_scheme(
+            next_url, allowed_hosts={self.request.get_host()}
+        ):
+            return next_url
+        return super().get_success_url()
 
 # ═══════════════════════════════════════════════════════════════
 # 🔐 LOGIN Y DASHBOARD
@@ -2279,13 +2285,13 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
                 f'No hay conflictos de horario.'
             )
         
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['usuario'] = self.request.user
         context['titulo'] = 'Crear Consulta Sin Cita'
-        context['next'] = self.request.GET.get('next', self.success_url)
+        context['next'] = self.request.GET.get('next') or self.request.POST.get('next', self.success_url)
         return context
 
 
@@ -4115,6 +4121,7 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
             'titulo': 'Nueva Cita',
             'accion': 'Crear',
             'usuario': user,
+            'next': self.request.GET.get('next') or self.request.POST.get('next', self.success_url),
         })
         return context
 
