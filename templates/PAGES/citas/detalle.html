@@ -800,6 +800,7 @@
       </div>
 
       <!-- Panel de Acciones -->
+      {% if user.rol != 'asistente' %}
       <div class="col-lg-4">
         <div class="actions-card">
           <div class="actions-header">
@@ -877,35 +878,36 @@
             {% endif %}
           </div>
         </div>
+      {% endif %}
 
-        <!-- Médicos Disponibles -->
-{% if puede_asignar_medico and medicos_disponibles and not cita.medico_asignado and cita.estado != 'cancelada' and cita.estado != 'completada' %}
-        <div class="card medicos-card mt-4">
-          <div class="medicos-header">
-            <h6 class="mb-0">
-              <i class="bi bi-people me-2"></i>
-              Médicos Disponibles
-            </h6>
-          </div>
-          <div class="card-body">
-            {% for medico in medicos_disponibles %}
-            <div class="medico-item">
-              <div class="medico-nombre">
-                <i class="bi bi-person-badge"></i>
-                Dr. {{ medico.get_full_name }}
-              </div>
-              <form method="post" action="{% url 'asignar_medico_cita' cita.id %}" class="d-inline">
-                {% csrf_token %}
-                <input type="hidden" name="medico" value="{{ medico.id }}">
-                <button type="submit" class="btn btn-asignar">
-                  Asignar
-                </button>
-              </form>
-            </div>
-            {% endfor %}
-          </div>
+      <!-- Médicos Disponibles -->
+{% if user.rol != 'asistente' and puede_asignar_medico and medicos_disponibles and not cita.medico_asignado and cita.estado != 'cancelada' and cita.estado != 'completada' %}
+      <div class="card medicos-card mt-4">
+        <div class="medicos-header">
+          <h6 class="mb-0">
+            <i class="bi bi-people me-2"></i>
+            Médicos Disponibles
+          </h6>
         </div>
-        {% endif %}
+        <div class="card-body">
+          {% for medico in medicos_disponibles %}
+          <div class="medico-item">
+            <div class="medico-nombre">
+              <i class="bi bi-person-badge"></i>
+              Dr. {{ medico.get_full_name }}
+            </div>
+            <form method="post" action="{% url 'asignar_medico_cita' cita.id %}" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="medico" value="{{ medico.id }}">
+              <button type="submit" class="btn btn-asignar">
+                Asignar
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+{% endif %}
 
         <!-- Información Adicional -->
         {% if cita.cita_anterior %}

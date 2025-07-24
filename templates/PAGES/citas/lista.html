@@ -499,17 +499,19 @@
                                        class="btn btn-sm btn-outline-info btn-action">
                                         <i class="bi bi-eye"></i> Ver
                                     </a>
-                                    {% if usuario.rol == 'medico' %}
-                                    <a href="{% url 'tomar_cita' cita.id %}"
-                                       class="btn btn-sm btn-success btn-action">
-                                        <i class="bi bi-hand-index"></i> Tomar
-                                    </a>
-                                    {% endif %}
-                                    {% if permisos.puede_asignar and usuario.rol != 'asistente' %}
-                                    <button type="button" class="btn btn-sm btn-primary btn-action"
-                                            onclick="asignarMedico('{{ cita.pk }}')">
-                                        <i class="bi bi-person-plus"></i> Asignar
-                                    </button>
+                                    {% if usuario.rol != 'asistente' %}
+                                        {% if usuario.rol == 'medico' %}
+                                        <a href="{% url 'tomar_cita' cita.id %}"
+                                           class="btn btn-sm btn-success btn-action">
+                                            <i class="bi bi-hand-index"></i> Tomar
+                                        </a>
+                                        {% endif %}
+                                        {% if permisos.puede_asignar %}
+                                        <button type="button" class="btn btn-sm btn-primary btn-action"
+                                                onclick="asignarMedico('{{ cita.pk }}')">
+                                            <i class="bi bi-person-plus"></i> Asignar
+                                        </button>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             </div>
@@ -611,30 +613,31 @@
                                        class="btn btn-sm btn-outline-info btn-action">
                                         <i class="bi bi-eye"></i> Ver
                                     </a>
-                                    
-                                    {% if permisos.puede_liberar and cita.medico_asignado %}
-                                    <a href="{% url 'liberar_cita' cita.id %}"
-                                       class="btn btn-sm btn-warning btn-action">
-                                        <i class="bi bi-unlock"></i> Liberar
-                                    </a>
-                                    {% endif %}
-                                    
-                                    <!-- Lógica para mostrar botón Iniciar o Ver Consulta -->
-                                    {% if cita.medico_asignado and cita.estado in 'programada,confirmada,en_espera' %}
-                                        {% if cita.consulta %}
-                                            <!-- Si ya tiene consulta, mostrar botón para ir a la consulta -->
-                                            <a href="{% url 'consulta_detalle' cita.consulta.id %}"
-                                               class="btn btn-sm btn-info btn-action">
-                                                <i class="bi bi-clipboard-pulse"></i> Ver Consulta
-                                            </a>
-                                        {% else %}
-                                            <!-- Si no tiene consulta, mostrar botón Iniciar -->
-                                            <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-success btn-action">
-                                                    <i class="bi bi-play"></i> Iniciar
-                                                </button>
-                                            </form>
+                                    {% if usuario.rol != 'asistente' %}
+                                        {% if permisos.puede_liberar and cita.medico_asignado %}
+                                        <a href="{% url 'liberar_cita' cita.id %}"
+                                           class="btn btn-sm btn-warning btn-action">
+                                            <i class="bi bi-unlock"></i> Liberar
+                                        </a>
+                                        {% endif %}
+
+                                        <!-- Lógica para mostrar botón Iniciar o Ver Consulta -->
+                                        {% if cita.medico_asignado and cita.estado in 'programada,confirmada,en_espera' %}
+                                            {% if cita.consulta %}
+                                                <!-- Si ya tiene consulta, mostrar botón para ir a la consulta -->
+                                                <a href="{% url 'consulta_detalle' cita.consulta.id %}"
+                                                   class="btn btn-sm btn-info btn-action">
+                                                    <i class="bi bi-clipboard-pulse"></i> Ver Consulta
+                                                </a>
+                                            {% else %}
+                                                <!-- Si no tiene consulta, mostrar botón Iniciar -->
+                                                <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-success btn-action">
+                                                        <i class="bi bi-play"></i> Iniciar
+                                                    </button>
+                                                </form>
+                                            {% endif %}
                                         {% endif %}
                                     {% endif %}
                                 </div>
@@ -698,7 +701,7 @@
                                        class="btn btn-sm btn-outline-info btn-action">
                                         <i class="bi bi-eye"></i> Ver Detalles
                                     </a>
-                                    {% if cita.consulta %}
+                                    {% if usuario.rol != 'asistente' and cita.consulta %}
                                     <a href="{% url 'consulta_detalle' cita.consulta.pk %}"
                                        class="btn btn-sm btn-outline-success btn-action">
                                         <i class="bi bi-clipboard-pulse"></i> Ver Consulta
