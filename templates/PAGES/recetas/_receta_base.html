@@ -14,6 +14,7 @@
       <span class="sub">RECETA INDIVIDUAL</span>
       <h2>CONSULTORIO MEDICO</h2>
   </header>
+  <p class="folio right"><strong>Folio:</strong> {{ receta.id }}</p>
 
   <!-- DATOS GENERALES -->
   <section class="grid-2">
@@ -46,17 +47,17 @@
        <th>T.A.</th><th>F.C.</th><th>Peso</th><th>Temp.</th>
      </tr>
      <tr>
-       <td>{{ receta.consulta.signos_vitales.tension|default:"__" }}</td>
-       <td>{{ receta.consulta.signos_vitales.fc|default:"__" }}</td>
+       <td>{{ receta.consulta.signos_vitales.tension_arterial|default:"__" }}</td>
+       <td>{{ receta.consulta.signos_vitales.frecuencia_cardiaca|default:"__" }}</td>
        <td>{{ receta.consulta.signos_vitales.peso|default:"__" }}</td>
-       <td>{{ receta.consulta.signos_vitales.temp|default:"__" }}</td>
+       <td>{{ receta.consulta.signos_vitales.temperatura|default:"__" }}</td>
      </tr>
      <tr>
        <th>Talla</th><th>Circ. Abd.</th><th>IMC</th><th></th>
      </tr>
      <tr>
        <td>{{ receta.consulta.signos_vitales.talla|default:"__" }}</td>
-       <td>{{ receta.consulta.signos_vitales.circ_abd|default:"__" }}</td>
+       <td>{{ receta.consulta.signos_vitales.circunferencia_abdominal|default:"__" }}</td>
        <td>{{ receta.consulta.signos_vitales.imc|default:"__" }}</td>
        <td></td>
      </tr>

@@ -21,6 +21,7 @@ body   { margin:0; background:#fff; }
 .hdr         { text-align:center; margin-bottom:4mm; }
 .logo        { max-height:18mm; display:block; margin:0 auto 2mm; }
 .sub         { font-size:10pt; display:block; letter-spacing:.4px; margin-bottom:1mm; }
+.folio       { font-size:9pt; margin-top:-2mm; margin-bottom:3mm; }
 .grid-2      { display:grid; grid-template-columns:1fr 1fr; gap:1mm; margin-bottom:4mm; }
 .right       { text-align:right; }
 .section-title{ font-size:11pt; margin:3mm 0 1.5mm; text-align:center; text-decoration:underline; }
