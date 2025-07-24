@@ -6,6 +6,7 @@ from django.core.validators import RegexValidator
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import FileExtensionValidator
+from django.conf import settings
 import uuid
 
 # ───────────────────────────────────────────────
@@ -146,6 +147,15 @@ class SignosVitales(models.Model):
     )
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
+    registrado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='signos_registrados',
+        verbose_name='Registrado por'
+    )
+
     # T.A. (Tensión Arterial)
     tension_arterial = models.CharField(
         "T.A. (Tensión Arterial)", max_length=20, blank=True, null=True,
@@ -209,6 +219,12 @@ class SignosVitales(models.Model):
         # Recalcula IMC si hay peso y talla
         if self.peso and self.talla:
             self.imc = float(self.peso) / (float(self.talla) ** 2)
+
+        # Asigna automáticamente quien registra si no se proporcionó
+        if not self.registrado_por:
+            from .audit_generic import get_current_user
+            self.registrado_por = get_current_user()
+
         super().save(*args, **kwargs)
 
     def __str__(self):
