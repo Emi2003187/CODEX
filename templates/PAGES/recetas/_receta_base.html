@@ -42,25 +42,32 @@
   <!-- SIGNOS + ALERGIAS -->
   <h4 class="section-title">Signos Vitales y Alergias</h4>
   <table class="tbl-signos">
-     <tr>
-       <th>T.A.</th><th>F.C.</th><th>Peso</th><th>Temp.</th>
-     </tr>
-     <tr>
-       <td>{{ receta.consulta.signos_vitales.tension|default:"__" }}</td>
-       <td>{{ receta.consulta.signos_vitales.fc|default:"__" }}</td>
-       <td>{{ receta.consulta.signos_vitales.peso|default:"__" }}</td>
-       <td>{{ receta.consulta.signos_vitales.temp|default:"__" }}</td>
-     </tr>
-     <tr>
-       <th>Talla</th><th>Circ. Abd.</th><th>IMC</th><th></th>
-     </tr>
-     <tr>
-       <td>{{ receta.consulta.signos_vitales.talla|default:"__" }}</td>
-       <td>{{ receta.consulta.signos_vitales.circ_abd|default:"__" }}</td>
-       <td>{{ receta.consulta.signos_vitales.imc|default:"__" }}</td>
-       <td></td>
-     </tr>
-  </table>
+  <tr>
+    <th>T.A.</th>
+    <th>F.C.</th>
+    <th>Temp.</th>
+    <th>Peso</th>
+  </tr>
+  <tr>
+    <td>{{ receta.consulta.signos_vitales.tension|default:"—" }}</td>
+    <td>{{ receta.consulta.signos_vitales.fc|default:"—" }}</td>
+    <td>{{ receta.consulta.signos_vitales.temp|default:"—" }}</td>
+    <td>{{ receta.consulta.signos_vitales.peso|default:"—" }}</td>
+  </tr>
+
+  <tr>
+    <th>Talla</th>
+    <th>Circ. Abd.</th>
+    <th>IMC</th>
+    <th>&nbsp;</th>
+  </tr>
+  <tr>
+    <td>{{ receta.consulta.signos_vitales.talla|default:"—" }}</td>
+    <td>{{ receta.consulta.signos_vitales.circ_abd|default:"—" }}</td>
+    <td>{{ receta.consulta.signos_vitales.imc|default:"—" }}</td>
+    <td></td>
+  </tr>
+</table>
 
   <p class="aler">
     <strong>Alergias:</strong>
