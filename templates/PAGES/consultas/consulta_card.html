@@ -184,28 +184,30 @@
               {% endif %}
             {% endif %}
             
-            {% if consulta.estado == "espera" or consulta.estado == "en_progreso" %}
-              <li>
-                <form method="post" action="{% url 'consulta_cancelar' consulta.pk %}" onsubmit="return confirm('¿Estás seguro de eliminar?');">
-                  {% csrf_token %}
-                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                  <button class="dropdown-item text-warning">
-                    <i class="bi bi-x-circle me-2"></i>Cancelar
-                  </button>
-                </form>
-              </li>
-            {% endif %}
+            {% if usuario.rol != 'asistente' %}
+              {% if consulta.estado == "espera" or consulta.estado == "en_progreso" %}
+                <li>
+                  <form method="post" action="{% url 'consulta_cancelar' consulta.pk %}" onsubmit="return confirm('¿Estás seguro de eliminar?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="dropdown-item text-warning">
+                      <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </button>
+                  </form>
+                </li>
+              {% endif %}
 
-            {% if consulta.estado != "en_progreso" %}
-              <li>
-                <form method="post" action="{% url 'consulta_eliminar' consulta.pk %}" onsubmit="return confirm('¿Estás seguro de eliminar?');">
-                  {% csrf_token %}
-                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                  <button class="dropdown-item text-danger">
-                    <i class="bi bi-trash me-2"></i>Eliminar
-                  </button>
-                </form>
-              </li>
+              {% if consulta.estado != "en_progreso" %}
+                <li>
+                  <form method="post" action="{% url 'consulta_eliminar' consulta.pk %}" onsubmit="return confirm('¿Estás seguro de eliminar?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button class="dropdown-item text-danger">
+                      <i class="bi bi-trash me-2"></i>Eliminar
+                    </button>
+                  </form>
+                </li>
+              {% endif %}
             {% endif %}
           </ul>
         </div>

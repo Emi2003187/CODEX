@@ -6,7 +6,7 @@ from django.contrib.auth import logout
 from django.db.models import Q, Count, Avg
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import get_template, render_to_string
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
 from django.urls import reverse_lazy, reverse
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -2897,10 +2897,8 @@ class SignosDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['usuario'] = self.request.user
         # Ensure self.object.consulta exists before accessing .paciente.pk
-        if hasattr(self.object, 'consulta') and self.object.consulta and hasattr(self.object.consulta, 'paciente'):
-            context['volver_a'] = self.request.GET.get('next') or reverse('paciente_detalle', args=[self.object.consulta.paciente.pk])
-        else:
-            context['volver_a'] = self.request.GET.get('next') or reverse('home') # Fallback if no associated consulta/paciente
+        # Usar la página de lista de consultas como destino predeterminado
+        context['volver_a'] = self.request.GET.get('next') or reverse('consultas_lista')
         return context
 
 
@@ -3752,6 +3750,8 @@ class ConsultaCancelarView(LoginRequiredMixin, View):
     
     def post(self, request, pk):
         """Procesar la cancelación de la consulta"""
+        if request.user.rol == "asistente":
+            return HttpResponseForbidden("No tienes permiso para cancelar consultas.")
         consulta = get_object_or_404(Consulta, pk=pk)
         
         if consulta.estado == 'cancelada':

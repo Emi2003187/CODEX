@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
+from django.http import HttpResponseForbidden
 from django import forms
 
 from .forms import ConsultaSinCitaForm
@@ -18,6 +19,8 @@ def puede_modificar(user, consulta):
 @login_required
 @require_POST
 def cancelar_consulta(request, pk):
+    if request.user.rol == "asistente":
+        return HttpResponseForbidden("No tienes permiso para cancelar consultas.")
     consulta = get_object_or_404(Consulta, pk=pk)
     if not puede_modificar(request.user, consulta):
         messages.error(request, "Acción no autorizada.")
@@ -37,6 +40,9 @@ def cancelar_consulta(request, pk):
 @login_required
 @require_POST
 def eliminar_consulta(request, pk):
+    if request.user.rol == "asistente":
+        messages.error(request, "No puedes eliminar consultas.")
+        return redirect("consultas_lista")
     consulta = get_object_or_404(Consulta, pk=pk)
     if not puede_modificar(request.user, consulta):
         messages.error(request, "Acción no autorizada.")
