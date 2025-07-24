@@ -81,3 +81,56 @@ def test_crear_consulta_desde_paciente(client):
     assert after == before + 1
     consulta = Consulta.objects.latest('id')
     assert consulta.paciente == paciente
+
+
+@pytest.mark.django_db
+def test_paciente_unica_consulta_activa(client):
+    consultorio = Consultorio.objects.create(nombre="C4")
+    medico = Usuario.objects.create(username="med4", rol="medico", first_name="M", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="PX", fecha_nacimiento="2000-01-01", sexo='M', telefono='1', correo='x@x.com', direccion='x', consultorio=consultorio
+    )
+
+    client.force_login(medico)
+    url = reverse('consultas_crear_sin_cita')
+    data = {
+        'paciente': paciente.pk,
+        'medico': medico.pk,
+        'motivo_consulta': 'test',
+        'programar_para': 'ahora',
+    }
+
+    client.post(url, data)
+    before = Consulta.objects.count()
+    client.post(url, data)
+    after = Consulta.objects.count()
+    assert after == before
+
+
+@pytest.mark.django_db
+def test_consultas_para_diferentes_pacientes(client):
+    consultorio = Consultorio.objects.create(nombre="C5")
+    medico = Usuario.objects.create(username="med5", rol="medico", first_name="M", consultorio=consultorio)
+    p1 = Paciente.objects.create(nombre_completo="P1", fecha_nacimiento="2000-01-01", sexo='M', telefono='1', correo='p1@x.com', direccion='x', consultorio=consultorio)
+    p2 = Paciente.objects.create(nombre_completo="P2", fecha_nacimiento="2000-01-01", sexo='M', telefono='2', correo='p2@x.com', direccion='x', consultorio=consultorio)
+
+    client.force_login(medico)
+    url = reverse('consultas_crear_sin_cita')
+    data1 = {
+        'paciente': p1.pk,
+        'medico': medico.pk,
+        'motivo_consulta': 'test',
+        'programar_para': 'ahora',
+    }
+    data2 = {
+        'paciente': p2.pk,
+        'medico': medico.pk,
+        'motivo_consulta': 'test2',
+        'programar_para': 'ahora',
+    }
+
+    client.post(url, data1)
+    before = Consulta.objects.count()
+    client.post(url, data2)
+    after = Consulta.objects.count()
+    assert after == before + 1

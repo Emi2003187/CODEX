@@ -721,6 +721,17 @@ class ConsultaSinCitaForm(forms.ModelForm):
         fecha_programada = cleaned_data.get('fecha_programada')
         hora_programada = cleaned_data.get('hora_programada')
         medico = cleaned_data.get('medico')
+        paciente = cleaned_data.get('paciente')
+
+        # Verificar que el paciente no tenga otra consulta activa
+        if paciente:
+            if Consulta.objects.filter(
+                paciente=paciente,
+                estado__in=['espera', 'en_progreso']
+            ).exists():
+                raise ValidationError(
+                    'El paciente ya tiene una consulta pendiente o en progreso.'
+                )
         
         # Validar horario personalizado
         if programar_para == 'personalizado':
@@ -765,19 +776,6 @@ class ConsultaSinCitaForm(forms.ModelForm):
                     c_fin = c.fecha_hora + timedelta(minutes=c.duracion)
                     if inicio < c_fin and fin > c.fecha_hora:
                         raise ValidationError('El horario se solapa con otra cita.')
-
-                # Revisar consultas en espera o en progreso
-                consultas = Consulta.objects.filter(
-                    Q(medico__consultorio=consultorio) |
-                    Q(cita__consultorio=consultorio) |
-                    Q(asistente__consultorio=consultorio),
-                    estado__in=['espera', 'en_progreso']
-                )
-                for con in consultas:
-                    ini = con.fecha_atencion or (con.cita.fecha_hora if con.cita else con.fecha_creacion)
-                    fin_con = ini + timedelta(minutes=30)
-                    if inicio < fin_con and fin > ini:
-                        raise ValidationError('El horario se solapa con otra consulta.')
 
         return cleaned_data
 
