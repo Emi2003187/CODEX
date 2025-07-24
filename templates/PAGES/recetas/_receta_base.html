@@ -1,7 +1,5 @@
-{# --- ¡NO incluir <html>! --- #}
-{% load static %}
+{# NO <html> ni <body> #}
 <link rel="stylesheet" href="{% static 'css/receta.css' %}">
-
 <div id="receta-print-area"
      class="receta-wrapper"
      data-id="{{ receta.pk }}"
@@ -9,25 +7,72 @@
      data-fecha="{{ receta.consulta.fecha_hora|date:'Y-m-d' }}">
 
   <header class="encabezado">
-      {% if show_logo %}<img src="{% static 'img/imss-logo.png' %}" alt="Logo">{% endif %}
-      <small>RECETA INDIVIDUAL</small>
-      <h3>CONSULTORIO MEDICO</h3>
+      {% if show_logo %}
+        <img src="{% static 'img/imss-logo.png' %}" alt="Logo IMSS">
+      {% endif %}
+      <small class="titulo-sec">RECETA INDIVIDUAL</small>
+      <h2>CONSULTORIO MEDICO</h2>
   </header>
 
-  <section class="datos-paciente">
-      <p><strong>NOMBRE DEL PACIENTE:</strong> {{ receta.consulta.paciente }}</p>
-      <p><strong>CONSULTORIO:</strong> {{ receta.consulta.medico.consultorio }}</p>
+  <section class="datos-generales">
+      <div><strong>NOMBRE DEL PACIENTE:</strong> {{ receta.consulta.paciente }}</div>
+      <div><strong>CONSULTORIO:</strong> {{ receta.consulta.medico.consultorio }}</div>
   </section>
 
-  <section class="datos-fecha">
-      <p><strong>Fecha:</strong> {{ receta.fecha|date:"d/m/Y" }}</p>
-      <p class="right"><strong>Válido hasta:</strong> {{ receta.fecha|date:"d/m/Y" }}</p>
+  <section class="fechas">
+      <div><strong>Fecha:</strong> {{ receta.fecha|date:"d/m/Y" }}</div>
+      <div class="right"><strong>Válido hasta:</strong> {{ receta.fecha|date:"d/m/Y" }}</div>
   </section>
 
-  {# … resto de campos (signos, medicamentos, etc.) … #}
+  <section class="medico">
+      <div><strong>Nombre y firma del médico:</strong> DR. {{ receta.consulta.medico }} ({{ receta.consulta.medico.rol }})</div>
+      <div class="right"><strong>Cédula Profesional:</strong> {{ receta.consulta.medico.cedula }}</div>
+  </section>
+
+  <section class="signos">
+      <h4>Signos Vitales y Alergias</h4>
+      <table>
+        <tr>
+          <td>T.A.: {{ receta.consulta.signos_vitales.tension|default:'__' }}</td>
+          <td>F.C.: {{ receta.consulta.signos_vitales.fc|default:'__' }}</td>
+          <td>Peso: {{ receta.consulta.signos_vitales.peso|default:'__' }}</td>
+          <td>Temp.: {{ receta.consulta.signos_vitales.temp|default:'__' }}</td>
+        </tr>
+        <tr>
+          <td>Talla: {{ receta.consulta.signos_vitales.talla|default:'__' }}</td>
+          <td>Circ. Abd.: {{ receta.consulta.signos_vitales.circ_abd|default:'__' }}</td>
+          <td>IMC: {{ receta.consulta.signos_vitales.imc|default:'__' }}</td>
+          <td></td>
+        </tr>
+      </table>
+      <p><strong>Alergias:</strong>
+        {% if receta.consulta.signos_vitales.alergias %}
+             {{ receta.consulta.signos_vitales.alergias }}
+        {% else %}
+             NEGATIVO
+        {% endif %}
+      </p>
+  </section>
+
+  <section class="medicamentos">
+      <table class="tabla-meds">
+        {% for m in receta.medicamentos.all %}
+          <tr>
+            <td>{{ forloop.counter }}.</td>
+            <td>{{ m.nombre }} – Dosis: {{ m.dosis }},
+                Frecuencia: {{ m.frecuencia }},
+                Duración: {{ m.duracion }},
+                Indicaciones: {{ m.indicaciones|default:'N/A' }}</td>
+          </tr>
+        {% empty %}
+          <tr><td>1.</td><td>No hay medicamentos registrados.</td></tr>
+        {% endfor %}
+      </table>
+  </section>
 
   <footer class="pie">
       <p>DR. {{ receta.consulta.medico }}</p>
-      <p>CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula }}</p>
+      <p>CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula }} – INSTITUCIÓN: {{ receta.consulta.medico.institucion }}</p>
+      <p>DIRECCIÓN: {{ receta.consulta.medico.direccion }}</p>
   </footer>
 </div>

@@ -752,17 +752,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const win  = window.open("", "_blank","width=800,height=600");
         win.document.write(`<link rel="stylesheet" href="/static/css/receta.css">`);
         win.document.body.appendChild(node);
+        win.document.title = "Receta";
         win.document.close();
-        win.focus();
-        win.print();
-        win.close();
+
+        win.onload = () => {
+          win.focus();
+          win.print();
+          win.close();
+        };
       };
 
       /* —— PDF —— */
       btnPdf.onclick = () => {
         const node    = bodyEl.querySelector('#receta-print-area');
         const id      = node.dataset.id;
-        const pacient = node.dataset.paciente.replace(/-/g,' ');
+        const pacient = node.dataset.paciente.replace(/-/g,' ').toLowerCase();
         const fecha   = node.dataset.fecha;
         const nombre  = `${id} - ${pacient} - ${fecha}.pdf`;
 

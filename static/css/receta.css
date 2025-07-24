@@ -1,12 +1,29 @@
-.receta-wrapper { font-family: Helvetica, Arial, sans-serif; width: 148mm; }
-.encabezado     { text-align:center; margin-bottom:6mm; }
+.receta-wrapper { width: 148mm; font-family:"Helvetica","Arial",sans-serif; font-size:11pt; }
+.encabezado     { text-align:center; margin-bottom:4mm; }
 .encabezado img { max-height:16mm; }
-.datos-paciente p,
-.datos-fecha p,
-.pie p          { margin:1.5mm 0; font-size:11pt; }
+.titulo-sec     { display:block; margin-top:1mm; font-size:10pt; letter-spacing:.5px; }
+.datos-generales,
+.fechas,
+.medico,
+.signos,
+.medicamentos   { margin-bottom:3mm; }
+
+.datos-generales div,
+.fechas div,
+.medico div     { margin:0.5mm 0; }
+
 .right          { float:right; }
+
+.signos h4      { font-size:11pt; text-align:center; margin-bottom:1mm; }
+.signos table   { width:100%; border-collapse:collapse; font-size:10pt; }
+.signos td      { border:1px solid #000; padding:1mm 2mm; }
+
+.tabla-meds     { width:100%; border-collapse:collapse; font-size:10pt; }
+.tabla-meds td  { border-bottom:1px dotted #666; padding:1mm; vertical-align:top; }
+
+.pie p          { text-align:center; margin:1mm 0; font-size:9pt; }
 
 @media print {
   @page { size:A5 portrait; margin:10mm; }
-  body  { margin:0; }
+  body  { margin:0; background:#fff; }
 }
