@@ -1,0 +1,37 @@
+/* ====  SOLO PARA IMPRESIÓN DE RECETA  ==== */
+@media print {
+
+  /* 0. Márgenes y tamaño de página  */
+  @page {
+      size: A5 portrait;            /* ajusta a formato deseado  */
+      margin: 12mm;                 /* margen estándar recetario */
+  }
+
+  /* 1. Ocultar TODO el resto del documento */
+  body *               { visibility: hidden !important; }
+  body, html           { background: #fff !important; }
+
+  /* 2. Mostrar solo la receta */
+  #modalReceta,                       /* contenedor modal */
+  #modalReceta .receta-container,
+  #modalReceta .receta-container *    /* hijos de la receta */
+  { visibility: visible !important; }
+
+  /* 3. Colocar la receta en posición normal para ocupar toda la página */
+  #modalReceta {
+      position: static !important;   /* quita fija/transform de Bootstrap */
+      inset: 0 !important;
+      transform: none !important;
+  }
+
+  /* 4. Elimina cabecera / pie del modal y sombras */
+  #modalReceta .modal-dialog,
+  #modalReceta .modal-content        { box-shadow: none !important; }
+
+  #modalReceta .modal-header,
+  #modalReceta .modal-footer         { display: none !important; }
+
+  /* 5. Evitar cortes internos */
+  .receta-container                  { break-inside: avoid; }
+
+}

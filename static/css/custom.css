@@ -1,7 +1,1 @@
 .receta-container { font-size: .95rem; }
-@media print {
-  body *        { visibility: hidden; }
-  #modalReceta  { position: static !important; }
-  #modalReceta *{ visibility: visible; }
-  #modalReceta .modal-footer { display:none; }
-}
