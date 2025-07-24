@@ -2,7 +2,22 @@
 @page  { size: A5 portrait; margin: 10mm; }
 body   { margin:0; background:#fff; }
 
-.receta      { width:126mm; margin:0 auto; font-size:11pt; line-height:1.35; font-family:"Helvetica","Arial",sans-serif; color:#000; break-inside:avoid; page-break-inside:avoid; }
+
+.receta      {
+    width:126mm;
+    margin:0 auto;
+    font-size:11pt;
+    line-height:1.35;
+    font-family:"Helvetica","Arial",sans-serif;
+    color:#000;
+    break-inside:avoid;
+    page-break-inside:avoid;
+    min-height:178mm;              /* alto útil en A5 con márgenes */
+    display:flex;
+    flex-direction:column;
+}
+
+.receta > * { flex-shrink:0; }
 .hdr         { text-align:center; margin-bottom:4mm; }
 .logo        { max-height:18mm; display:block; margin:0 auto 2mm; }
 .sub         { font-size:10pt; display:block; letter-spacing:.4px; margin-bottom:1mm; }
@@ -20,14 +35,21 @@ body   { margin:0; background:#fff; }
 .lista-meds li{ margin-bottom:1.2mm; }
 
 /* === BLOQUE NOTAS === */
-.notas           { margin:4mm 0 5mm; }
+.notas           { margin:4mm 0 3mm; }
 .notas .line     {
    border-bottom:0.25pt dotted #999;
    height:6mm;
    margin-bottom:1.5mm;
 }
 
-.pie         { text-align:center; font-size:9pt; border-top:0.4pt dotted #666; padding-top:2mm; }
+.pie         {
+    margin: top 35px;;
+    text-align:center;
+    font-size:9pt;
+    border-top:0.4pt dotted #666;
+    padding-top:2mm;
+}
+
 
 @media print {
   .receta { page-break-after: avoid; }
