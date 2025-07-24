@@ -2,29 +2,33 @@
 @page  { size: A5 portrait; margin: 10mm; }
 body   { margin:0; background:#fff; }
 
-.receta      { width: 128mm; margin:0 auto; font-size:12pt; line-height:1.45; font-family:"Helvetica","Arial",sans-serif; color:#000; }
+.receta      { width:126mm; margin:0 auto; font-size:11pt; line-height:1.35; font-family:"Helvetica","Arial",sans-serif; color:#000; break-inside:avoid; page-break-inside:avoid; }
 .hdr         { text-align:center; margin-bottom:4mm; }
 .logo        { max-height:18mm; display:block; margin:0 auto 2mm; }
 .sub         { font-size:10pt; display:block; letter-spacing:.4px; margin-bottom:1mm; }
 .grid-2      { display:grid; grid-template-columns:1fr 1fr; gap:1mm; margin-bottom:4mm; }
 .right       { text-align:right; }
-.section-title{ font-size:11pt; margin:4mm 0 2mm; text-align:center; text-decoration:underline; }
+.section-title{ font-size:11pt; margin:3mm 0 1.5mm; text-align:center; text-decoration:underline; }
 
-.tbl-signos  { width:100%; border-collapse:collapse; font-size:10pt; margin-bottom:2mm;}
+.tbl-signos  { width:100%; border-collapse:collapse; font-size:10pt; margin-bottom:1.5mm; }
 .tbl-signos th,
 .tbl-signos td{ border:1px solid #000; padding:1mm 2mm; text-align:center; }
 
 .aler        { margin:1mm 0 3mm; }
 
 .lista-meds  { font-size:10pt; margin:0 0 4mm 0; padding-left:4mm; }
-.lista-meds li{ margin-bottom:2.5mm; }
+.lista-meds li{ margin-bottom:1.2mm; }
 
 /* === BLOQUE NOTAS === */
 .notas           { margin:4mm 0 5mm; }
 .notas .line     {
    border-bottom:0.25pt dotted #999;
-   height:8mm;
-   margin-bottom:2mm;
+   height:6mm;
+   margin-bottom:1.5mm;
 }
 
 .pie         { text-align:center; font-size:9pt; border-top:0.4pt dotted #666; padding-top:2mm; }
+
+@media print {
+  .receta { page-break-after: avoid; }
+}
