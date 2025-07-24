@@ -2213,6 +2213,21 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     def form_valid(self, form):
         user = self.request.user
         consulta = form.save(commit=False)
+
+        paciente = form.cleaned_data.get("paciente")
+        if paciente:
+            estados = ["espera", "en_progreso"]
+            if Consulta.objects.filter(
+                paciente=paciente,
+                tipo="sin_cita",
+                estado__in=estados,
+            ).exists():
+                form.add_error(
+                    None,
+                    "Este paciente ya tiene una consulta activa. "
+                    "No se puede crear otra hasta que finalice."
+                )
+                return self.form_invalid(form)
         
         # ✅ CONFIGURACIÓN BÁSICA - SIN CITA
         consulta.tipo = 'sin_cita'
@@ -2288,6 +2303,7 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
         
         # ✅ GUARDAR LA CONSULTA
         consulta.save()
+        self.object = consulta
         
         # ✅ MENSAJE DE ÉXITO FINAL
         if form.es_consulta_instantanea():

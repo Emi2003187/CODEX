@@ -717,6 +717,22 @@ class ConsultaSinCitaForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        # Verificar si el paciente ya tiene una consulta "sin_cita" activa
+        paciente = cleaned_data.get("paciente")
+        if paciente:
+            conflicto = Consulta.objects.filter(
+                paciente=paciente,
+                tipo="sin_cita",
+                estado__in=["espera", "en_progreso"],
+            ).exists()
+
+            if conflicto:
+                raise ValidationError(
+                    f"El paciente {paciente} ya tiene una consulta en espera o en progreso. "
+                    "Finalízala antes de registrar otra."
+                )
+
         programar_para = cleaned_data.get('programar_para')
         fecha_programada = cleaned_data.get('fecha_programada')
         hora_programada = cleaned_data.get('hora_programada')
