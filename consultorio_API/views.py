@@ -1077,8 +1077,8 @@ def detalle_cita(request, cita_id):
         'consulta': consulta,
         'medicos_disponibles': medicos_disponibles,
         'puede_asignar_medico': (
-            cita.puede_asignar_medico and 
-            request.user.rol in ['admin', 'asistente']
+            cita.puede_asignar_medico and
+            request.user.rol == 'admin'
         ),
         'puede_tomar_cita': puede_tomar_cita(request.user, cita),
         'puede_editar': puede_editar_cita(request.user, cita),
@@ -2184,6 +2184,12 @@ class ConsultaDeleteView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
     model = Consulta
     template_name = 'PAGES/consultas/eliminar.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.rol == 'asistente':
+            messages.warning(request, 'No tienes permiso para eliminar consultas.')
+            return redirect('consultas_lista')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_success_url(self):
         next_url = self.request.GET.get("next")
         if next_url:
@@ -2204,6 +2210,12 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     form_class = ConsultaSinCitaForm
     template_name = 'PAGES/consultas/crear_sin_cita.html'
     success_url = reverse_lazy('consultas_lista')
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.rol == 'asistente':
+            messages.warning(request, 'No tienes permiso para crear consultas.')
+            return redirect('consultas_lista')
+        return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -3726,7 +3738,10 @@ class ConsultaCancelarView(LoginRequiredMixin, View):
     
     def dispatch(self, request, *args, **kwargs):
         # Verificar permisos
-        if request.user.rol not in ('admin', 'medico', 'asistente'):
+        if request.user.rol == 'asistente':
+            messages.warning(request, 'No tienes permiso para cancelar consultas.')
+            return redirect('consultas_lista')
+        if request.user.rol not in ('admin', 'medico'):
             messages.error(request, 'No tienes permisos para cancelar consultas.')
             return redirect_next(request, 'consultas_lista')
         return super().dispatch(request, *args, **kwargs)
@@ -3873,7 +3888,7 @@ class CitaListView(CitaPermisoMixin, ListView):
         # 4. Determinar permisos para botones
         permisos = {
             'puede_tomar': user.rol == 'medico',
-            'puede_asignar': user.rol in ['admin', 'asistente'],
+            'puede_asignar': user.rol == 'admin',
             'puede_liberar': user.rol in ['admin', 'medico'],
             'puede_crear': True,
         }
@@ -4157,6 +4172,11 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
         )
         
         return super().form_valid(form)
+
+    def get_success_url(self):
+        if self.request.user.rol == "asistente":
+            return reverse("citas_lista")
+        return super().get_success_url()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

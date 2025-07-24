@@ -37,6 +37,7 @@
           <i class="bi bi-x"></i>
         </button>
       </div>
+      {% if usuario.rol != 'asistente' %}
       <div class="dropdown">
         <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
           <i class="bi bi-plus-circle me-1"></i>Nueva Consulta
@@ -54,6 +55,7 @@
           </li>
         </ul>
       </div>
+      {% endif %}
       
       <!-- BOTÓN PARA RECARGAR PÁGINA -->
       <button class="btn btn-outline-primary" onclick="location.reload()">
