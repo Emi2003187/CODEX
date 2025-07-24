@@ -7,18 +7,17 @@ from .models import Receta
 
 
 class RecetaPreviewView(LoginRequiredMixin, DetailView):
-    """Previsualización simple de una receta para mostrar en un modal."""
+    """Previsualización de receta reutilizada para impresión y PDF."""
 
     model = Receta
-    template_name = "PAGES/pdf/receta_consulta.html"
+    template_name = "PAGES/recetas/_receta_base.html"
     context_object_name = "receta"
-    pk_url_kwarg = "receta_id"
+    pk_url_kwarg = "pk"
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["consulta"] = self.object.consulta
-        context["fecha_actual"] = timezone.now()
-        return context
+        ctx = super().get_context_data(**kwargs)
+        ctx["show_logo"] = True
+        return ctx
 
     def dispatch(self, request, *args, **kwargs):
         receta = self.get_object()

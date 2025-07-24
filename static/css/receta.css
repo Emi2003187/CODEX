@@ -1,0 +1,12 @@
+.receta-wrapper { font-family: Helvetica, Arial, sans-serif; width: 148mm; }
+.encabezado     { text-align:center; margin-bottom:6mm; }
+.encabezado img { max-height:16mm; }
+.datos-paciente p,
+.datos-fecha p,
+.pie p          { margin:1.5mm 0; font-size:11pt; }
+.right          { float:right; }
+
+@media print {
+  @page { size:A5 portrait; margin:10mm; }
+  body  { margin:0; }
+}
