@@ -78,6 +78,14 @@
      {% endfor %}
   </ol>
 
+  <!-- NOTAS DEL MÉDICO -->
+  <h4 class="section-title">Observaciones</h4>
+  <div class="notas">
+     {% for i in "12345"|make_list %}
+         <div class="line"></div>
+     {% endfor %}
+  </div>
+
   <!-- PIE -->
   <footer class="pie">
     DR. {{ receta.consulta.medico }}<br>
