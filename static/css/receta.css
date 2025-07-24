@@ -42,7 +42,7 @@ body   { margin:0; background:#fff; }
 }
 
 .pie         {
-    margin-top:auto;
+    margin: top 35px;;
     text-align:center;
     font-size:9pt;
     border-top:0.4pt dotted #666;
