@@ -2,6 +2,7 @@
 @page  { size: A5 portrait; margin: 10mm; }
 body   { margin:0; background:#fff; }
 
+
 .receta      {
     width:126mm;
     margin:0 auto;
@@ -48,6 +49,7 @@ body   { margin:0; background:#fff; }
     border-top:0.4pt dotted #666;
     padding-top:2mm;
 }
+
 
 @media print {
   .receta { page-break-after: avoid; }
