@@ -106,7 +106,7 @@ urlpatterns = [
     
     # PDF y previsualización de recetas
     path('recetas/<int:receta_id>/pdf/', views.receta_pdf_view, name='receta_pdf'),
-    path("recetas/<uuid:pk>/preview/", RecetaPreviewView.as_view(), name="receta_preview"),
+    path('recetas/<int:receta_id>/preview/', RecetaPreviewView.as_view(), name='receta_preview'),
     path('citas/exportar-csv/', viewscitas.exportar_citas_csv, name='exportar_citas_csv'),  # CAMBIAR
     
     
