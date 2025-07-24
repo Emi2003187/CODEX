@@ -4207,6 +4207,12 @@ class CitaUpdateView(NextRedirectMixin, CitaPermisoMixin, UpdateView):
     template_name = 'PAGES/citas/editar.html'
     success_url = reverse_lazy('citas_lista')
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.rol == 'asistente':
+            messages.error(request, 'No tienes permiso para editar citas.')
+            return redirect('citas_lista')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
