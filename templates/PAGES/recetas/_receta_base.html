@@ -23,14 +23,20 @@
 
   <!-- FECHAS -->
   <section class="grid-2">
-      <div><strong>Fecha:</strong> {{ receta.fecha|date:"d/m/Y" }}</div>
-      <div class="right"><strong>Válido hasta:</strong> {{ receta.fecha|date:"d/m/Y" }}</div>
+      <div><strong>Fecha:</strong> {{ receta.fecha_emision|date:"d/m/Y" }}</div>
+      <div class="right"><strong>Válido hasta:</strong>
+          {{ receta.fecha_validez|default_if_none:receta.fecha_emision|date:"d/m/Y" }}
+      </div>
   </section>
 
   <!-- MÉDICO -->
   <section class="grid-2">
-      <div><strong>Nombre y firma del médico:</strong> DR. {{ receta.consulta.medico }}</div>
-      <div class="right"><strong>Cédula Prof.:</strong> {{ receta.consulta.medico.cedula }}</div>
+      <div><strong>Nombre y firma del médico:</strong>
+          DR. {{ receta.consulta.medico.get_full_name }}
+      </div>
+      <div class="right"><strong>Cédula Prof.:</strong>
+          {{ receta.consulta.medico.cedula_profesional|default:"—" }}
+      </div>
   </section>
 
   <!-- SIGNOS + ALERGIAS -->
@@ -81,15 +87,16 @@
   <!-- NOTAS DEL MÉDICO -->
   <h4 class="section-title">Observaciones</h4>
   <div class="notas">
-     {% for i in "12345"|make_list %}
+     {% for i in "123"|make_list %}
          <div class="line"></div>
      {% endfor %}
   </div>
 
   <!-- PIE -->
   <footer class="pie">
-    DR. {{ receta.consulta.medico }}<br>
-    CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula }} – INSTITUCIÓN: {{ receta.consulta.medico.institucion }}<br>
-    DIRECCIÓN: {{ receta.consulta.medico.direccion }}
+    DR. {{ receta.consulta.medico.get_full_name }}<br>
+    CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula_profesional|default:"—" }} –
+    INSTITUCIÓN: {{ receta.consulta.medico.institucion_cedula|default:"—" }}<br>
+    DIRECCIÓN: {{ receta.consulta.medico.consultorio.ubicacion|default:"—" }}
   </footer>
 </div>

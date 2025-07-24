@@ -2,6 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseForbidden
 from django.views.generic import DetailView
 from django.utils import timezone
+from datetime import timedelta
 
 from .models import Receta
 
@@ -17,6 +18,10 @@ class RecetaPreviewView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["show_logo"] = True
+        receta = ctx["receta"]
+        receta.fecha_validez = receta.valido_hasta or (
+            receta.fecha_emision + timedelta(days=2)
+        )
         return ctx
 
     def dispatch(self, request, *args, **kwargs):
