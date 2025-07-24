@@ -1,0 +1,16 @@
+<div class="receta-container px-3 py-2">
+  <h4 class="fw-bold mb-0">{{ receta.consulta.medico }}</h4>
+  <small class="text-muted">{{ receta.fecha|date:"d/m/Y H:i" }}</small>
+  <hr>
+  <p><strong>Paciente:</strong> {{ receta.consulta.paciente }}</p>
+  <p><strong>Diagnóstico:</strong> {{ receta.diagnostico }}</p>
+  <h5 class="mt-3">Medicamentos</h5>
+  <ul class="mb-2">
+    {% for m in receta.medicamentos.all %}
+      <li>{{ m.nombre }} – {{ m.indicaciones }}</li>
+    {% empty %}
+      <li>No hay medicamentos.</li>
+    {% endfor %}
+  </ul>
+  <p class="fst-italic">Firma electrónica del médico</p>
+</div>
