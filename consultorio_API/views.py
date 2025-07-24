@@ -2351,6 +2351,26 @@ class ConsultaPrecheckView(NextRedirectMixin, LoginRequiredMixin, UserPassesTest
         ctx["next"] = self.next_url
         return ctx
 
+    def post(self, request, pk):
+        consulta = get_object_or_404(Consulta, pk=pk)
+        signos, _ = SignosVitales.objects.get_or_create(consulta=consulta)
+
+        # asignar quién los registra
+        signos.registrado_por = request.user
+
+        form = SignosVitalesForm(request.POST, instance=signos)
+        if form.is_valid():
+            form.save()  # guarda también registrado_por
+            messages.success(request, "Signos vitales guardados correctamente.")
+            return redirect(self.get_next_url() or reverse("consulta_detalle", args=[pk]))
+
+        return render(request, self.template_name, {
+            "form": form,
+            "usuario": request.user,
+            "consulta": consulta,
+            "next": self.get_next_url() or reverse("consulta_detalle", args=[pk]),
+        })
+
     def form_valid(self, form):
         form.instance.consulta = self.consulta
         form.save()
