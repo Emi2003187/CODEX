@@ -160,32 +160,8 @@
 
                     <!-- Acciones para asistentes -->
                     {% if usuario.rol == 'asistente' %}
-                        <!-- Asignar médico -->
-                        {% if not cita.medico_asignado and cita.estado in 'programada,confirmada' %}
-                        <div class="dropdown d-inline-block">
-                            <button class="btn-action btn-primary-action dropdown-toggle"
-                                     type="button"
-                                     data-bs-toggle="dropdown">
-                                <i class="bi bi-person-plus"></i>
-                                Asignar Médico
-                            </button>
-                            <ul class="dropdown-menu">
-                                {% for medico in cita.consultorio.usuarios_asignados.all %}
-                                {% if medico.rol == 'medico' and medico.is_active %}
-                                <li>
-                                    <a class="dropdown-item" href="#"
-                                        onclick="asignarMedico('{{ cita.id }}', '{{ medico.id }}', '{{ medico.get_full_name }}')">
-                                        <i class="bi bi-person-check me-2"></i>
-                                        Dr. {{ medico.get_full_name }}
-                                    </a>
-                                </li>
-                                {% endif %}
-                                {% empty %}
-                                <li><span class="dropdown-item-text text-muted">No hay médicos disponibles</span></li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
+                        {# Botón de asignar médico oculto para asistentes #}
+                        {% if false %}{% endif %}
 
                         <!-- Cambiar estado -->
                         {% if cita.estado == 'programada' %}
