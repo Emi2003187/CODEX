@@ -2287,7 +2287,9 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
                 )
         
         # ✅ GUARDAR LA CONSULTA
+
         consulta.save()
+        self.object = consulta
         
         # ✅ MENSAJE DE ÉXITO FINAL
         if form.es_consulta_instantanea():
