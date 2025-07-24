@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.db.models import Q, Count
 from django.utils import timezone
 from django.core.paginator import Paginator
@@ -375,9 +375,13 @@ def detalle_cita(request, cita_id):
 def asignar_medico_cita(request, cita_id):
     """Asignar médico a una cita - CORREGIDA"""
     cita = get_object_or_404(Cita, id=cita_id)
-    
+
     # Verificar permisos
-    if request.user.rol not in ['admin', 'asistente']:
+    if request.user.rol == 'asistente':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'Acción no permitida para asistentes.'}, status=403)
+        return HttpResponseForbidden('Acción no permitida para asistentes.')
+    if request.user.rol not in ['admin', 'medico']:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'message': 'No tienes permisos para asignar médicos'}, status=403)
         messages.error(request, 'No tienes permisos para asignar médicos.')
@@ -772,7 +776,9 @@ def mis_citas_asignadas(request):
 def cancelar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
 
-    if request.user.rol not in ("admin", "asistente"):
+    if request.user.rol == "asistente":
+        return HttpResponseForbidden("Acción no permitida para asistentes.")
+    if request.user.rol != "admin":
         messages.error(request, "No tienes permisos para cancelar citas.")
         return redirect("citas_detalle", pk=cita.id)
 
