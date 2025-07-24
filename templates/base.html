@@ -749,13 +749,15 @@ document.addEventListener("DOMContentLoaded", () => {
       /* —— imprimir —— */
       btnPrint.onclick = () => {
         const node = bodyEl.querySelector('#receta-print-area').cloneNode(true);
-        const win  = window.open("", "_blank","width=800,height=600");
-        win.document.write(`<link rel="stylesheet" href="/static/css/receta.css">`);
+        const win  = window.open("", "_blank","width=850,height=600");
+        win.document.write(`
+     <html><head>
+        <link rel="stylesheet" href="/static/css/receta.css">
+        <title>Receta</title>
+     </head><body></body></html>`);
         win.document.body.appendChild(node);
         win.document.close();
-        win.focus();
-        win.print();
-        win.close();
+        win.onload = () => { win.focus(); win.print(); win.close(); };
       };
 
       /* —— PDF —— */
