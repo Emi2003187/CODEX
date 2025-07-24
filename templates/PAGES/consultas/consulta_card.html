@@ -170,8 +170,7 @@
               {% if consulta.receta %}
                 <li>
                   <a class="dropdown-item btn-preview-receta" href="#"
-                     data-preview-url="{% url 'receta_preview' consulta.receta.pk %}"
-                     data-pdf-url="{% url 'receta_pdf' consulta.receta.pk %}">
+                     data-preview-url="{% url 'receta_preview' consulta.receta.pk %}">
                     <i class="bi bi-eye me-2"></i>Ver Receta
                   </a>
                 </li>

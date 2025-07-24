@@ -1,0 +1,32 @@
+{# --- ¡NO incluir <html>! --- #}
+<link rel="stylesheet" href="{% static 'css/receta.css' %}">
+
+<div id="receta-print-area"
+     class="receta-wrapper"
+     data-id="{{ receta.pk }}"
+     data-paciente="{{ receta.consulta.paciente|slugify }}"
+     data-fecha="{{ receta.consulta.fecha_hora|date:'Y-m-d' }}">
+
+  <header class="encabezado">
+      {% if show_logo %}<img src="{% static 'img/imss-logo.png' %}" alt="Logo">{% endif %}
+      <small>RECETA INDIVIDUAL</small>
+      <h3>CONSULTORIO MEDICO</h3>
+  </header>
+
+  <section class="datos-paciente">
+      <p><strong>NOMBRE DEL PACIENTE:</strong> {{ receta.consulta.paciente }}</p>
+      <p><strong>CONSULTORIO:</strong> {{ receta.consulta.medico.consultorio }}</p>
+  </section>
+
+  <section class="datos-fecha">
+      <p><strong>Fecha:</strong> {{ receta.fecha|date:"d/m/Y" }}</p>
+      <p class="right"><strong>Válido hasta:</strong> {{ receta.fecha|date:"d/m/Y" }}</p>
+  </section>
+
+  {# … resto de campos (signos, medicamentos, etc.) … #}
+
+  <footer class="pie">
+      <p>DR. {{ receta.consulta.medico }}</p>
+      <p>CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula }}</p>
+  </footer>
+</div>
