@@ -403,44 +403,86 @@ class AdminRequiredMixin(UserPassesTestMixin):
         messages.error(self.request, 'No tienes permisos de administrador.')
         return redirect_next(self.request, dashboard)
 
+# consultorio_API/views.py
 
 class UsuarioListView(AdminRequiredMixin, ListView):
-    model = Usuario
-    template_name = 'PAGES/usuarios/lista.html'
-    context_object_name = 'usuarios'
-    paginate_by = 8  
+    """
+    Vista de lista de usuarios para el panel de administración.
 
+    • Muestra TODOS los usuarios (incluidos otros administradores),
+      excepto el usuario actualmente autenticado.
+    • Admite filtros por texto, rol y consultorio.
+    • Paginación segura de 8 elementos por página (Django maneja automáticamente
+      los casos en que la página solicitada no existe).
+    """
+    model               = Usuario
+    template_name       = "PAGES/usuarios/lista.html"
+    context_object_name = "usuarios"
+    paginate_by         = 8
+
+    # ────────────────────────────────────────────────────────────────
+    #  Helpers
+    # ────────────────────────────────────────────────────────────────
+    def _rol_param_to_code(self, rol_param: str | None) -> str | None:
+        """
+        Convierte el parámetro de rol (que puede venir como código
+        ─'admin', 'medico', 'asistente'─ **o** como display
+        ─'Administrador', 'Médico', 'Asistente'─) al código interno.
+        """
+        if not rol_param:
+            return None
+
+        # Si ya es un código válido, regrésalo tal cual
+        CODES = {c for c, _ in Usuario.ROLES}
+        if rol_param in CODES:
+            return rol_param
+
+        # Caso contrario, mapear texto→código
+        display_to_code = {display: code for code, display in Usuario.ROLES}
+        return display_to_code.get(rol_param)
+
+    # ────────────────────────────────────────────────────────────────
+    #  Queryset principal
+    # ────────────────────────────────────────────────────────────────
     def get_queryset(self):
-        qs = Usuario.objects.exclude(rol='admin')
+        qs = Usuario.objects.all().exclude(pk=self.request.user.pk)
 
-        q = self.request.GET.get("q", "").strip()
-        rol = self.request.GET.get("rol", "").strip()
-        consultorio_id = self.request.GET.get("consultorio", "").strip()
+        # -------- filtros ----------
+        q_raw       = self.request.GET.get("q", "").strip()
+        rol_raw     = self.request.GET.get("rol", "").strip()
+        consultorio = self.request.GET.get("consultorio", "").strip()
 
-        if q:
+        if q_raw:
             qs = qs.filter(
-                Q(first_name__icontains=q) |
-                Q(last_name__icontains=q) |
-                Q(email__icontains=q) |
-                Q(consultorio__nombre__icontains=q)
+                Q(first_name__icontains=q_raw)        |
+                Q(last_name__icontains=q_raw)         |
+                Q(email__icontains=q_raw)             |
+                Q(consultorio__nombre__icontains=q_raw)
             )
 
-        if rol:
-            qs = qs.filter(rol=rol)
+        rol_code = self._rol_param_to_code(rol_raw)
+        if rol_code:
+            qs = qs.filter(rol=rol_code)
 
-        if consultorio_id.isdigit():
-            qs = qs.filter(consultorio_id=consultorio_id)
+        if consultorio.isdigit():
+            qs = qs.filter(consultorio_id=consultorio)
 
         return qs.order_by("first_name", "last_name")
 
+    # ────────────────────────────────────────────────────────────────
+    #  Contexto extra
+    # ────────────────────────────────────────────────────────────────
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['usuario'] = self.request.user
-        context['consultorios'] = Consultorio.objects.all()
-        context['q'] = self.request.GET.get("q", "")
-        context['rol_selected'] = self.request.GET.get("rol", "")
-        context['consultorio_selected'] = self.request.GET.get("consultorio", "")
-        return context
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(
+            usuario              = self.request.user,
+            consultorios         = Consultorio.objects.all(),
+            q                    = self.request.GET.get("q", ""),
+            rol_selected         = self.request.GET.get("rol", ""),
+            consultorio_selected = self.request.GET.get("consultorio", ""),
+        )
+        return ctx
+
 
 
 class UsuarioCreateView(NextRedirectMixin, AdminRequiredMixin, CreateView):
