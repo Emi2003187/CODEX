@@ -193,7 +193,7 @@
                 <i class="bi bi-eye me-1"></i>Ver Detalles
               </a>
               {% if usuario.rol in 'medico,asistente,admin' %}
-                <a href="{% url 'consultas_precheck' consulta.pk %}?next={{ request.get_full_path }}" class="btn btn-sm btn-outline-warning">
+                <a href="{% url 'signos_editar' signos_vitales.pk %}?next={{ request.get_full_path }}" class="btn btn-sm btn-outline-warning">
                   <i class="bi bi-pencil me-1"></i>Editar Signos
                 </a>
               {% endif %}
