@@ -192,7 +192,7 @@
               <a href="{% url 'signos_detalle' signos_vitales.pk %}" class="btn btn-sm btn-outline-info">
                 <i class="bi bi-eye me-1"></i>Ver Detalles
               </a>
-              {% if usuario.rol in 'medico,asistente,admin' %}
+              {% if puede_editar %}
                 <a href="{% url 'signos_editar' signos_vitales.pk %}?next={{ request.get_full_path }}" class="btn btn-sm btn-outline-warning">
                   <i class="bi bi-pencil me-1"></i>Editar Signos
                 </a>
@@ -203,9 +203,11 @@
               <i class="bi bi-dash-circle me-1"></i>
               No hay signos vitales registrados
             </p>
-            <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-sm btn-outline-primary w-100">
-              <i class="bi bi-plus me-1"></i>Registrar Signos
-            </a>
+            {% if puede_editar %}
+              <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-plus me-1"></i>Registrar Signos
+              </a>
+            {% endif %}
           {% endif %}
         </div>
       </div>
@@ -279,7 +281,7 @@
               </a>
             {% endif %}
             
-            {% if not signos_vitales %}
+            {% if not signos_vitales and puede_editar %}
               <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-warning btn-sm">
                 <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
               </a>

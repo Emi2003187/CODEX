@@ -1192,7 +1192,7 @@ def puede_ver_cita(user, cita):
     if user.rol == 'admin':
         return True
     elif user.rol == 'medico':
-        return (cita.consultorio == user.consultorio or 
+        return (cita.consultorio == user.consultorio or
                 cita.medico_asignado == user)
     elif user.rol == 'asistente':
         return cita.consultorio == user.consultorio
@@ -1203,12 +1203,11 @@ def puede_editar_cita(user, cita):
     """Verifica si el usuario puede editar la cita"""
     if user.rol == 'admin':
         return True
-    elif user.rol == 'asistente':
-        return (cita.consultorio == user.consultorio and 
-                cita.estado in ['programada', 'confirmada'])
     elif user.rol == 'medico':
-        return (cita.medico_asignado == user and 
-                cita.estado in ['programada', 'confirmada'])
+        return (
+            cita.medico_asignado == user
+            and cita.estado in ['programada', 'confirmada']
+        )
     return False
 
 

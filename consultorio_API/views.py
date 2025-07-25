@@ -1641,12 +1641,11 @@ def puede_editar_cita(user, cita):
     """Verifica si el usuario puede editar la cita"""
     if user.rol == 'admin':
         return True
-    elif user.rol == 'asistente':
-        return (cita.consultorio == user.consultorio and 
-                cita.estado in ['programada', 'confirmada'])
     elif user.rol == 'medico':
-        return (cita.medico_asignado == user and 
-                cita.estado in ['programada', 'confirmada'])
+        return (
+            cita.medico_asignado == user
+            and cita.estado in ['programada', 'confirmada']
+        )
     return False
 
 
@@ -1755,7 +1754,22 @@ def crear_notificacion_cita_liberada(cita, medico_anterior):
 
 class ConsultaPermisoMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.rol in ("medico", "admin")
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        if user.rol == "admin":
+            return True
+
+        if user.rol == "medico":
+            consulta_id = (
+                self.kwargs.get("pk")
+                or self.kwargs.get("consulta_id")
+                or self.request.POST.get("consulta_id")
+            )
+            if consulta_id:
+                consulta = get_object_or_404(Consulta, pk=consulta_id)
+                return consulta.medico == user
+        return False
 
 
 class ConsultaListView(LoginRequiredMixin, ListView):
@@ -2440,10 +2454,26 @@ class ConsultaPrecheckView(NextRedirectMixin, LoginRequiredMixin, UserPassesTest
     success_url = reverse_lazy("consultas_lista")
 
     def test_func(self):
-        return self.request.user.rol in ("asistente", "medico", "admin")
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        if user.rol == "admin":
+            return True
+        if user.rol == "medico":
+            consulta_id = self.kwargs.get("pk")
+            if consulta_id:
+                consulta = get_object_or_404(Consulta, pk=consulta_id)
+                return consulta.medico == user
+        return False
 
     def dispatch(self, request, *args, **kwargs):
         self.consulta = get_object_or_404(Consulta, pk=kwargs["pk"])
+
+        if request.user.rol == "medico" and self.consulta.medico != request.user:
+            messages.error(request, "No puedes editar esta consulta, no est\u00e1s asignado.")
+            return redirect("consulta_detalle", pk=self.consulta.pk)
+        if request.user.rol not in ("medico", "admin"):
+            return redirect("consultas_lista")
 
         if hasattr(self.consulta, "signos_vitales"):
             self.object = self.consulta.signos_vitales
@@ -2501,10 +2531,16 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
     template_name = "PAGES/consultas/atencion.html"
 
     def dispatch(self, request, *args, **kwargs):
+        consulta_pk = kwargs.get("pk")
+        self.consulta = get_object_or_404(Consulta, pk=consulta_pk)
+
+        if request.user.rol == "medico" and self.consulta.medico != request.user:
+            messages.error(request, "No puedes editar esta consulta, no est\u00e1s asignado.")
+            return redirect("consulta_detalle", pk=consulta_pk)
+
         if request.user.rol not in ("medico", "admin"):
             return redirect("citas_lista")
 
-        consulta_pk = kwargs.get("pk")
         self.next_url = (
             request.POST.get("next")
             or request.GET.get("next")
@@ -3053,6 +3089,12 @@ class MedicamentoDeleteView(NextRedirectMixin, PacientePermisoMixin, DeleteView)
 
 def receta_nueva(request, consulta_id):
     consulta = get_object_or_404(Consulta, pk=consulta_id)
+
+    if request.user.rol == "medico" and consulta.medico != request.user:
+        messages.error(request, "No puedes editar esta consulta, no est\u00e1s asignado.")
+        return redirect("consulta_detalle", pk=consulta.pk)
+    if request.user.rol not in ("medico", "admin"):
+        return redirect("consultas_lista")
     receta, _ = Receta.objects.get_or_create(
         consulta=consulta,
         defaults={'medico': request.user}
@@ -4225,10 +4267,11 @@ def puede_editar_cita(user, cita):
     """Verifica si el usuario puede editar la cita"""
     if user.rol == 'admin':
         return True
-    elif user.rol == 'asistente':
-        return cita.consultorio == user.consultorio and cita.estado in ['programada', 'confirmada']
     elif user.rol == 'medico':
-        return cita.medico_asignado == user and cita.estado in ['programada', 'confirmada']
+        return (
+            cita.medico_asignado == user
+            and cita.estado in ['programada', 'confirmada']
+        )
     return False
 
 
@@ -4518,12 +4561,11 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
         """Verifica si el usuario puede editar la cita"""
         if user.rol == 'admin':
             return True
-        elif user.rol == 'asistente':
-            return (cita.consultorio == user.consultorio and 
-                   cita.estado in ['programada', 'confirmada'])
         elif user.rol == 'medico':
-            return (cita.medico_asignado == user and 
-                   cita.estado in ['programada', 'confirmada'])
+            return (
+                cita.medico_asignado == user
+                and cita.estado in ['programada', 'confirmada']
+            )
         return False
 
 
