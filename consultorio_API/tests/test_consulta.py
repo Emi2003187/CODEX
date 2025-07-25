@@ -81,3 +81,38 @@ def test_crear_consulta_desde_paciente(client):
     assert after == before + 1
     consulta = Consulta.objects.latest('id')
     assert consulta.paciente == paciente
+
+
+@pytest.mark.django_db
+def test_no_crear_consulta_antes_de_cita(client):
+    consultorio = Consultorio.objects.create(nombre="CF")
+    medico = Usuario.objects.create(
+        username="medf", rol="medico", first_name="Med", consultorio=consultorio
+    )
+    paciente = Paciente.objects.create(
+        nombre_completo="PF",
+        fecha_nacimiento="2000-01-01",
+        sexo="M",
+        telefono="1",
+        correo="pf@example.com",
+        direccion="X",
+        consultorio=consultorio,
+    )
+    cita = Cita.objects.create(
+        id="22222222-2222-2222-2222-222222222222",
+        numero_cita="10",
+        paciente=paciente,
+        consultorio=consultorio,
+        medico_asignado=medico,
+        fecha_hora=timezone.now() + timezone.timedelta(hours=1),
+        duracion=30,
+        estado="programada",
+    )
+
+    client.force_login(medico)
+    url = reverse("citas_crear_desde_cita", args=[cita.id])
+    before = Consulta.objects.count()
+    resp = client.post(url, follow=True)
+    after = Consulta.objects.count()
+    assert after == before
+    assert "No puedes atender esta consulta" in resp.content.decode()
