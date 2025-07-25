@@ -422,21 +422,9 @@
                         <span class="badge bg-info">{{ c.get_tipo_display }}</span>
                       </td>
                       <td>
-                        {% if c.estado == "finalizada" %}
-                          <span class="badge bg-success">
-                            <i class="bi bi-check-circle me-1"></i>{{ c.get_estado_display }}
-                          </span>
-                        {% elif c.estado == "cancelada" %}
-                          <span class="badge bg-danger">
-                            <i class="bi bi-x-circle me-1"></i>{{ c.get_estado_display }}
-                          </span>
-                        {% elif c.estado == "en_progreso" %}
-                          <span class="badge bg-warning">
-                            <i class="bi bi-clock me-1"></i>{{ c.get_estado_display }}
-                          </span>
-                        {% else %}
-                          <span class="badge bg-secondary">{{ c.get_estado_display }}</span>
-                        {% endif %}
+                        <a href="{% url 'consulta_detalle' c.pk %}">
+                          {{ c.get_estado_display }}
+                        </a>
                       </td>
                       <td>
                         {% if c.medico %}
@@ -476,61 +464,34 @@
                           </span>
                         {% endif %}
                       </td>
-                      <td>
-                        <div class="btn-group" role="group">
-                          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
-                                  data-bs-toggle="dropdown">
-                            <i class="bi bi-three-dots"></i>
+                      <td class="text-end">
+                        <div class="dropdown">
+                          <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
+                            ⋮
                           </button>
                           <ul class="dropdown-menu dropdown-menu-end">
-                            {% if c.estado != "finalizada" %}
+                            <li>
+                              <a class="dropdown-item" href="{% url 'consulta_detalle' c.pk %}">
+                                Ver detalle
+                              </a>
+                            </li>
+
+                            {% if c.estado in 'espera,en_progreso' %}
                               <li>
-                                <a class="dropdown-item" href="{% url 'consultas_atencion' c.pk %}?next={{ request.path }}">
-                                  <i class="bi bi-heart-pulse me-2 text-info"></i>Atender
-                                </a>
-                              </li>
-                            {% endif %}
-                            
-                            {% if not c.signos_vitales %}
-                              <li>
-                                <a class="dropdown-item" href="{% url 'consultas_precheck' c.pk %}?next={{ request.path }}">
-                                  <i class="bi bi-thermometer-half me-2 text-warning"></i>Signos Vitales
-                                </a>
-                              </li>
-                            {% endif %}
-                            
-                            {% if c.receta %}
-                              <li>
-                                <a class="dropdown-item btn-preview-receta" href="#"
-                                   data-preview-url="{% url 'receta_a5' c.receta.pk %}">
-                                  <i class="bi bi-eye me-2 text-success"></i>Ver Receta
-                                </a>
-                              </li>
-                            {% else %}
-                              <li>
-                                <a class="dropdown-item" href="{% url 'receta_nueva' c.pk %}?next={{ request.path }}">
-                                  <i class="bi bi-file-earmark-plus me-2 text-primary"></i>Emitir Receta
-                                </a>
-                              </li>
-                            {% endif %}
-                            
-                            {% if c.estado == "finalizada" %}
-                              <li><hr class="dropdown-divider"></li>
-                              <li>
-                                <a class="dropdown-item" href="{% url 'consulta_editar' c.pk %}?next={{ request.path }}">
-                                  <i class="bi bi-pencil-square me-2 text-warning"></i>Editar
-                                </a>
-                              </li>
-                            {% endif %}
-                            
-                            {% if c.estado == "finalizada" or c.estado == "cancelada" %}
-                              <li>
-                                <form method="post" action="{% url 'consulta_eliminar' c.pk %}" onsubmit="return confirm('¿Estás seguro de eliminar?');">
+                                <form action="{% url 'consulta_cancelar' c.pk %}" method="post"
+                                      onsubmit="return confirm('¿Cancelar consulta?');">
                                   {% csrf_token %}
-                                  <input type="hidden" name="next" value="{{ request.path }}">
-                                  <button class="dropdown-item text-danger" type="submit">
-                                    <i class="bi bi-trash3 me-2"></i>Eliminar
-                                  </button>
+                                  <button class="dropdown-item text-warning">Cancelar</button>
+                                </form>
+                              </li>
+                            {% endif %}
+
+                            {% if c.estado != 'cancelada' %}
+                              <li>
+                                <form action="{% url 'consulta_eliminar' c.pk %}" method="post"
+                                      onsubmit="return confirm('Esta acción es irreversible. ¿Eliminar?');">
+                                  {% csrf_token %}
+                                  <button class="dropdown-item text-danger">Eliminar</button>
                                 </form>
                               </li>
                             {% endif %}

@@ -136,33 +136,7 @@
 
   <!-- Paginación -->
   {% if is_paginated %}
-    <nav class="mt-4 d-flex justify-content-center">
-      <ul class="pagination">
-        {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?page=1{{ request.GET.urlencode|safe|cut:'page=' }}">« Primero</a></li>
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|safe|cut:'page=' }}">‹ Anterior</a></li>
-        {% else %}
-          <li class="page-item disabled"><span class="page-link">«</span></li>
-          <li class="page-item disabled"><span class="page-link">‹</span></li>
-        {% endif %}
-
-        {% for i in page_obj.paginator.page_range %}
-          {% if page_obj.number == i %}
-            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-          {% elif i >= page_obj.number|add:"-2" and i <= page_obj.number|add:"2" %}
-            <li class="page-item"><a class="page-link" href="?page={{ i }}{{ request.GET.urlencode|safe|cut:'page=' }}">{{ i }}</a></li>
-          {% endif %}
-        {% endfor %}
-
-        {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|safe|cut:'page=' }}">Siguiente ›</a></li>
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{{ request.GET.urlencode|safe|cut:'page=' }}">Último »</a></li>
-        {% else %}
-          <li class="page-item disabled"><span class="page-link">›</span></li>
-          <li class="page-item disabled"><span class="page-link">»</span></li>
-        {% endif %}
-      </ul>
-    </nav>
+    {% include 'PAGES/partials/_paginacion.html' %}
   {% endif %}
 
 </div>
