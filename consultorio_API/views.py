@@ -4589,3 +4589,45 @@ def editar_perfil(request):
         'title': 'Editar Perfil'
     }
     return render(request, 'PAGES/perfil/editar.html', context)
+
+# Nueva Cola Virtual combinada de citas y consultas sin cita
+@login_required
+def cola_virtual(request):
+    """Muestra la cola virtual combinando citas del día y consultas sin cita."""
+    hoy = timezone.localdate()
+
+    # Citas programadas o confirmadas para hoy
+    citas = (
+        Cita.objects.filter(
+            fecha_hora__date=hoy,
+            estado__in=["programada", "confirmada"]
+        )
+        .select_related("paciente")
+        .order_by("fecha_hora")
+    )
+
+    # Consultas sin cita en espera
+    consultas_directas = (
+        Consulta.objects.filter(
+            cita__isnull=True,
+            estado="espera"
+        )
+        .select_related("paciente")
+        .order_by("fecha_creacion")
+    )
+
+    # Combinar y marcar tipo
+    cola = []
+    for c in citas:
+        cola.append({"tipo": "cita", "hora": c.fecha_hora, "obj": c})
+    for q in consultas_directas:
+        cola.append({"tipo": "sin_cita", "hora": q.fecha_creacion, "obj": q})
+
+    # Ordenar por hora
+    cola.sort(key=lambda x: x["hora"])
+
+    return render(request, "PAGES/consultas/cola_virtual.html", {
+        "cola": cola,
+        "usuario": request.user,
+        "hoy": hoy,
+    })

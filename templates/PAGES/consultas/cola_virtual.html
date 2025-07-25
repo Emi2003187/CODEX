@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cola Virtual{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">Cola Virtual - {{ hoy|date:"d/m/Y" }}</h1>
+
+  {% for item in cola %}
+    {% if item.tipo == "cita" %}
+    <div class="card mb-2 border-primary">
+      <div class="card-body">
+        <h6 class="text-primary">
+          {{ item.obj.paciente.nombre_completo }}
+          <span class="badge bg-info">Con Cita</span>
+        </h6>
+        <p class="mb-0"><strong>Hora:</strong> {{ item.obj.fecha_hora|time:"H:i" }}</p>
+        <p><strong>Motivo:</strong> {{ item.obj.motivo }}</p>
+      </div>
+    </div>
+    {% else %}
+    <div class="card mb-2 border-warning">
+      <div class="card-body">
+        <h6 class="text-warning">
+          {{ item.obj.paciente.nombre_completo }}
+          <span class="badge bg-warning text-dark">Sin Cita</span>
+        </h6>
+        <p class="mb-0"><strong>Hora:</strong> {{ item.obj.fecha_creacion|time:"H:i" }}</p>
+      </div>
+    </div>
+    {% endif %}
+  {% empty %}
+  <p>No hay pacientes en cola.</p>
+  {% endfor %}
+</div>
+{% endblock %}
