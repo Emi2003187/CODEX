@@ -1,51 +1,87 @@
-{% load static %}
 <link rel="stylesheet" href="{% static 'css/rx_receta.css' %}">
+<div id="receta-print-area"
+     class="receta"
+     data-id="{{ receta.pk }}"
+     data-paciente="{{ receta.consulta.paciente|slugify }}"
+     data-fecha="{{ receta.consulta.fecha_hora|date:'Y-m-d' }}">
 
-<div id="receta-print-area" class="rx A5">
   <!-- CABECERA -->
-  <header>
-      <h3>DR. {{ medico.get_full_name }}</h3>
-      <p>{{ medico.institucion_cedula }} — Cédula Prof. {{ medico.cedula_profesional }}</p>
-      <p>{{ consultorio.ubicacion }}</p>
-      <p>Teléfono: {{ consultorio.telefono }}</p>
-      <div class="folio">
-        <span>Folio:</span> <strong>{{ receta.pk|stringformat:"05d" }}</strong><br>
-        <span>Fecha:</span> <strong>{{ receta.fecha_emision|date:"d/m/Y" }}</strong>
-      </div>
+  <header class="hdr">
+      {% if show_logo %}
+        <img src="{% static 'img/imss-logo.png' %}" class="logo">
+      {% endif %}
+      <span class="sub">RECETA INDIVIDUAL</span>
+      <h2>CONSULTORIO MEDICO</h2>
   </header>
 
-  <!-- DATOS PACIENTE -->
-  <section class="paciente">
-      <div><strong>Nombre del paciente:</strong> {{ paciente }}</div>
-      <div class="mini">
-          <span>No. Expediente: {{ paciente.expediente|default:"—" }}</span> ·
-          <span>Edad: {{ paciente.edad }} años</span> ·
-          <span>Fecha nacimiento: {{ paciente.fecha_nacimiento|date:"d/m/Y" }}</span>
-      </div>
+  <!-- DATOS PACIENTE / CONSULTORIO -->
+  <section class="grid-2">
+      <div><strong>NOMBRE DEL PACIENTE:</strong> {{ receta.consulta.paciente }}</div>
+      <div><strong>CONSULTORIO:</strong> {{ receta.consulta.medico.consultorio }}</div>
   </section>
 
-  <!-- RECETARIO -->
-  <section class="cuerpo">
-      <h4>Rx</h4>
-      <ol class="meds">
-          {% for m in receta.medicamentos.all %}
-            <li>
-              {{ m.nombre|upper }} – {{ m.dosis }}.<br>
-              {{ m.frecuencia }}, Duración: {{ m.duracion }},
-              Vía: {{ m.via_administracion|default:"Oral" }}.
-            </li>
-          {% empty %}
-            <li>No hay medicamentos.</li>
-          {% endfor %}
-      </ol>
-
-      <h4>Observaciones</h4>
-      <p class="obs">{{ receta.notas|default:"__________" }}</p>
+  <!-- FECHAS -->
+  <section class="grid-2">
+      <div><strong>Fecha:</strong> {{ receta.fecha|date:"d/m/Y" }}</div>
+      <div class="right"><strong>Válido hasta:</strong> {{ receta.fecha_validez|default_if_none:receta.fecha|date:"d/m/Y" }}</div>
   </section>
+
+  <!-- MÉDICO -->
+  <section class="grid-2">
+      <div><strong>Nombre y firma del médico:</strong> DR. {{ receta.consulta.medico.get_full_name }}</div>
+      <div class="right"><strong>Cédula Prof.:</strong> {{ receta.consulta.medico.cedula|default:"—" }}</div>
+  </section>
+
+  <!-- SIGNOS VITALES -->
+  <h4 class="section-title">Signos Vitales y Alergias</h4>
+  <table class="tbl-signos">
+      <tr><th>T.A.</th><th>F.C.</th><th>Temp.</th><th>Peso</th></tr>
+      <tr>
+        <td>{{ receta.consulta.signos_vitales.tension|default:"—" }}</td>
+        <td>{{ receta.consulta.signos_vitales.fc|default:"—" }}</td>
+        <td>{{ receta.consulta.signos_vitales.temp|default:"—" }}</td>
+        <td>{{ receta.consulta.signos_vitales.peso|default:"—" }}</td>
+      </tr>
+      <tr><th>Talla</th><th>Circ. Abd.</th><th>IMC</th><th>&nbsp;</th></tr>
+      <tr>
+        <td>{{ receta.consulta.signos_vitales.talla|default:"—" }}</td>
+        <td>{{ receta.consulta.signos_vitales.circ_abd|default:"—" }}</td>
+        <td>{{ receta.consulta.signos_vitales.imc|default:"—" }}</td>
+        <td></td>
+      </tr>
+  </table>
+
+  <p class="aler">
+     <strong>Alergias:</strong>
+     {{ receta.consulta.signos_vitales.alergias|default:"NEGATIVO" }}
+  </p>
+
+  <!-- MEDICAMENTOS -->
+  <h4 class="section-title">Medicamentos</h4>
+  <ol class="lista-meds">
+     {% for m in receta.medicamentos.all %}
+       <li>
+         <span class="med-nombre">{{ m.nombre|title }}</span> – 
+         Dosis: {{ m.dosis }}, Frecuencia: {{ m.frecuencia }},
+         Duración: {{ m.duracion }}, Indicaciones: {{ m.indicaciones|default:"N/A" }}
+       </li>
+     {% empty %}
+       <li>No hay medicamentos.</li>
+     {% endfor %}
+  </ol>
+
+  <!-- OBSERVACIONES -->
+  <h4 class="section-title">Observaciones</h4>
+  <div class="obs-box">{{ receta.observaciones|default:"" }}</div>
+
+  <!-- RECUADRO EXTRA -->
+  <div class="extra-box"></div>
 
   <!-- FIRMA -->
-  <footer>
-      <p>________________________________________</p>
-      <p class="firma">Dr. {{ medico.get_full_name }}</p>
+  <footer class="pie">
+      DR. {{ receta.consulta.medico.get_full_name }}<br>
+      CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula|default:"—" }} –
+      INSTITUCIÓN: {{ receta.consulta.medico.institucion|default:"—" }}<br>
+      DIRECCIÓN: {{ receta.consulta.medico.direccion|default:"—" }}
   </footer>
 </div>
