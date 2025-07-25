@@ -1207,29 +1207,34 @@ class FiltroConsultaForm(forms.Form):
 
 class HorarioMedicoForm(forms.ModelForm):
     """Formulario para horarios de médicos"""
-    
+
+    dias = forms.MultipleChoiceField(
+        choices=HorarioMedico.DIAS_SEMANA,
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
+        required=False,
+        label="Días de la Semana",
+    )
+
     class Meta:
         model = HorarioMedico
-        fields = ['medico', 'consultorio', 'dia', 'hora_inicio', 'hora_fin']
+        fields = ["medico", "consultorio", "hora_inicio", "hora_fin"]
         widgets = {
-            'medico': forms.Select(attrs={'class': 'form-select'}),
-            'consultorio': forms.Select(attrs={'class': 'form-select'}),
-            'dia': forms.Select(attrs={'class': 'form-select'}),
-            'hora_inicio': forms.TimeInput(attrs={
-                'type': 'time',
-                'class': 'form-control'
-            }),
-            'hora_fin': forms.TimeInput(attrs={
-                'type': 'time',
-                'class': 'form-control'
-            }),
+            "medico": forms.Select(attrs={"class": "form-select"}),
+            "consultorio": forms.Select(attrs={"class": "form-select"}),
+            "hora_inicio": forms.TimeInput(
+                format="%H:%M",
+                attrs={"type": "time", "class": "form-control"},
+            ),
+            "hora_fin": forms.TimeInput(
+                format="%H:%M",
+                attrs={"type": "time", "class": "form-control"},
+            ),
         }
         labels = {
-            'medico': 'Médico',
-            'consultorio': 'Consultorio',
-            'dia': 'Día de la Semana',
-            'hora_inicio': 'Hora de Inicio',
-            'hora_fin': 'Hora de Fin',
+            "medico": "Médico",
+            "consultorio": "Consultorio",
+            "hora_inicio": "Hora de Inicio",
+            "hora_fin": "Hora de Fin",
         }
 
     def __init__(self, *args, **kwargs):
