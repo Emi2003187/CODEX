@@ -1,15 +1,10 @@
 @page { size:A5 portrait; margin:10mm; }
-body  { margin:0; background:#fff; }
+body  { margin:0; }
 
 .receta{
-    width:126mm;
-    height:178mm;            /* 210 - 10 - 10 */
-    margin:0 auto;
+    width:126mm; height:178mm;
     font:11pt/1.35 "Helvetica","Arial",sans-serif;
-    color:#000;
-    display:flex;
-    flex-direction:column;
-    box-sizing:border-box;
+    display:flex; flex-direction:column;
     page-break-inside:avoid;
 }
 
@@ -31,27 +26,24 @@ body  { margin:0; background:#fff; }
 .lista-meds     { font-size:10pt; margin:0 0 3mm 0; padding-left:4mm; }
 .lista-meds li  { margin-bottom:2mm; text-align:justify; }
 
+/* Observaciones */
 .obs-box{
     min-height:40mm;
-    border:0.4pt solid #666;
-    padding:2mm;
-    margin-bottom:4mm;
-    font-size:10pt;
+    border:0.4pt solid #666; padding:2mm; margin-bottom:3mm;
     white-space:pre-wrap;
 }
 
-.extra-box{
-    height:25mm;
-    border:0.4pt solid #999;
-    margin-bottom:12mm;      /* ~3 líneas antes de firma */
+/* Recuadro adicional con líneas */
+.extra-box{ height:25mm; margin-bottom:10mm; }
+.extra-box .dotted{
+    border-bottom:0.25pt dotted #999; height:6mm; margin-bottom:2mm;
 }
 
-.pie{
-    margin-top:auto;
-    text-align:center;
-    font-size:9pt;
-    border-top:0.4pt dotted #666;
-    padding-top:2mm;
-}
+/* Firma al pie */
+.pie{ margin-top:auto; text-align:center; font-size:9pt;
+      border-top:0.4pt dotted #666; padding-top:2mm; }
 
-@media print{ .receta{ page-break-after:avoid; } }
+/* Garantizar impresión idéntica */
+@media print{
+    .receta{ page-break-after:avoid; }
+}

@@ -49,7 +49,7 @@
         <td>{{ receta.consulta.signos_vitales.talla|default:"—" }}</td>
         <td>{{ receta.consulta.signos_vitales.circ_abd|default:"—" }}</td>
         <td>{{ receta.consulta.signos_vitales.imc|default:"—" }}</td>
-        <td></td>
+        <td>{{ ""|default:"—" }}</td>
       </tr>
   </table>
 
@@ -76,12 +76,15 @@
   <h4 class="section-title">Observaciones</h4>
   <div class="obs-box">{{ receta.observaciones|default:"" }}</div>
 
-  <!-- RECUADRO EXTRA -->
-  <div class="extra-box"></div>
+  <div class="extra-box">
+    {% for _ in "123"|make_list %}
+        <div class="dotted"></div>
+    {% endfor %}
+  </div>
 
   <!-- FIRMA -->
   <footer class="pie">
-      DR. {{ receta.consulta.medico.get_full_name }}<br>
+      DR. {{ receta.consulta.medico.get_full_name|default:"—" }}<br>
       CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula|default:"—" }} –
       INSTITUCIÓN: {{ receta.consulta.medico.institucion|default:"—" }}<br>
       DIRECCIÓN: {{ receta.consulta.medico.direccion|default:"—" }}
