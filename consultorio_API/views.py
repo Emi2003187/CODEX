@@ -2445,6 +2445,10 @@ class ConsultaPrecheckView(NextRedirectMixin, LoginRequiredMixin, UserPassesTest
     def dispatch(self, request, *args, **kwargs):
         self.consulta = get_object_or_404(Consulta, pk=kwargs["pk"])
 
+        if self.consulta.estado == "cancelada":
+            messages.error(request, "No se pueden registrar signos vitales en una consulta cancelada.")
+            return redirect("consulta_detalle", pk=self.consulta.pk)
+
         if hasattr(self.consulta, "signos_vitales"):
             self.object = self.consulta.signos_vitales
             self.__class__ = type(
@@ -2621,6 +2625,13 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
     """Vista completa para editar consulta con signos vitales, receta y medicamentos"""
     model = Consulta
     template_name = 'PAGES/consultas/editar.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.estado == "cancelada":
+            messages.error(request, "No puedes editar una consulta cancelada.")
+            return redirect("consulta_detalle", pk=self.object.pk)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_form_class(self):
         """Use the medical form for editing regardless of tipo."""
@@ -3116,6 +3127,10 @@ def signos_nuevo(request, paciente_id):
             consulta = get_object_or_404(Consulta, pk=consulta_id, paciente=paciente)
         except:
             pass
+        else:
+            if consulta.estado == "cancelada":
+                messages.error(request, "No se pueden registrar signos vitales en una consulta cancelada.")
+                return redirect_next(request, 'consulta_detalle', pk=consulta.pk)
     
     if not consulta:
         # Buscar consulta activa (en espera o en progreso)

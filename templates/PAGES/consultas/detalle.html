@@ -203,9 +203,15 @@
               <i class="bi bi-dash-circle me-1"></i>
               No hay signos vitales registrados
             </p>
-            <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-sm btn-outline-primary w-100">
-              <i class="bi bi-plus me-1"></i>Registrar Signos
-            </a>
+            {% if consulta.estado == "cancelada" %}
+              <button class="btn btn-sm btn-outline-primary w-100" disabled>
+                <i class="bi bi-plus me-1"></i>Registrar Signos
+              </button>
+            {% else %}
+              <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-plus me-1"></i>Registrar Signos
+              </a>
+            {% endif %}
           {% endif %}
         </div>
       </div>
@@ -280,15 +286,27 @@
             {% endif %}
             
             {% if not signos_vitales %}
-              <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-warning btn-sm">
-                <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
-              </a>
+              {% if consulta.estado == 'cancelada' %}
+                <button class="btn btn-warning btn-sm" disabled>
+                  <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
+                </button>
+              {% else %}
+                <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-warning btn-sm">
+                  <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
+                </a>
+              {% endif %}
             {% endif %}
-            
+
             {% if puede_editar %}
-              <a href="{% url 'consulta_editar' consulta.pk %}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-pencil me-1"></i>Editar Consulta
-              </a>
+              {% if consulta.estado == 'cancelada' %}
+                <button class="btn btn-outline-secondary btn-sm" disabled>
+                  <i class="bi bi-pencil me-1"></i>Editar Consulta
+                </button>
+              {% else %}
+                <a href="{% url 'consulta_editar' consulta.pk %}" class="btn btn-outline-secondary btn-sm">
+                  <i class="bi bi-pencil me-1"></i>Editar Consulta
+                </a>
+              {% endif %}
             {% endif %}
           </div>
         </div>
