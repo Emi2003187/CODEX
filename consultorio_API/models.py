@@ -253,12 +253,35 @@ class Antecedente(models.Model):
         ('toxicologico', 'Toxicológico'),
     ]
 
-    expediente = models.ForeignKey(Expediente, on_delete=models.CASCADE, related_name="antecedentes")
+    SEVERIDAD_CHOICES = [
+        ("baja", "Baja"),
+        ("media", "Media"),
+        ("alta", "Alta"),
+    ]
+
+    ESTADO_CHOICES = [
+        ("estable", "Estable"),
+        ("en_tratamiento", "En tratamiento"),
+        ("controlado", "Controlado"),
+        ("resuelto", "Resuelto"),
+    ]
+
+    expediente = models.ForeignKey(
+        Expediente, on_delete=models.CASCADE, related_name="antecedentes"
+    )
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
     descripcion = models.TextField()
     fecha_diagnostico = models.DateField(blank=True, null=True)
-    severidad = models.CharField(max_length=50, blank=True, null=True)
-    estado_actual = models.CharField(max_length=100, blank=True, null=True)
+    severidad = models.CharField(
+        max_length=10,
+        choices=SEVERIDAD_CHOICES,
+        default="media",
+    )
+    estado_actual = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default="estable",
+    )
     notas = models.TextField(blank=True, null=True)
 
     creado = models.DateTimeField(auto_now_add=True)

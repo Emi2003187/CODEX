@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Editar Medicamento{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-header bg-primary text-white rounded-top-4">
+      <h4 class="mb-0"><i class="bi bi-capsule"></i> Editar Medicamento</h4>
+    </div>
+    <div class="card-body px-4">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            {{ form.nombre.label_tag }} {{ form.nombre }}
+            {% for error in form.nombre.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.principio_activo.label_tag }} {{ form.principio_activo }}
+            {% for error in form.principio_activo.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.dosis.label_tag }} {{ form.dosis }}
+            {% for error in form.dosis.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.frecuencia.label_tag }} {{ form.frecuencia }}
+            {% for error in form.frecuencia.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.via_administracion.label_tag }} {{ form.via_administracion }}
+            {% for error in form.via_administracion.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.proposito.label_tag }} {{ form.proposito }}
+            {% for error in form.proposito.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.inicio.label_tag }} {{ form.inicio }}
+            {% for error in form.inicio.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.fin.label_tag }} {{ form.fin }}
+            {% for error in form.fin.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-md-6 mb-3">
+            {{ form.prescrito_por.label_tag }} {{ form.prescrito_por }}
+            {% for error in form.prescrito_por.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-12 mb-3">
+            {{ form.notas.label_tag }} {{ form.notas }}
+            {% for error in form.notas.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="mt-4 d-flex justify-content-end gap-2">
+          <a href="{{ next }}" class="btn btn-secondary px-4">Cancelar</a>
+          <button type="submit" class="btn btn-primary px-4">Actualizar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
