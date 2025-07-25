@@ -1,11 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
 from django.http import HttpResponseForbidden
 from django import forms
+from django.db.models import Q
 
 from .forms import ConsultaSinCitaForm
 from .models import Consulta, Paciente
@@ -83,3 +84,33 @@ class ConsultaCreateFromPacienteView(ConsultaSinCitaCreateView):
             form.fields['paciente'].empty_label = None
             form.fields['paciente'].disabled = True
         return form
+
+
+@login_required
+def lista_consultas(request):
+    """Listado básico de consultas con filtros por fecha, estado y médico"""
+    consultas = Consulta.objects.all().select_related("paciente", "medico")
+
+    buscar = request.GET.get("buscar", "").strip()
+    estado = request.GET.get("estado", "").strip()
+    medico = request.GET.get("medico", "").strip()
+    fecha = request.GET.get("fecha", "").strip()
+
+    if buscar:
+        consultas = consultas.filter(
+            Q(paciente__nombre_completo__icontains=buscar)
+            | Q(motivo_consulta__icontains=buscar)
+        )
+
+    if estado:
+        consultas = consultas.filter(estado=estado)
+
+    if medico:
+        consultas = consultas.filter(medico_id=medico)
+
+    if fecha:
+        consultas = consultas.filter(fecha_atencion__date=fecha)
+
+    consultas = consultas.order_by("-fecha_atencion")
+
+    return render(request, "PAGES/consultas/lista.html", {"consultas": consultas})
