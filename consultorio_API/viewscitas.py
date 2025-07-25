@@ -1353,7 +1353,15 @@ def crear_consulta_desde_cita_view(request, cita_id):
     """Genera una consulta ligada a la cita sin iniciarla todavía."""
     try:
         cita = get_object_or_404(Cita, pk=cita_id)
-        
+
+        # Bloquear si la cita es en el futuro
+        if cita.fecha_hora > timezone.now():
+            messages.error(
+                request,
+                "No puedes atender esta consulta antes de la fecha y hora de la cita."
+            )
+            return redirect_next(request, 'citas_detalle', pk=cita.id)
+
         # Verificar permisos
         if not (request.user.rol == 'admin' or cita.medico_asignado == request.user):
             messages.error(request, 'No tienes permisos para iniciar esta consulta.')

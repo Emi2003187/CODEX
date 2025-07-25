@@ -4497,11 +4497,12 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
         context.update({
             'consulta': consulta,
             'medicos_disponibles': medicos_disponibles,
-            'puede_asignar_medico': (cita.puede_asignar_medico and 
+            'puede_asignar_medico': (cita.puede_asignar_medico and
                                    user.rol in ['admin', 'asistente']),
             'puede_tomar_cita': self._puede_tomar_cita(user, cita),
             'puede_editar': self._puede_editar_cita(user, cita),
             'usuario': user,
+            'now': timezone.now(),
         })
         
         return context
