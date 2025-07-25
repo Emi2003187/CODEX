@@ -1748,56 +1748,38 @@ class ConsultaListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         user = self.request.user
 
-        # Query base con relaciones
         qs = Consulta.objects.select_related(
             "paciente", "medico", "cita", "cita__consultorio"
         ).order_by("-fecha_creacion")
 
-        # 1. Filtrar consultas por consultorio del usuario
         if user.rol == 'admin':
-            # Admin ve todas las consultas
             pass
         elif user.consultorio:
-            # Filtrar por consultas del consultorio
             qs = qs.filter(
-                Q(medico__consultorio=user.consultorio) |  # Consultas atendidas por médicos del consultorio
-                Q(cita__consultorio=user.consultorio) |   # Consultas derivadas de citas del consultorio
-                Q(asistente__consultorio=user.consultorio)  # Consultas creadas por asistentes del consultorio
+                Q(medico__consultorio=user.consultorio) |
+                Q(cita__consultorio=user.consultorio) |
+                Q(asistente__consultorio=user.consultorio)
             )
         elif user.rol == 'medico':
-            # Médico sin consultorio ve solo sus consultas
             qs = qs.filter(medico=user)
         else:
             qs = qs.none()
 
-        # Filtros de búsqueda
-        search_query = self.request.GET.get("search", "").strip()
-        tipo_filter = self.request.GET.get("tipo", "").strip()
-        medico_filter = self.request.GET.get("medico", "").strip()
-        fecha_filter = self.request.GET.get("fecha", "").strip()
-        origen_filter = self.request.GET.get("origen", "").strip()
+        filtro_form = ConsultaFiltroForm(self.request.GET, user=user)
+        if filtro_form.is_valid():
+            cd = filtro_form.cleaned_data
 
-        if search_query:
-            qs = qs.filter(paciente__nombre_completo__icontains=search_query)
+            if cd.get("buscar"):
+                qs = qs.filter(paciente__nombre_completo__icontains=cd["buscar"])
 
-        if tipo_filter:
-            qs = qs.filter(tipo=tipo_filter)
+            if cd.get("fecha"):
+                qs = qs.filter(fecha_atencion__date=cd["fecha"])
 
-        if medico_filter.isdigit():
-            qs = qs.filter(medico_id=medico_filter)
+            if cd.get("estado"):
+                qs = qs.filter(estado=cd["estado"])
 
-        if fecha_filter:
-            try:
-                fecha = datetime.strptime(fecha_filter, "%Y-%m-%d").date()
-                qs = qs.filter(fecha_creacion__date=fecha)
-            except ValueError:
-                pass
-
-        # Filtro por origen (con/sin cita)
-        if origen_filter == 'con_cita':
-            qs = qs.filter(cita__isnull=False)
-        elif origen_filter == 'sin_cita':
-            qs = qs.filter(cita__isnull=True)
+            if cd.get("medico"):
+                qs = qs.filter(medico=cd["medico"])
 
         return qs
 
@@ -1858,12 +1840,7 @@ class ConsultaListView(LoginRequiredMixin, ListView):
             "medicos": medicos,
             "usuario": usuario,
             "consultorio": getattr(usuario, "consultorio", None),
-            # Valores actuales de los filtros
-            "search_query": self.request.GET.get("search", ""),
-            "tipo_filter": self.request.GET.get("tipo", ""),
-            "medico_filter": self.request.GET.get("medico", ""),
-            "fecha_filter": self.request.GET.get("fecha", ""),
-            "origen_filter": self.request.GET.get("origen", ""),
+            "filtro_form": ConsultaFiltroForm(self.request.GET, user=usuario),
             # 4. Permitir crear consultas sin cita
             "puede_crear_sin_cita": usuario.rol in ['medico', 'asistente', 'admin'],
         })
