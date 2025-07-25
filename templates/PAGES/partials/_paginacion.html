@@ -1,0 +1,45 @@
+{% load url_replace %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Paginación">
+  <ul class="pagination justify-content-center">
+
+    {# « Primero » #}
+    <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+      <a class="page-link" href="?{% url_replace request 'page' 1 %}">
+        « Primero
+      </a>
+    </li>
+
+    {# « Anterior » #}
+    <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+      <a class="page-link" href="?{% url_replace request 'page' page_obj.previous_page_number %}">
+        ‹ Anterior
+      </a>
+    </li>
+
+    {# números #}
+    {% for n in page_obj.paginator.page_range %}
+      {% if n|add:'-2' <= page_obj.number <= n|add:'2' %}
+        <li class="page-item {% if n == page_obj.number %}active{% endif %}">
+          <a class="page-link" href="?{% url_replace request 'page' n %}">{{ n }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+
+    {# « Siguiente » #}
+    <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+      <a class="page-link" href="?{% url_replace request 'page' page_obj.next_page_number %}">
+        Siguiente ›
+      </a>
+    </li>
+
+    {# « Último » #}
+    <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+      <a class="page-link" href="?{% url_replace request 'page' page_obj.paginator.num_pages %}">
+        Último »
+      </a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
