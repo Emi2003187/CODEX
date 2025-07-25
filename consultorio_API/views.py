@@ -510,7 +510,7 @@ class PacienteDetailView(LoginRequiredMixin, DetailView):
 
         # antecedentes completos
         ctx["antecedentes"] = (
-            paciente.expediente.antecedentes.all().order_by("-fecha_diagnostico")
+            paciente.expediente.antecedentes.exclude(tipo="alergico").order_by("-fecha_diagnostico")
             if hasattr(paciente, "expediente") else []
         )
 
@@ -527,7 +527,9 @@ class PacienteDetailView(LoginRequiredMixin, DetailView):
         )
 
         # historial de consultas
-        ctx["consultas"] = Consulta.objects.filter(paciente=paciente).order_by("-fecha_creacion")
+        consultas_qs = Consulta.objects.filter(paciente=paciente).order_by("-fecha_creacion")
+        ctx["consultas"] = consultas_qs
+        ctx["consultas_finalizadas"] = consultas_qs.filter(estado="finalizada")
 
         # últimos signos
         ctx["ultimos_signos"] = getattr(
@@ -2825,24 +2827,38 @@ def antecedente_nuevo(request, paciente_id):
     tipo = request.GET.get('tipo')
     initial_data = {'tipo': tipo} if tipo else {}
 
-    form = AntecedenteForm(request.POST or None, initial=initial_data)
+    form = AntecedenteForm(
+        request.POST or None,
+        initial=initial_data,
+        expediente=expediente,
+    )
 
     if tipo:
-        form.fields['tipo'].widget = forms.HiddenInput()
+        form.fields['tipo'].widget.attrs['disabled'] = True
 
     next_url = request.POST.get("next") or request.GET.get("next")
     default_url = reverse('paciente_detalle', args=[paciente.pk])
 
     if request.method == 'POST' and form.is_valid():
-        antecedente = form.save(commit=False)
-        antecedente.expediente = expediente
-        antecedente.save()
-        return redirect(next_url or default_url)
+        if (
+            form.cleaned_data.get("tipo") == "alergico"
+            and expediente.antecedentes.filter(
+                tipo="alergico",
+                descripcion__iexact=form.cleaned_data.get("descripcion"),
+            ).exists()
+        ):
+            form.add_error("descripcion", "Esta alergia ya está registrada.")
+        else:
+            antecedente = form.save(commit=False)
+            antecedente.expediente = expediente
+            antecedente.save()
+            return redirect(next_url or default_url)
 
     return render(request, 'PAGES/antecedentes/crear.html', {
         'usuario': request.user,
         'paciente': paciente,
         'form': form,
+        'tipo_selected': tipo,
         'next': next_url or default_url,
     })
 
@@ -2870,6 +2886,81 @@ def medicamento_nuevo(request, paciente_id):
         'usuario': request.user,
         'next': next_url or default_url,
     })
+
+
+class AntecedenteUpdateView(NextRedirectMixin, PacientePermisoMixin, UpdateView):
+    model = Antecedente
+    form_class = AntecedenteForm
+    template_name = 'PAGES/antecedentes/editar.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['expediente'] = self.get_object().expediente
+        return kwargs
+
+    def get_success_url(self):
+        next_url = self.get_next_url()
+        if next_url:
+            return next_url
+        return reverse('paciente_detalle', args=[self.object.expediente.paciente.pk])
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['usuario'] = self.request.user
+        ctx['paciente'] = self.object.expediente.paciente
+        ctx['next'] = self.get_next_url() or reverse('paciente_detalle', args=[ctx['paciente'].pk])
+        return ctx
+
+
+class AntecedenteDeleteView(NextRedirectMixin, PacientePermisoMixin, DeleteView):
+    model = Antecedente
+    template_name = 'PAGES/antecedentes/eliminar.html'
+
+    def get_success_url(self):
+        next_url = self.get_next_url()
+        if next_url:
+            return next_url
+        return reverse('paciente_detalle', args=[self.object.expediente.paciente.pk])
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['usuario'] = self.request.user
+        return ctx
+
+
+class MedicamentoUpdateView(NextRedirectMixin, PacientePermisoMixin, UpdateView):
+    model = MedicamentoActual
+    form_class = MedicamentoActualForm
+    template_name = 'PAGES/medicamentos/editar.html'
+
+    def get_success_url(self):
+        next_url = self.get_next_url()
+        if next_url:
+            return next_url
+        return reverse('paciente_detalle', args=[self.object.expediente.paciente.pk])
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['usuario'] = self.request.user
+        ctx['paciente'] = self.object.expediente.paciente
+        ctx['next'] = self.get_next_url() or reverse('paciente_detalle', args=[ctx['paciente'].pk])
+        return ctx
+
+
+class MedicamentoDeleteView(NextRedirectMixin, PacientePermisoMixin, DeleteView):
+    model = MedicamentoActual
+    template_name = 'PAGES/medicamentos/eliminar.html'
+
+    def get_success_url(self):
+        next_url = self.get_next_url()
+        if next_url:
+            return next_url
+        return reverse('paciente_detalle', args=[self.object.expediente.paciente.pk])
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['usuario'] = self.request.user
+        return ctx
 
 
 def receta_nueva(request, consulta_id):

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Nuevo Antecedente{% endblock %}
+{% block title %}Editar Antecedente{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
   <div class="card shadow-sm border-0 rounded-4">
     <div class="card-header bg-primary text-white rounded-top-4">
-      <h4 class="mb-0"><i class="bi bi-journal-plus"></i> Registrar Antecedente</h4>
+      <h4 class="mb-0"><i class="bi bi-journal-text"></i> Editar Antecedente</h4>
     </div>
     <div class="card-body px-4">
       <form method="post">
@@ -15,9 +15,6 @@
         <div class="row">
           <div class="col-md-6 mb-3">
             {{ form.tipo.label_tag }} {{ form.tipo }}
-            {% if tipo_selected %}
-              <input type="hidden" name="tipo" value="{{ tipo_selected }}">
-            {% endif %}
             {% for error in form.tipo.errors %}
               <div class="text-danger small">{{ error }}</div>
             {% endfor %}
@@ -53,10 +50,9 @@
             {% endfor %}
           </div>
         </div>
-
         <div class="mt-4 d-flex justify-content-end gap-2">
           <a href="{{ next }}" class="btn btn-secondary px-4">Cancelar</a>
-          <button type="submit" class="btn btn-primary px-4">Guardar</button>
+          <button type="submit" class="btn btn-primary px-4">Actualizar</button>
         </div>
       </form>
     </div>

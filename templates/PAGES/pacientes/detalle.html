@@ -200,6 +200,29 @@
                         </small>
                       {% endif %}
                     </div>
+                    <div class="ms-2">
+                      <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                          <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <a class="dropdown-item" href="{% url 'antecedente_editar' ant.pk %}?next={{ request.path }}">
+                              <i class="bi bi-pencil-square me-2 text-warning"></i>Editar
+                            </a>
+                          </li>
+                          <li>
+                            <form method="post" action="{% url 'antecedente_eliminar' ant.pk %}" onsubmit="return confirm('¿Eliminar antecedente?');">
+                              {% csrf_token %}
+                              <input type="hidden" name="next" value="{{ request.path }}">
+                              <button class="dropdown-item text-danger" type="submit">
+                                <i class="bi bi-trash3 me-2"></i>Eliminar
+                              </button>
+                            </form>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
               {% endfor %}
@@ -226,10 +249,9 @@
             <h5 class="mb-0">
               <i class="bi bi-exclamation-octagon me-2"></i>Alergias
             </h5>
-            <!-- Botón deshabilitado hasta que se implemente la funcionalidad -->
-            <button class="btn btn-dark btn-sm" disabled title="Funcionalidad en desarrollo">
+            <a href="{% url 'antecedente_nuevo' paciente.pk %}?tipo=alergico&next={{ request.path }}" class="btn btn-dark btn-sm">
               <i class="bi bi-plus"></i>
-            </button>
+            </a>
           </div>
         </div>
         <div class="card-body p-0">
@@ -247,6 +269,29 @@
                         <small class="text-muted">{{ al.notas }}</small>
                       {% endif %}
                     </div>
+                    <div class="ms-2">
+                      <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                          <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <a class="dropdown-item" href="{% url 'antecedente_editar' al.pk %}?next={{ request.path }}">
+                              <i class="bi bi-pencil-square me-2 text-warning"></i>Editar
+                            </a>
+                          </li>
+                          <li>
+                            <form method="post" action="{% url 'antecedente_eliminar' al.pk %}" onsubmit="return confirm('¿Eliminar alergia?');">
+                              {% csrf_token %}
+                              <input type="hidden" name="next" value="{{ request.path }}">
+                              <button class="dropdown-item text-danger" type="submit">
+                                <i class="bi bi-trash3 me-2"></i>Eliminar
+                              </button>
+                            </form>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
               {% endfor %}
@@ -255,7 +300,9 @@
             <div class="text-center py-4">
               <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
               <p class="text-muted mt-2 mb-0">Sin alergias conocidas</p>
-              <small class="text-muted">Funcionalidad de alergias en desarrollo</small>
+              <a href="{% url 'antecedente_nuevo' paciente.pk %}?tipo=alergico&next={{ request.path }}" class="btn btn-dark btn-sm mt-2">
+                <i class="bi bi-plus me-1"></i>Agregar Alergia
+              </a>
             </div>
           {% endif %}
         </div>
@@ -291,6 +338,29 @@
                           • Desde {{ med.inicio|date:"d/m/Y" }}
                         {% endif %}
                       </small>
+                    </div>
+                    <div class="ms-2">
+                      <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                          <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <a class="dropdown-item" href="{% url 'medicamento_editar' med.pk %}?next={{ request.path }}">
+                              <i class="bi bi-pencil-square me-2 text-warning"></i>Editar
+                            </a>
+                          </li>
+                          <li>
+                            <form method="post" action="{% url 'medicamento_eliminar' med.pk %}" onsubmit="return confirm('¿Eliminar medicamento?');">
+                              {% csrf_token %}
+                              <input type="hidden" name="next" value="{{ request.path }}">
+                              <button class="dropdown-item text-danger" type="submit">
+                                <i class="bi bi-trash3 me-2"></i>Eliminar
+                              </button>
+                            </form>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
