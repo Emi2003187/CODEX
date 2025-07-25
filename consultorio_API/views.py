@@ -92,6 +92,19 @@ def logout_view(request):
         return redirect(next_url)
     return redirect_next(request, 'login')
 
+
+def home_redirect(request):
+    """Redirige la raíz `/` según el rol del usuario."""
+    if request.user.is_authenticated:
+        rol = getattr(request.user, 'rol', '')
+        if rol == 'medico':
+            return redirect('dashboard_medico')
+        elif rol == 'asistente':
+            return redirect('citas_lista')
+        else:
+            return redirect('dashboard_admin')
+    return redirect_next(request, 'login')
+
 # ═══════════════════════════════════════════════════════════════
 # 🏠 DASHBOARDS CORREGIDOS
 # ═══════════════════════════════════════════════════════════════

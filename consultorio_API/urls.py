@@ -18,6 +18,7 @@ from consultorio_API import views, viewscitas
 from consultorio_API.views_recetas import RecetaPreviewView, RxRecetaView, RecetaA5View
 
 urlpatterns = [
+    path('', views.home_redirect, name='home'),
       # LOGIN Y LOGOUT
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('logout/', views.logout_view, name='logout'),
