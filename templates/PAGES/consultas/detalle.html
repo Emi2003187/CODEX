@@ -35,10 +35,9 @@
         </a>
       {% endif %}
       {% if receta and receta.medicamentos.exists %}
-        <a href="#"
-           class="btn btn-outline-primary btn-preview-receta me-1"
-           data-preview-url="{% url 'receta_preview' receta.pk %}">
-          <i class="bi bi-eye me-1"></i>Ver Receta
+        <a class="btn btn-outline-primary btn-preview-receta"
+           data-preview-url="{% url 'receta_rx' consulta.receta.pk %}">
+           👁️ Ver Receta
         </a>
       {% endif %}
       {% if consulta.estado == 'espera' or consulta.estado == 'en_progreso' %}
@@ -226,13 +225,9 @@
               Receta emitida el {{ receta.fecha_emision|date:"d/m/Y" }}
             </p>
             {% if receta.medicamentos.exists %}
-              <a href="#" class="btn btn-sm btn-outline-primary btn-preview-receta w-100 mb-2"
-                 data-preview-url="{% url 'receta_preview' receta.pk %}">
-                <i class="bi bi-eye me-1"></i>Ver Receta
-              </a>
               <a href="#" class="btn btn-sm btn-outline-primary btn-preview-receta w-100 mb-3"
                  data-preview-url="{% url 'receta_rx' receta.pk %}">
-                <i class="bi bi-eye me-1"></i>Ver Receta estilo Rx
+                <i class="bi bi-eye me-1"></i>Ver Receta
               </a>
             {% endif %}
 

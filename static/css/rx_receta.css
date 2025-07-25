@@ -1,20 +1,57 @@
-@page { size:A5 portrait; margin:12mm; }
-body  { margin:0; font:10.5pt/1.35 "Helvetica",sans-serif; }
+@page { size:A5 portrait; margin:10mm; }
+body  { margin:0; background:#fff; }
 
-.A5       { width:126mm; margin:0 auto; }
-header    { text-align:center; margin-bottom:4mm; }
-header h3 { margin:0 0 1mm; font-size:12pt; }
-header p  { margin:0.5mm 0; }
-.folio    { position:absolute; right:12mm; top:12mm; font-size:9pt; }
+.receta{
+    width:126mm;
+    height:178mm;            /* 210 - 10 - 10 */
+    margin:0 auto;
+    font:11pt/1.35 "Helvetica","Arial",sans-serif;
+    color:#000;
+    display:flex;
+    flex-direction:column;
+    box-sizing:border-box;
+    page-break-inside:avoid;
+}
 
-.paciente{ border:1px solid #000; padding:2mm; margin-bottom:3mm; }
-.paciente .mini{ font-size:9pt; }
+.receta>*       { flex-shrink:0; }
+.hdr            { text-align:center; margin-bottom:4mm; }
+.logo           { max-height:18mm; margin:0 auto 2mm; display:block; }
+.sub            { font-size:10pt; display:block; margin-bottom:1mm; }
+.grid-2         { display:grid; grid-template-columns:1fr 1fr; gap:1mm; margin-bottom:4mm; }
+.right          { text-align:right; }
 
-.cuerpo  h4 { margin:2mm 0 1mm; font-weight:700; }
-.meds    { margin-left:4mm; }
-.meds li { margin-bottom:1.5mm; }
+.section-title  { font-size:11pt; margin:2.5mm 0 1.2mm; text-align:center; text-decoration:underline; }
 
-.obs     { border:1px dotted #555; height:22mm; padding:2mm; }
+.tbl-signos     { width:100%; border-collapse:collapse; font-size:10pt; margin-bottom:1.5mm; }
+.tbl-signos th,
+.tbl-signos td  { border:1px solid #000; padding:1mm 2mm; text-align:center; }
 
-footer   { text-align:center; margin-top:6mm; font-size:9pt; }
-.firma   { margin-top:1mm; }
+.aler           { margin:1mm 0 3mm; }
+
+.lista-meds     { font-size:10pt; margin:0 0 3mm 0; padding-left:4mm; }
+.lista-meds li  { margin-bottom:2mm; text-align:justify; }
+
+.obs-box{
+    min-height:40mm;
+    border:0.4pt solid #666;
+    padding:2mm;
+    margin-bottom:4mm;
+    font-size:10pt;
+    white-space:pre-wrap;
+}
+
+.extra-box{
+    height:25mm;
+    border:0.4pt solid #999;
+    margin-bottom:12mm;      /* ~3 líneas antes de firma */
+}
+
+.pie{
+    margin-top:auto;
+    text-align:center;
+    font-size:9pt;
+    border-top:0.4pt dotted #666;
+    padding-top:2mm;
+}
+
+@media print{ .receta{ page-break-after:avoid; } }

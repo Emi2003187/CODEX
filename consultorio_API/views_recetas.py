@@ -44,6 +44,10 @@ class RxRecetaView(LoginRequiredMixin, DetailView):
         ctx["medico"] = self.object.consulta.medico
         ctx["paciente"] = self.object.consulta.paciente
         ctx["consultorio"] = self.object.consulta.medico.consultorio
+        receta = ctx["receta"]
+        receta.fecha_validez = receta.valido_hasta or (
+            receta.fecha_emision + timedelta(days=2)
+        )
         return ctx
 
     def dispatch(self, request, *args, **kwargs):
