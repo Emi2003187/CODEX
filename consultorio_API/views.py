@@ -2809,7 +2809,10 @@ class HorarioMedicoCreateView(NextRedirectMixin, LoginRequiredMixin, HorarioPerm
         return kwargs
 
     def form_valid(self, form):
-        dias = form.cleaned_data.get("dias", [form.cleaned_data["dia"]])
+        dias = form.cleaned_data.get("dias")
+        if not dias:
+            form.add_error("dias", "Debe seleccionar al menos un día.")
+            return self.form_invalid(form)
         hora_inicio = form.cleaned_data["hora_inicio"]
         hora_fin = form.cleaned_data["hora_fin"]
         medico = form.cleaned_data["medico"]
@@ -2869,7 +2872,10 @@ class HorarioUpdateView(NextRedirectMixin, LoginRequiredMixin, HorarioPermisoMix
         consultorio = medico.consultorio
         hora_inicio = form.cleaned_data["hora_inicio"]
         hora_fin = form.cleaned_data["hora_fin"]
-        nuevos_dias = form.cleaned_data.get("dias", [form.cleaned_data["dia"]])
+        nuevos_dias = form.cleaned_data.get("dias")
+        if not nuevos_dias:
+            form.add_error("dias", "Debe seleccionar al menos un día.")
+            return self.form_invalid(form)
 
         for dia in nuevos_dias:
             HorarioMedico.objects.create(
