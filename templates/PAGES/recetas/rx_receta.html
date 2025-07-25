@@ -1,0 +1,51 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/rx_receta.css' %}">
+
+<div id="receta-print-area" class="rx A5">
+  <!-- CABECERA -->
+  <header>
+      <h3>DR. {{ medico.get_full_name }}</h3>
+      <p>{{ medico.institucion_cedula }} — Cédula Prof. {{ medico.cedula_profesional }}</p>
+      <p>{{ consultorio.ubicacion }}</p>
+      <p>Teléfono: {{ consultorio.telefono }}</p>
+      <div class="folio">
+        <span>Folio:</span> <strong>{{ receta.pk|stringformat:"05d" }}</strong><br>
+        <span>Fecha:</span> <strong>{{ receta.fecha_emision|date:"d/m/Y" }}</strong>
+      </div>
+  </header>
+
+  <!-- DATOS PACIENTE -->
+  <section class="paciente">
+      <div><strong>Nombre del paciente:</strong> {{ paciente }}</div>
+      <div class="mini">
+          <span>No. Expediente: {{ paciente.expediente|default:"—" }}</span> ·
+          <span>Edad: {{ paciente.edad }} años</span> ·
+          <span>Fecha nacimiento: {{ paciente.fecha_nacimiento|date:"d/m/Y" }}</span>
+      </div>
+  </section>
+
+  <!-- RECETARIO -->
+  <section class="cuerpo">
+      <h4>Rx</h4>
+      <ol class="meds">
+          {% for m in receta.medicamentos.all %}
+            <li>
+              {{ m.nombre|upper }} – {{ m.dosis }}.<br>
+              {{ m.frecuencia }}, Duración: {{ m.duracion }},
+              Vía: {{ m.via_administracion|default:"Oral" }}.
+            </li>
+          {% empty %}
+            <li>No hay medicamentos.</li>
+          {% endfor %}
+      </ol>
+
+      <h4>Observaciones</h4>
+      <p class="obs">{{ receta.notas|default:"__________" }}</p>
+  </section>
+
+  <!-- FIRMA -->
+  <footer>
+      <p>________________________________________</p>
+      <p class="firma">Dr. {{ medico.get_full_name }}</p>
+  </footer>
+</div>
