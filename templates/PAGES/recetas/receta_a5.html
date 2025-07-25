@@ -1,0 +1,93 @@
+<link rel="stylesheet" href="{% static 'css/receta_a5.css' %}">
+
+{% with sv=receta.consulta.signos_vitales %}
+<div id="receta-print-area"
+     class="receta"
+     data-id="{{ receta.pk }}"
+     data-paciente="{{ receta.consulta.paciente|slugify }}"
+     data-fecha="{{ receta.fecha_emision|date:'Y-m-d' }}">
+
+  <!-- 0 · ENCABEZADO -------------------------------------------------->
+  <header class="hdr">
+     {% if show_logo %}
+       <img src="{% static 'img/imss-logo.png' %}" class="logo" alt="">
+     {% endif %}
+     <span class="sub">RECETA INDIVIDUAL</span>
+     <h2>CONSULTORIO MÉDICO</h2>
+  </header>
+
+  <!-- 1 · DATOS PACIENTE / CONSULTORIO -------------------------------->
+  <section class="datos">
+     <div><b>Paciente:</b> {{ receta.consulta.paciente }}</div>
+     <div><b>Consultorio:</b> {{ receta.consulta.medico.consultorio }}</div>
+  </section>
+
+  <!-- 2 · FECHAS ------------------------------------------------------>
+  <section class="fechas">
+     <div><b>Fecha:</b> {{ receta.fecha_emision|date:"d/m/Y" }}</div>
+     <div class="right"><b>Válido hasta:</b> {{ receta.fecha_validez|default_if_none:receta.fecha_emision|date:"d/m/Y" }}</div>
+  </section>
+
+  <!-- 3 · MÉDICO ------------------------------------------------------>
+  <section class="medico">
+     <div><b>Médico responsable:</b> Dr. {{ receta.consulta.medico.get_full_name }}</div>
+     <div class="right"><b>Cédula:</b> {{ receta.consulta.medico.cedula|default:"—" }}</div>
+  </section>
+
+  <!-- 4 · SIGNOS VITALES --------------------------------------------->
+  <section class="signos">
+    <table>
+      <tr><th>T.A.</th><th>F.C.</th><th>Temp.</th><th>Peso</th></tr>
+      <tr>
+        <td>{{ sv.tension|default:"—" }}</td>
+        <td>{{ sv.fc|default:"—" }}</td>
+        <td>{{ sv.temp|default:"—" }}</td>
+        <td>{{ sv.peso|default:"—" }}</td>
+      </tr>
+      <tr><th>Talla</th><th>Circ. Abd.</th><th>IMC</th><th></th></tr>
+      <tr>
+        <td>{{ sv.talla|default:"—" }}</td>
+        <td>{{ sv.circ_abd|default:"—" }}</td>
+        <td>{{ sv.imc|default:"—" }}</td>
+        <td></td>
+      </tr>
+    </table>
+    <p class="alerg"><b>Alergias:</b> {{ sv.alergias|default:"NEGATIVO" }}</p>
+  </section>
+
+  <!-- 5 · MEDICAMENTOS ------------------------------------------------>
+  <section class="meds">
+     <h4>Medicamentos</h4>
+     <ol class="lista-meds">
+        {% for m in receta.medicamentos.all %}
+          <li>
+            <b>{{ m.nombre|title }}</b> – Dosis: {{ m.dosis }},
+            Frecuencia: {{ m.frecuencia }},
+            Duración: {{ m.duracion }}{% if m.indicaciones and m.indicaciones != "N/A" %},
+            Indicaciones: {{ m.indicaciones }}{% endif %}
+          </li>
+        {% empty %}
+          <li>No hay medicamentos.</li>
+        {% endfor %}
+     </ol>
+  </section>
+
+  <!-- 6 · OBSERVACIONES ---------------------------------------------->
+  <section class="obs">
+    <div class="obs-box">
+       <span class="obs-title">Observaciones</span>
+       <div class="obs-text">{{ receta.observaciones|default:"" }}</div>
+    </div>
+  </section>
+
+  <div class="firma-box"></div>
+
+  <!-- 7 · FIRMA ------------------------------------------------------->
+  <footer class="pie">
+     Dr. {{ receta.consulta.medico.get_full_name }}<br>
+     CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula_profesional|default:"—" }} –
+     INSTITUCIÓN: {{ receta.consulta.medico.institucion_cedula|default:"—" }}<br>
+     DIRECCIÓN: {{ receta.consulta.medico.consultorio.ubicacion|default:"—" }}
+</footer>
+</div>
+{% endwith %}

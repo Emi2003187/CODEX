@@ -36,7 +36,7 @@
       {% endif %}
       {% if receta and receta.medicamentos.exists %}
         <a class="btn btn-outline-primary btn-preview-receta"
-           data-preview-url="{% url 'receta_rx' consulta.receta.pk %}">
+           data-preview-url="{% url 'receta_a5' consulta.receta.pk %}">
            👁️ Ver Receta
         </a>
       {% endif %}
@@ -226,7 +226,7 @@
             </p>
             {% if receta.medicamentos.exists %}
               <a href="#" class="btn btn-sm btn-outline-primary btn-preview-receta w-100 mb-3"
-                 data-preview-url="{% url 'receta_rx' receta.pk %}">
+                 data-preview-url="{% url 'receta_a5' receta.pk %}">
                 <i class="bi bi-eye me-1"></i>Ver Receta
               </a>
             {% endif %}
