@@ -329,22 +329,55 @@ class BaseDashboardView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
-@method_decorator(login_required, name='dispatch')
-class DashboardMedico(BaseDashboardView):
+# ─── mixin genérico por rol ──────────────────────────────────────────
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
+class RoleRequiredMixin(UserPassesTestMixin):
+    """Permite el acceso sólo a users con rol==required_role."""
+    required_role: str | None = None  # «admin», «medico», «asistente»
+
+    # ① Permiso
+    def test_func(self) -> bool:
+        return (
+            self.request.user.is_authenticated
+            and self.request.user.rol == self.required_role
+        )
+
+    # ② Qué hacer si no tiene permiso → redirigir a su propio dashboard
+    def handle_no_permission(self):
+        usr = self.request.user
+        if not usr.is_authenticated:
+            return HttpResponseRedirect(reverse("login"))
+
+        destino = {
+            "admin": "dashboard_admin",
+            "medico": "dashboard_medico",
+            "asistente": "dashboard_asistente",
+        }.get(usr.rol, "login")
+
+        return HttpResponseRedirect(reverse(destino))
+
+
+@method_decorator(login_required, name="dispatch")
+class DashboardAdmin(RoleRequiredMixin, BaseDashboardView):
+    required_role = "admin"
+    rol_mostrado = "Administrador"
+
+
+@method_decorator(login_required, name="dispatch")
+class DashboardMedico(RoleRequiredMixin, BaseDashboardView):
+    required_role = "medico"
     rol_mostrado = "Médico"
 
 
-@method_decorator(login_required, name='dispatch')
-class DashboardAsistente(View):
-    """Redirect assistants directly to the appointment list."""
+@method_decorator(login_required, name="dispatch")
+class DashboardAsistente(RoleRequiredMixin, View):
+    required_role = "asistente"
 
+    # Sólo redirige a lista de citas; igual protegemos acceso directo
     def get(self, request, *args, **kwargs):
         return redirect("citas_lista")
-
-
-@method_decorator(login_required, name='dispatch')
-class DashboardAdmin(BaseDashboardView):
-    rol_mostrado = "Administrador"
 
 
 # ═══════════════════════════════════════════════════════════════
