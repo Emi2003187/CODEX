@@ -371,6 +371,14 @@ class AntecedenteForm(forms.ModelForm):
 
 class MedicamentoActualForm(forms.ModelForm):
     """Formulario para medicamentos actuales"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            if self.instance.inicio:
+                self.initial.setdefault('inicio', self.instance.inicio.strftime('%Y-%m-%d'))
+            if self.instance.fin:
+                self.initial.setdefault('fin', self.instance.fin.strftime('%Y-%m-%d'))
     
     class Meta:
         model = MedicamentoActual
@@ -403,14 +411,14 @@ class MedicamentoActualForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Para qué se toma'
             }),
-            'inicio': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control'
-            }),
-            'fin': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control'
-            }),
+            'inicio': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={'type': 'date', 'class': 'form-control'}
+            ),
+            'fin': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={'type': 'date', 'class': 'form-control'}
+            ),
             'prescrito_por': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Médico que lo prescribió'
@@ -432,6 +440,11 @@ class MedicamentoActualForm(forms.ModelForm):
             'fin': 'Fecha de Fin',
             'prescrito_por': 'Prescrito por',
             'notas': 'Notas',
+        }
+
+        input_formats = {
+            'inicio': ['%Y-%m-%d'],
+            'fin': ['%Y-%m-%d'],
         }
 
 
