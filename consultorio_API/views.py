@@ -936,6 +936,19 @@ def cola_virtual_data(request):
 # 📅 CITAS - SISTEMA POR CONSULTORIO
 # ═══════════════════════════════════════════════════════════════
 
+def marcar_citas_vencidas():
+    """Marca como no asistió las citas pasadas sin consulta y las cancela."""
+    ahora = timezone.now()
+    Cita.objects.filter(
+        fecha_hora__lt=ahora,
+        estado__in=["programada", "confirmada"],
+        consulta__isnull=True,
+    ).update(
+        estado="no_asistio",
+        fecha_cancelacion=ahora,
+        motivo_cancelacion="No asistió",
+    )
+
 class CitaPermisoMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.is_authenticated and self.request.user.rol in ('medico', 'asistente', 'admin')
@@ -944,6 +957,7 @@ class CitaPermisoMixin(UserPassesTestMixin):
 @login_required
 def lista_citas(request):
     """Lista de citas filtrada por consultorio del usuario"""
+    marcar_citas_vencidas()
     user = request.user
     
     # ✅ USAR LA FUNCIÓN REUTILIZABLE
@@ -3990,6 +4004,7 @@ class CitaListView(CitaPermisoMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
+        marcar_citas_vencidas()
         user = self.request.user
 
         # 1. Filtrar por consultorio del usuario / 5. Admin ve todas, otros solo su consultorio

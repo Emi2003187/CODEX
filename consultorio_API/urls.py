@@ -135,6 +135,7 @@ urlpatterns = [
     path('citas/<uuid:cita_id>/eliminar/', viewscitas.CitaDeleteView.as_view(), name='citas_eliminar'),
     # Cancelar (cambia estado)
     path('citas/<uuid:cita_id>/cancelar/', viewscitas.cancelar_cita,         name='cancelar_cita'),
+    path('citas/<uuid:cita_id>/no-asistio/', viewscitas.marcar_no_asistio, name='cita_marcar_no_asistio'),
     path("citas/<uuid:pk>/cambiar-estado/", cambiar_estado_cita, name="cambiar_estado_cita"),
     
     

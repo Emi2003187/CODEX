@@ -337,6 +337,16 @@
     color: white;
   }
 
+  .btn-no-asistio {
+    background: #6f42c1;
+    color: white;
+  }
+
+  .btn-no-asistio:hover {
+    background: #5936a6;
+    color: white;
+  }
+
   .consulta-card {
     background: #ecfdf5;
     border: none;
@@ -866,12 +876,22 @@
             {% endif %}
 
             <!-- Cancelar Cita -->
-            {% if puede_editar and cita.estado != 'completada' and cita.estado != 'cancelada' %}
+            {% if puede_editar and cita.estado != 'completada' and cita.estado != 'cancelada' and cita.estado != 'no_asistio' %}
             <form method="post" action="{% url 'cancelar_cita' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
               <button type="submit" class="btn btn-action btn-cancelar" onclick="return confirm('¿Confirmas que deseas cancelar esta cita?');">
                 <i class="bi bi-x-circle"></i>
                 Cancelar Cita
+              </button>
+            </form>
+            {% endif %}
+
+            {% if cita.estado == 'programada' and not consulta or cita.estado == 'confirmada' and not consulta %}
+            <form method="post" action="{% url 'cita_marcar_no_asistio' cita.id %}" class="d-inline w-100">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-action btn-no-asistio" onclick="return confirm('¿Marcar esta cita como NO ASISTIÓ?');">
+                <i class="bi bi-person-x"></i>
+                No Asistió
               </button>
             </form>
             {% endif %}
