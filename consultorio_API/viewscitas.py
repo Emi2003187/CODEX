@@ -79,20 +79,29 @@ def lista_citas(request):
     filtro_form = CitaFiltroForm(request.GET, user=user)
     if filtro_form.is_valid():
         cd = filtro_form.cleaned_data
-        
+
         if cd.get('buscar'):
             citas = citas.filter(
                 Q(paciente__nombre_completo__icontains=cd['buscar']) |
                 Q(numero_cita__icontains=cd['buscar']) |
                 Q(motivo__icontains=cd['buscar'])
             )
-        
+
         if cd.get('fecha'):
             citas = citas.filter(fecha_hora__date=cd['fecha'])
         if cd.get('estado'):
             citas = citas.filter(estado=cd['estado'])
         if cd.get('medico'):
             citas = citas.filter(medico_asignado=cd['medico'])
+
+    # Filtros adicionales no incluidos en el formulario
+    tipo = request.GET.get("tipo_cita", "").strip()
+    if tipo:
+        citas = citas.filter(tipo_cita=tipo)
+
+    prioridad = request.GET.get("prioridad", "").strip()
+    if prioridad:
+        citas = citas.filter(prioridad=prioridad)
     
     # Ordenar por fecha
     citas = citas.select_related(
