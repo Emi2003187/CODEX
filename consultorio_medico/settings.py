@@ -141,7 +141,13 @@ TIME_ZONE = 'America/Tijuana'
 
 USE_I18N = True
 
-USE_TZ = True
+# MySQL installations often don't include the time zone definition tables
+# required by Django when USE_TZ is enabled.  This causes queries that
+# truncate datetimes (e.g. the date hierarchy in the admin) to fail with
+# "Database returned an invalid datetime value".  Since the application does
+# not rely on time zone aware datetimes, disable time zone support to avoid
+# these errors without requiring the extra MySQL data tables.
+USE_TZ = False
 
 
 
