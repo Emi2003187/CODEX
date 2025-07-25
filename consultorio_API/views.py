@@ -4596,11 +4596,11 @@ def cola_virtual(request):
     """Muestra la cola virtual combinando citas del día y consultas sin cita."""
     hoy = timezone.localdate()
 
-    # Citas programadas o confirmadas para hoy
+    # Citas activas para hoy (incluye programadas, confirmadas, en espera y en atencion)
     citas = (
         Cita.objects.filter(
             fecha_hora__date=hoy,
-            estado__in=["programada", "confirmada"]
+            estado__in=["programada", "confirmada", "en_espera", "en_atencion"]
         )
         .select_related("paciente")
         .order_by("fecha_hora")
@@ -4623,8 +4623,8 @@ def cola_virtual(request):
     for q in consultas_directas:
         cola.append({"tipo": "sin_cita", "hora": q.fecha_creacion, "obj": q})
 
-    # Ordenar por hora
-    cola.sort(key=lambda x: x["hora"])
+    # Ordenar por hora y priorizar citas si coinciden en la misma hora
+    cola.sort(key=lambda x: (x["hora"], 0 if x["tipo"] == "cita" else 1))
 
     return render(request, "PAGES/consultas/cola_virtual.html", {
         "cola": cola,
