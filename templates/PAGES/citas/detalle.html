@@ -886,7 +886,7 @@
             </form>
             {% endif %}
 
-            {% if (cita.estado == 'programada' or cita.estado == 'confirmada') and not consulta %}
+            {% if cita.estado == 'programada' and not consulta or cita.estado == 'confirmada' and not consulta %}
             <form method="post" action="{% url 'cita_marcar_no_asistio' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
               <button type="submit" class="btn btn-action btn-no-asistio" onclick="return confirm('¿Marcar esta cita como NO ASISTIÓ?');">
