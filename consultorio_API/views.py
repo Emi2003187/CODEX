@@ -937,13 +937,17 @@ def cola_virtual_data(request):
 # ═══════════════════════════════════════════════════════════════
 
 def marcar_citas_vencidas():
-    """Marca como no asistió las citas pasadas sin consulta."""
+    """Marca como no asistió las citas pasadas sin consulta y las cancela."""
     ahora = timezone.now()
     Cita.objects.filter(
         fecha_hora__lt=ahora,
         estado__in=["programada", "confirmada"],
         consulta__isnull=True,
-    ).update(estado="no_asistio")
+    ).update(
+        estado="no_asistio",
+        fecha_cancelacion=ahora,
+        motivo_cancelacion="No asistió",
+    )
 
 class CitaPermisoMixin(UserPassesTestMixin):
     def test_func(self):

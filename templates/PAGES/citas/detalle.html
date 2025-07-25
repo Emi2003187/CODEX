@@ -876,7 +876,7 @@
             {% endif %}
 
             <!-- Cancelar Cita -->
-            {% if puede_editar and cita.estado != 'completada' and cita.estado != 'cancelada' %}
+            {% if puede_editar and cita.estado != 'completada' and cita.estado != 'cancelada' and cita.estado != 'no_asistio' %}
             <form method="post" action="{% url 'cancelar_cita' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
               <button type="submit" class="btn btn-action btn-cancelar" onclick="return confirm('¿Confirmas que deseas cancelar esta cita?');">

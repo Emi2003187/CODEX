@@ -827,7 +827,17 @@ def marcar_no_asistio(request, cita_id):
     if request.method == "POST":
         cita.estado = "no_asistio"
         cita.actualizado_por = request.user
-        cita.save(update_fields=["estado", "actualizado_por", "fecha_actualizacion"])
+        cita.fecha_cancelacion = timezone.now()
+        cita.motivo_cancelacion = "No asistió"
+        cita.save(
+            update_fields=[
+                "estado",
+                "actualizado_por",
+                "fecha_cancelacion",
+                "motivo_cancelacion",
+                "fecha_actualizacion",
+            ]
+        )
         messages.success(
             request,
             f"Cita {cita.numero_cita} marcada como 'No asistió'.",
