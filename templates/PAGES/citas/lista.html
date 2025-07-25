@@ -335,14 +335,10 @@
             </div>
             <div class="row g-3 mt-2">
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">Fecha Desde</label>
-                    <input type="date" name="fecha_desde" class="form-control" value="{{ request.GET.fecha_desde }}">
+                    <label class="form-label fw-bold">Fecha</label>
+                    <input type="date" name="fecha" class="form-control" value="{{ request.GET.fecha }}">
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Fecha Hasta</label>
-                    <input type="date" name="fecha_hasta" class="form-control" value="{{ request.GET.fecha_hasta }}">
-                </div>
-                <div class="col-md-6 d-flex align-items-end">
+                <div class="col-md-9 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2 btn-action">
                         <i class="bi bi-search me-1"></i>Filtrar
                     </button>

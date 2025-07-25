@@ -961,32 +961,12 @@ def lista_citas(request):
                 Q(motivo__icontains=cd['buscar'])
             )
         
-        if cd.get('fecha_desde'):
-            citas = citas.filter(fecha_hora__date__gte=cd['fecha_desde'])
-        if cd.get('fecha_hasta'):
-            citas = citas.filter(fecha_hora__date__lte=cd['fecha_hasta'])
+        if cd.get('fecha'):
+            citas = citas.filter(fecha_hora__date=cd['fecha'])
         if cd.get('estado'):
             citas = citas.filter(estado=cd['estado'])
-        if cd.get('tipo_cita'):
-            citas = citas.filter(tipo_cita=cd['tipo_cita'])
-        if cd.get('prioridad'):
-            citas = citas.filter(prioridad=cd['prioridad'])
-        if cd.get('consultorio') and user.rol == 'admin':
-            citas = citas.filter(consultorio=cd['consultorio'])
         if cd.get('medico'):
             citas = citas.filter(medico_asignado=cd['medico'])
-        if cd.get('estado_asignacion'):
-            if cd['estado_asignacion'] == 'disponibles':
-                citas = citas.filter(medico_asignado__isnull=True)
-            elif cd['estado_asignacion'] == 'asignadas':
-                citas = citas.filter(medico_asignado__isnull=False)
-            elif cd['estado_asignacion'] == 'preferidas':
-                citas = citas.filter(medico_preferido__isnull=False)
-            elif cd['estado_asignacion'] == 'vencidas':
-                citas = citas.filter(
-                    medico_asignado__isnull=True,
-                    fecha_hora__lt=timezone.now()
-                )
         
         if cd.get('rango_tiempo'):
             hoy = timezone.now().date()
@@ -3995,7 +3975,7 @@ class CitaListView(CitaPermisoMixin, ListView):
             queryset = Cita.objects.none()
 
         # Aplicar filtros del formulario
-        filtro_form = CitaFiltroForm(self.request.GET)
+        filtro_form = CitaFiltroForm(self.request.GET, user=user)
         if filtro_form.is_valid():
             cd = filtro_form.cleaned_data
             
@@ -4006,18 +3986,10 @@ class CitaListView(CitaPermisoMixin, ListView):
                     Q(motivo__icontains=cd['buscar'])
                 )
             
-            if cd.get('fecha_desde'):
-                queryset = queryset.filter(fecha_hora__date__gte=cd['fecha_desde'])
-            if cd.get('fecha_hasta'):
-                queryset = queryset.filter(fecha_hora__date__lte=cd['fecha_hasta'])
+            if cd.get('fecha'):
+                queryset = queryset.filter(fecha_hora__date=cd['fecha'])
             if cd.get('estado'):
                 queryset = queryset.filter(estado=cd['estado'])
-            if cd.get('tipo_cita'):
-                queryset = queryset.filter(tipo_cita=cd['tipo_cita'])
-            if cd.get('prioridad'):
-                queryset = queryset.filter(prioridad=cd['prioridad'])
-            if cd.get('consultorio') and user.rol == 'admin':
-                queryset = queryset.filter(consultorio=cd['consultorio'])
             if cd.get('medico'):
                 queryset = queryset.filter(medico_asignado=cd['medico'])
 
@@ -4085,7 +4057,7 @@ class CitaListView(CitaPermisoMixin, ListView):
             medicos_disponibles = Usuario.objects.none()
 
         context.update({
-            'filtro_form': CitaFiltroForm(self.request.GET),
+            'filtro_form': CitaFiltroForm(self.request.GET, user=user),
             'grupos': grupos,
             'stats': stats,
             'citas_urgentes': citas_urgentes,

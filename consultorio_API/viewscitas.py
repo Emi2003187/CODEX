@@ -87,52 +87,12 @@ def lista_citas(request):
                 Q(motivo__icontains=cd['buscar'])
             )
         
-        if cd.get('fecha_desde'):
-            citas = citas.filter(fecha_hora__date__gte=cd['fecha_desde'])
-        if cd.get('fecha_hasta'):
-            citas = citas.filter(fecha_hora__date__lte=cd['fecha_hasta'])
+        if cd.get('fecha'):
+            citas = citas.filter(fecha_hora__date=cd['fecha'])
         if cd.get('estado'):
             citas = citas.filter(estado=cd['estado'])
-        if cd.get('tipo_cita'):
-            citas = citas.filter(tipo_cita=cd['tipo_cita'])
-        if cd.get('prioridad'):
-            citas = citas.filter(prioridad=cd['prioridad'])
-        if cd.get('consultorio') and user.rol == 'admin':
-            citas = citas.filter(consultorio=cd['consultorio'])
         if cd.get('medico'):
             citas = citas.filter(medico_asignado=cd['medico'])
-        if cd.get('estado_asignacion'):
-            if cd['estado_asignacion'] == 'disponibles':
-                citas = citas.filter(medico_asignado__isnull=True)
-            elif cd['estado_asignacion'] == 'asignadas':
-                citas = citas.filter(medico_asignado__isnull=False)
-            elif cd['estado_asignacion'] == 'preferidas':
-                citas = citas.filter(medico_preferido__isnull=False)
-            elif cd['estado_asignacion'] == 'vencidas':
-                citas = citas.filter(
-                    medico_asignado__isnull=True,
-                    fecha_hora__lt=timezone.now()
-                )
-        
-        if cd.get('rango_tiempo'):
-            hoy = timezone.now().date()
-            if cd['rango_tiempo'] == 'hoy':
-                citas = citas.filter(fecha_hora__date=hoy)
-            elif cd['rango_tiempo'] == 'manana':
-                citas = citas.filter(fecha_hora__date=hoy + timedelta(days=1))
-            elif cd['rango_tiempo'] == 'esta_semana':
-                inicio_semana = hoy - timedelta(days=hoy.weekday())
-                fin_semana = inicio_semana + timedelta(days=6)
-                citas = citas.filter(fecha_hora__date__range=[inicio_semana, fin_semana])
-            elif cd['rango_tiempo'] == 'proximo_mes':
-                inicio_mes = hoy.replace(day=1)
-                if inicio_mes.month == 12:
-                    fin_mes = inicio_mes.replace(year=inicio_mes.year + 1, month=1) - timedelta(days=1)
-                else:
-                    fin_mes = inicio_mes.replace(month=inicio_mes.month + 1) - timedelta(days=1)
-                citas = citas.filter(fecha_hora__date__range=[inicio_mes, fin_mes])
-            elif cd['rango_tiempo'] == 'vencidas':
-                citas = citas.filter(fecha_hora__lt=timezone.now())
     
     # Ordenar por fecha
     citas = citas.select_related(
