@@ -88,8 +88,6 @@ DATABASES = {
         'PASSWORD': '',
         'HOST': 'localhost',  
         'PORT': '3306',
-        # Use UTC to avoid relying on MySQL time zone tables
-        'TIME_ZONE': 'UTC',
         'OPTIONS': {
             # Ensure consistent timezone handling even if the MySQL
             # server does not have time zone tables loaded.
