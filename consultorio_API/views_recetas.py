@@ -39,15 +39,11 @@ class RxRecetaView(LoginRequiredMixin, DetailView):
     context_object_name = "receta"
     pk_url_kwarg = "pk"
 
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["medico"] = self.object.consulta.medico
-        ctx["paciente"] = self.object.consulta.paciente
-        ctx["consultorio"] = self.object.consulta.medico.consultorio
+    def get_context_data(self, **kw):
+        ctx = super().get_context_data(**kw)
         receta = ctx["receta"]
-        receta.fecha_validez = receta.valido_hasta or (
-            receta.fecha_emision + timedelta(days=2)
-        )
+        receta.fecha_validez = receta.fecha_emision + timedelta(days=2)
+        ctx["show_logo"] = True
         return ctx
 
     def dispatch(self, request, *args, **kwargs):
@@ -55,3 +51,14 @@ class RxRecetaView(LoginRequiredMixin, DetailView):
         if not request.user.has_perm("consultorio.view_receta"):
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
+
+
+class RecetaA5View(LoginRequiredMixin, DetailView):
+    model = Receta
+    template_name = "PAGES/recetas/receta_a5.html"
+
+    def get_context_data(self, **kw):
+        ctx = super().get_context_data(**kw)
+        ctx["show_logo"] = True
+        ctx["receta"].fecha_validez = ctx["receta"].fecha_emision + timedelta(days=2)
+        return ctx
