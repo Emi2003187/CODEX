@@ -29,3 +29,25 @@ class RecetaPreviewView(LoginRequiredMixin, DetailView):
         if not request.user.has_perm("consultorio.view_receta"):
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
+
+
+class RxRecetaView(LoginRequiredMixin, DetailView):
+    """Receta con estilo tipo Rx para impresión simplificada."""
+
+    model = Receta
+    template_name = "PAGES/recetas/rx_receta.html"
+    context_object_name = "receta"
+    pk_url_kwarg = "pk"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["medico"] = self.object.consulta.medico
+        ctx["paciente"] = self.object.consulta.paciente
+        ctx["consultorio"] = self.object.consulta.medico.consultorio
+        return ctx
+
+    def dispatch(self, request, *args, **kwargs):
+        receta = self.get_object()
+        if not request.user.has_perm("consultorio.view_receta"):
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)

@@ -15,7 +15,7 @@ from .views_consultas import (
 from django.contrib.auth.views import LogoutView
 from .views import CitaCreateView, Receta
 from consultorio_API import views, viewscitas
-from consultorio_API.views_recetas import RecetaPreviewView
+from consultorio_API.views_recetas import RecetaPreviewView, RxRecetaView
 
 urlpatterns = [
       # LOGIN Y LOGOUT
@@ -107,6 +107,7 @@ urlpatterns = [
     # PDF y previsualización de recetas
     path('recetas/<int:receta_id>/pdf/', views.receta_pdf_view, name='receta_pdf'),
     path('recetas/<int:pk>/preview/', RecetaPreviewView.as_view(), name='receta_preview'),
+    path('recetas/<int:pk>/rx/', RxRecetaView.as_view(), name='receta_rx'),
     path('citas/exportar-csv/', viewscitas.exportar_citas_csv, name='exportar_citas_csv'),  # CAMBIAR
     
     

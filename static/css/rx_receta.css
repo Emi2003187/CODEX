@@ -1,0 +1,20 @@
+@page { size:A5 portrait; margin:12mm; }
+body  { margin:0; font:10.5pt/1.35 "Helvetica",sans-serif; }
+
+.A5       { width:126mm; margin:0 auto; }
+header    { text-align:center; margin-bottom:4mm; }
+header h3 { margin:0 0 1mm; font-size:12pt; }
+header p  { margin:0.5mm 0; }
+.folio    { position:absolute; right:12mm; top:12mm; font-size:9pt; }
+
+.paciente{ border:1px solid #000; padding:2mm; margin-bottom:3mm; }
+.paciente .mini{ font-size:9pt; }
+
+.cuerpo  h4 { margin:2mm 0 1mm; font-weight:700; }
+.meds    { margin-left:4mm; }
+.meds li { margin-bottom:1.5mm; }
+
+.obs     { border:1px dotted #555; height:22mm; padding:2mm; }
+
+footer   { text-align:center; margin-top:6mm; font-size:9pt; }
+.firma   { margin-top:1mm; }
