@@ -79,60 +79,29 @@ def lista_citas(request):
     filtro_form = CitaFiltroForm(request.GET, user=user)
     if filtro_form.is_valid():
         cd = filtro_form.cleaned_data
-        
+
         if cd.get('buscar'):
             citas = citas.filter(
                 Q(paciente__nombre_completo__icontains=cd['buscar']) |
                 Q(numero_cita__icontains=cd['buscar']) |
                 Q(motivo__icontains=cd['buscar'])
             )
-        
-        if cd.get('fecha_desde'):
-            citas = citas.filter(fecha_hora__date__gte=cd['fecha_desde'])
-        if cd.get('fecha_hasta'):
-            citas = citas.filter(fecha_hora__date__lte=cd['fecha_hasta'])
+
+        if cd.get('fecha'):
+            citas = citas.filter(fecha_hora__date=cd['fecha'])
         if cd.get('estado'):
             citas = citas.filter(estado=cd['estado'])
-        if cd.get('tipo_cita'):
-            citas = citas.filter(tipo_cita=cd['tipo_cita'])
-        if cd.get('prioridad'):
-            citas = citas.filter(prioridad=cd['prioridad'])
-        if cd.get('consultorio') and user.rol == 'admin':
-            citas = citas.filter(consultorio=cd['consultorio'])
         if cd.get('medico'):
             citas = citas.filter(medico_asignado=cd['medico'])
-        if cd.get('estado_asignacion'):
-            if cd['estado_asignacion'] == 'disponibles':
-                citas = citas.filter(medico_asignado__isnull=True)
-            elif cd['estado_asignacion'] == 'asignadas':
-                citas = citas.filter(medico_asignado__isnull=False)
-            elif cd['estado_asignacion'] == 'preferidas':
-                citas = citas.filter(medico_preferido__isnull=False)
-            elif cd['estado_asignacion'] == 'vencidas':
-                citas = citas.filter(
-                    medico_asignado__isnull=True,
-                    fecha_hora__lt=timezone.now()
-                )
-        
-        if cd.get('rango_tiempo'):
-            hoy = timezone.now().date()
-            if cd['rango_tiempo'] == 'hoy':
-                citas = citas.filter(fecha_hora__date=hoy)
-            elif cd['rango_tiempo'] == 'manana':
-                citas = citas.filter(fecha_hora__date=hoy + timedelta(days=1))
-            elif cd['rango_tiempo'] == 'esta_semana':
-                inicio_semana = hoy - timedelta(days=hoy.weekday())
-                fin_semana = inicio_semana + timedelta(days=6)
-                citas = citas.filter(fecha_hora__date__range=[inicio_semana, fin_semana])
-            elif cd['rango_tiempo'] == 'proximo_mes':
-                inicio_mes = hoy.replace(day=1)
-                if inicio_mes.month == 12:
-                    fin_mes = inicio_mes.replace(year=inicio_mes.year + 1, month=1) - timedelta(days=1)
-                else:
-                    fin_mes = inicio_mes.replace(month=inicio_mes.month + 1) - timedelta(days=1)
-                citas = citas.filter(fecha_hora__date__range=[inicio_mes, fin_mes])
-            elif cd['rango_tiempo'] == 'vencidas':
-                citas = citas.filter(fecha_hora__lt=timezone.now())
+
+    # Filtros adicionales no incluidos en el formulario
+    tipo = request.GET.get("tipo_cita", "").strip()
+    if tipo:
+        citas = citas.filter(tipo_cita=tipo)
+
+    prioridad = request.GET.get("prioridad", "").strip()
+    if prioridad:
+        citas = citas.filter(prioridad=prioridad)
     
     # Ordenar por fecha
     citas = citas.select_related(
@@ -813,6 +782,37 @@ def cancelar_cita(request, cita_id):
         "PAGES/citas/eliminar.html",
         {"cita": cita, "titulo": "Cancelar Cita", "usuario": request.user},
     )
+
+
+@login_required
+def marcar_no_asistio(request, cita_id):
+    """Marca una cita como no asistió."""
+    cita = get_object_or_404(Cita, id=cita_id)
+
+    if request.user.rol not in ["admin", "medico"]:
+        messages.error(request, "No tienes permisos para marcar esta cita.")
+        return redirect("citas_detalle", pk=cita.id)
+
+    if request.method == "POST":
+        cita.estado = "no_asistio"
+        cita.actualizado_por = request.user
+        cita.fecha_cancelacion = timezone.now()
+        cita.motivo_cancelacion = "No asistió"
+        cita.save(
+            update_fields=[
+                "estado",
+                "actualizado_por",
+                "fecha_cancelacion",
+                "motivo_cancelacion",
+                "fecha_actualizacion",
+            ]
+        )
+        messages.success(
+            request,
+            f"Cita {cita.numero_cita} marcada como 'No asistió'.",
+        )
+
+    return redirect("citas_detalle", pk=cita.id)
 
 
 # ───────────────────────────────────────────

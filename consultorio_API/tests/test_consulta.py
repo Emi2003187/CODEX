@@ -116,3 +116,47 @@ def test_no_crear_consulta_antes_de_cita(client):
     after = Consulta.objects.count()
     assert after == before
     assert "No puedes atender esta consulta" in resp.content.decode()
+
+
+@pytest.mark.django_db
+def test_bloqueo_registrar_signos_cancelada(client):
+    consultorio = Consultorio.objects.create(nombre="BC")
+    medico = Usuario.objects.create(username="medb", rol="medico", first_name="Med", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="PB",
+        fecha_nacimiento="2000-01-01",
+        sexo="M",
+        telefono="1",
+        correo="pb@example.com",
+        direccion="X",
+        consultorio=consultorio,
+    )
+    consulta = Consulta.objects.create(paciente=paciente, medico=medico, tipo="sin_cita", estado="cancelada")
+
+    client.force_login(medico)
+    url = reverse("consultas_precheck", args=[consulta.pk])
+    resp = client.get(url, follow=True)
+    assert resp.redirect_chain
+    assert "No se pueden registrar signos vitales" in resp.content.decode()
+
+
+@pytest.mark.django_db
+def test_bloqueo_editar_consulta_cancelada(client):
+    consultorio = Consultorio.objects.create(nombre="BE")
+    medico = Usuario.objects.create(username="mede", rol="medico", first_name="Med", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="PE",
+        fecha_nacimiento="2000-01-01",
+        sexo="M",
+        telefono="1",
+        correo="pe@example.com",
+        direccion="X",
+        consultorio=consultorio,
+    )
+    consulta = Consulta.objects.create(paciente=paciente, medico=medico, tipo="sin_cita", estado="cancelada")
+
+    client.force_login(medico)
+    url = reverse("consulta_editar", args=[consulta.pk])
+    resp = client.get(url, follow=True)
+    assert resp.redirect_chain
+    assert "No puedes editar una consulta cancelada" in resp.content.decode()

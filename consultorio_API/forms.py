@@ -87,124 +87,79 @@ class LoginForm(AuthenticationForm):
 # ═══════════════════════════════════════════════════════════════
 
 class CitaFiltroForm(forms.Form):
-    """
-    Formulario para filtrar citas - Usando solo campos que existen
-    """
-    
+    """Formulario simplificado para filtrar citas"""
+
     buscar = forms.CharField(
-        max_length=100,
         required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Buscar por paciente, número de cita o motivo...'
-        })
+        label="Buscar",
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "Nombre, motivo, folio…"}
+        ),
     )
-    
-    fecha_desde = forms.DateField(
+
+    fecha = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={
-            'type': 'date',
-            'class': 'form-control'
-        })
+        label="Fecha",
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
     )
-    
-    fecha_hasta = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={
-            'type': 'date',
-            'class': 'form-control'
-        })
-    )
-    
+
     estado = forms.ChoiceField(
-        choices=[('', 'Todos los estados')] + Cita.ESTADO_CHOICES,
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        label="Estado",
+        choices=[("", "Todos")] + list(Cita.ESTADO_CHOICES),
+        widget=forms.Select(attrs={"class": "form-select"}),
     )
-    
-    tipo_cita = forms.ChoiceField(
-        choices=[('', 'Todos los tipos')] + Cita.TIPO_CITA_CHOICES,
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    
-    prioridad = forms.ChoiceField(
-        choices=[('', 'Todas las prioridades')] + Cita.PRIORIDAD_CHOICES,
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    
-    # Filtro por estado de asignación
-    estado_asignacion = forms.ChoiceField(
-        choices=[
-            ('', 'Todas las citas'),
-            ('disponibles', 'Sin médico asignado'),
-            ('asignadas', 'Con médico asignado'),
-            ('preferidas', 'Con médico preferido'),
-            ('vencidas', 'Vencidas sin asignar'),
-        ],
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        help_text="Filtrar por estado de asignación de médico"
-    )
-    
-    # Filtro por médico asignado
+
     medico = forms.ModelChoiceField(
-        queryset=Usuario.objects.none(),
         required=False,
-        empty_label="Todos los médicos",
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        help_text="Filtrar por médico asignado"
-    )
-    
-    # Filtro por consultorio (solo para admin)
-    consultorio = forms.ModelChoiceField(
-        queryset=Consultorio.objects.all(),
-        required=False,
-        empty_label="Todos los consultorios",
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    
-    # Filtro por rango de tiempo
-    rango_tiempo = forms.ChoiceField(
-        choices=[
-            ('', 'Cualquier fecha'),
-            ('hoy', 'Hoy'),
-            ('manana', 'Mañana'),
-            ('esta_semana', 'Esta semana'),
-            ('proximo_mes', 'Próximo mes'),
-            ('vencidas', 'Citas vencidas'),
-        ],
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        queryset=Usuario.objects.filter(rol="medico", is_active=True),
+        label="Médico",
+        widget=forms.Select(attrs={"class": "form-select"}),
     )
 
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        # Configurar queryset de médicos según usuario
-        if user:
-            if user.rol == 'admin':
-                self.fields['medico'].queryset = Usuario.objects.filter(
-                    rol='medico',
-                    is_active=True
-                ).order_by('first_name', 'last_name')
-                # Admin puede ver filtro de consultorio
-                self.fields['consultorio'].widget.attrs['style'] = ''
-            elif user.consultorio:
-                self.fields['medico'].queryset = Usuario.objects.filter(
-                    rol='medico',
-                    consultorio=user.consultorio,
-                    is_active=True
-                ).order_by('first_name', 'last_name')
-                # Ocultar filtro de consultorio para no-admin
-                self.fields['consultorio'].widget = forms.HiddenInput()
-            else:
-                self.fields['medico'].queryset = Usuario.objects.none()
-                self.fields['consultorio'].widget = forms.HiddenInput()
+        qs = Usuario.objects.filter(rol="medico", is_active=True)
+        if user and user.rol != "admin" and user.consultorio:
+            qs = qs.filter(consultorio=user.consultorio)
+        self.fields["medico"].queryset = qs.order_by("first_name", "last_name")
 
     
+class ConsultaFiltroForm(forms.Form):
+    """Formulario para filtrar consultas"""
+
+    buscar = forms.CharField(
+        required=False,
+        label="Buscar",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre o folio…"}),
+    )
+
+    fecha = forms.DateField(
+        required=False,
+        label="Fecha",
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+    )
+
+    estado = forms.ChoiceField(
+        required=False,
+        label="Estado",
+        choices=[("", "Todos")] + list(Consulta.ESTADO_OPCIONES),
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+
+    medico = forms.ModelChoiceField(
+        required=False,
+        queryset=Usuario.objects.filter(rol="medico", is_active=True),
+        label="Médico",
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        qs = Usuario.objects.filter(rol="medico", is_active=True)
+        if user and user.rol != "admin" and user.consultorio:
+            qs = qs.filter(consultorio=user.consultorio)
+        self.fields["medico"].queryset = qs.order_by("first_name", "last_name")
 # ═══════════════════════════════════════════════════════════════
 # 👥 FORMULARIOS DE PACIENTES
 # ═══════════════════════════════════════════════════════════════
@@ -1207,29 +1162,34 @@ class FiltroConsultaForm(forms.Form):
 
 class HorarioMedicoForm(forms.ModelForm):
     """Formulario para horarios de médicos"""
-    
+
+    dias = forms.MultipleChoiceField(
+        choices=HorarioMedico.DIAS_SEMANA,
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
+        required=False,
+        label="Días de la Semana",
+    )
+
     class Meta:
         model = HorarioMedico
-        fields = ['medico', 'consultorio', 'dia', 'hora_inicio', 'hora_fin']
+        fields = ["medico", "consultorio", "hora_inicio", "hora_fin"]
         widgets = {
-            'medico': forms.Select(attrs={'class': 'form-select'}),
-            'consultorio': forms.Select(attrs={'class': 'form-select'}),
-            'dia': forms.Select(attrs={'class': 'form-select'}),
-            'hora_inicio': forms.TimeInput(attrs={
-                'type': 'time',
-                'class': 'form-control'
-            }),
-            'hora_fin': forms.TimeInput(attrs={
-                'type': 'time',
-                'class': 'form-control'
-            }),
+            "medico": forms.Select(attrs={"class": "form-select"}),
+            "consultorio": forms.Select(attrs={"class": "form-select"}),
+            "hora_inicio": forms.TimeInput(
+                format="%H:%M",
+                attrs={"type": "time", "class": "form-control"},
+            ),
+            "hora_fin": forms.TimeInput(
+                format="%H:%M",
+                attrs={"type": "time", "class": "form-control"},
+            ),
         }
         labels = {
-            'medico': 'Médico',
-            'consultorio': 'Consultorio',
-            'dia': 'Día de la Semana',
-            'hora_inicio': 'Hora de Inicio',
-            'hora_fin': 'Hora de Fin',
+            "medico": "Médico",
+            "consultorio": "Consultorio",
+            "hora_inicio": "Hora de Inicio",
+            "hora_fin": "Hora de Fin",
         }
 
     def __init__(self, *args, **kwargs):
