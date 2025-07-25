@@ -1,3 +1,4 @@
+{% load static %}
 <link rel="stylesheet" href="{% static 'css/rx_receta.css' %}">
 <div id="receta-print-area"
      class="receta"
@@ -74,14 +75,16 @@
 
   <!-- OBSERVACIONES -->
   <h4 class="section-title">Observaciones</h4>
-  <div class="obs-box">{{ receta.observaciones|default:"" }}</div>
+  <div class="obs-box">{{ receta.notas|default:"" }}</div>
 
-  <div class="extra-box">
-    <!-- caja vacía con líneas guía -->
-    {% for _ in "123"|make_list %}
-        <div class="dotted"></div>
-    {% endfor %}
-  </div>
+
+<br>
+ <br>
+ <br>
+  <br>
+ <br>
+ <br>
+
 
   <!-- FIRMA -->
   <footer class="pie">
