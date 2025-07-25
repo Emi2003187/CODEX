@@ -975,52 +975,13 @@ def lista_citas(request):
                 Q(motivo__icontains=cd['buscar'])
             )
         
-        if cd.get('fecha_desde'):
-            citas = citas.filter(fecha_hora__date__gte=cd['fecha_desde'])
-        if cd.get('fecha_hasta'):
-            citas = citas.filter(fecha_hora__date__lte=cd['fecha_hasta'])
+        if cd.get('fecha'):
+            citas = citas.filter(fecha_hora__date=cd['fecha'])
         if cd.get('estado'):
             citas = citas.filter(estado=cd['estado'])
-        if cd.get('tipo_cita'):
-            citas = citas.filter(tipo_cita=cd['tipo_cita'])
-        if cd.get('prioridad'):
-            citas = citas.filter(prioridad=cd['prioridad'])
-        if cd.get('consultorio') and user.rol == 'admin':
-            citas = citas.filter(consultorio=cd['consultorio'])
         if cd.get('medico'):
             citas = citas.filter(medico_asignado=cd['medico'])
-        if cd.get('estado_asignacion'):
-            if cd['estado_asignacion'] == 'disponibles':
-                citas = citas.filter(medico_asignado__isnull=True)
-            elif cd['estado_asignacion'] == 'asignadas':
-                citas = citas.filter(medico_asignado__isnull=False)
-            elif cd['estado_asignacion'] == 'preferidas':
-                citas = citas.filter(medico_preferido__isnull=False)
-            elif cd['estado_asignacion'] == 'vencidas':
-                citas = citas.filter(
-                    medico_asignado__isnull=True,
-                    fecha_hora__lt=timezone.now()
-                )
         
-        if cd.get('rango_tiempo'):
-            hoy = timezone.now().date()
-            if cd['rango_tiempo'] == 'hoy':
-                citas = citas.filter(fecha_hora__date=hoy)
-            elif cd['rango_tiempo'] == 'manana':
-                citas = citas.filter(fecha_hora__date=hoy + timedelta(days=1))
-            elif cd['rango_tiempo'] == 'esta_semana':
-                inicio_semana = hoy - timedelta(days=hoy.weekday())
-                fin_semana = inicio_semana + timedelta(days=6)
-                citas = citas.filter(fecha_hora__date__range=[inicio_semana, fin_semana])
-            elif cd['rango_tiempo'] == 'proximo_mes':
-                inicio_mes = hoy.replace(day=1)
-                if inicio_mes.month == 12:
-                    fin_mes = inicio_mes.replace(year=inicio_mes.year + 1, month=1) - timedelta(days=1)
-                else:
-                    fin_mes = inicio_mes.replace(month=inicio_mes.month + 1) - timedelta(days=1)
-                citas = citas.filter(fecha_hora__date__range=[inicio_mes, fin_mes])
-            elif cd['rango_tiempo'] == 'vencidas':
-                citas = citas.filter(fecha_hora__lt=timezone.now())
     
     # Ordenar por fecha
     citas = citas.order_by('fecha_hora')
@@ -1782,56 +1743,38 @@ class ConsultaListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         user = self.request.user
 
-        # Query base con relaciones
         qs = Consulta.objects.select_related(
             "paciente", "medico", "cita", "cita__consultorio"
         ).order_by("-fecha_creacion")
 
-        # 1. Filtrar consultas por consultorio del usuario
         if user.rol == 'admin':
-            # Admin ve todas las consultas
             pass
         elif user.consultorio:
-            # Filtrar por consultas del consultorio
             qs = qs.filter(
-                Q(medico__consultorio=user.consultorio) |  # Consultas atendidas por médicos del consultorio
-                Q(cita__consultorio=user.consultorio) |   # Consultas derivadas de citas del consultorio
-                Q(asistente__consultorio=user.consultorio)  # Consultas creadas por asistentes del consultorio
+                Q(medico__consultorio=user.consultorio) |
+                Q(cita__consultorio=user.consultorio) |
+                Q(asistente__consultorio=user.consultorio)
             )
         elif user.rol == 'medico':
-            # Médico sin consultorio ve solo sus consultas
             qs = qs.filter(medico=user)
         else:
             qs = qs.none()
 
-        # Filtros de búsqueda
-        search_query = self.request.GET.get("search", "").strip()
-        tipo_filter = self.request.GET.get("tipo", "").strip()
-        medico_filter = self.request.GET.get("medico", "").strip()
-        fecha_filter = self.request.GET.get("fecha", "").strip()
-        origen_filter = self.request.GET.get("origen", "").strip()
+        filtro_form = ConsultaFiltroForm(self.request.GET, user=user)
+        if filtro_form.is_valid():
+            cd = filtro_form.cleaned_data
 
-        if search_query:
-            qs = qs.filter(paciente__nombre_completo__icontains=search_query)
+            if cd.get("buscar"):
+                qs = qs.filter(paciente__nombre_completo__icontains=cd["buscar"])
 
-        if tipo_filter:
-            qs = qs.filter(tipo=tipo_filter)
+            if cd.get("fecha"):
+                qs = qs.filter(fecha_creacion__date=cd["fecha"])
 
-        if medico_filter.isdigit():
-            qs = qs.filter(medico_id=medico_filter)
+            if cd.get("estado"):
+                qs = qs.filter(estado=cd["estado"])
 
-        if fecha_filter:
-            try:
-                fecha = datetime.strptime(fecha_filter, "%Y-%m-%d").date()
-                qs = qs.filter(fecha_creacion__date=fecha)
-            except ValueError:
-                pass
-
-        # Filtro por origen (con/sin cita)
-        if origen_filter == 'con_cita':
-            qs = qs.filter(cita__isnull=False)
-        elif origen_filter == 'sin_cita':
-            qs = qs.filter(cita__isnull=True)
+            if cd.get("medico"):
+                qs = qs.filter(medico=cd["medico"])
 
         return qs
 
@@ -1892,12 +1835,7 @@ class ConsultaListView(LoginRequiredMixin, ListView):
             "medicos": medicos,
             "usuario": usuario,
             "consultorio": getattr(usuario, "consultorio", None),
-            # Valores actuales de los filtros
-            "search_query": self.request.GET.get("search", ""),
-            "tipo_filter": self.request.GET.get("tipo", ""),
-            "medico_filter": self.request.GET.get("medico", ""),
-            "fecha_filter": self.request.GET.get("fecha", ""),
-            "origen_filter": self.request.GET.get("origen", ""),
+            "filtro_form": ConsultaFiltroForm(self.request.GET, user=usuario),
             # 4. Permitir crear consultas sin cita
             "puede_crear_sin_cita": usuario.rol in ['medico', 'asistente', 'admin'],
         })
@@ -4031,7 +3969,7 @@ class CitaListView(CitaPermisoMixin, ListView):
             queryset = Cita.objects.none()
 
         # Aplicar filtros del formulario
-        filtro_form = CitaFiltroForm(self.request.GET)
+        filtro_form = CitaFiltroForm(self.request.GET, user=user)
         if filtro_form.is_valid():
             cd = filtro_form.cleaned_data
             
@@ -4042,18 +3980,10 @@ class CitaListView(CitaPermisoMixin, ListView):
                     Q(motivo__icontains=cd['buscar'])
                 )
             
-            if cd.get('fecha_desde'):
-                queryset = queryset.filter(fecha_hora__date__gte=cd['fecha_desde'])
-            if cd.get('fecha_hasta'):
-                queryset = queryset.filter(fecha_hora__date__lte=cd['fecha_hasta'])
+            if cd.get('fecha'):
+                queryset = queryset.filter(fecha_hora__date=cd['fecha'])
             if cd.get('estado'):
                 queryset = queryset.filter(estado=cd['estado'])
-            if cd.get('tipo_cita'):
-                queryset = queryset.filter(tipo_cita=cd['tipo_cita'])
-            if cd.get('prioridad'):
-                queryset = queryset.filter(prioridad=cd['prioridad'])
-            if cd.get('consultorio') and user.rol == 'admin':
-                queryset = queryset.filter(consultorio=cd['consultorio'])
             if cd.get('medico'):
                 queryset = queryset.filter(medico_asignado=cd['medico'])
 
@@ -4121,7 +4051,7 @@ class CitaListView(CitaPermisoMixin, ListView):
             medicos_disponibles = Usuario.objects.none()
 
         context.update({
-            'filtro_form': CitaFiltroForm(self.request.GET),
+            'filtro_form': CitaFiltroForm(self.request.GET, user=user),
             'grupos': grupos,
             'stats': stats,
             'citas_urgentes': citas_urgentes,
