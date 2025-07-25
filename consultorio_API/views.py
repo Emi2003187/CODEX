@@ -968,25 +968,6 @@ def lista_citas(request):
         if cd.get('medico'):
             citas = citas.filter(medico_asignado=cd['medico'])
         
-        if cd.get('rango_tiempo'):
-            hoy = timezone.now().date()
-            if cd['rango_tiempo'] == 'hoy':
-                citas = citas.filter(fecha_hora__date=hoy)
-            elif cd['rango_tiempo'] == 'manana':
-                citas = citas.filter(fecha_hora__date=hoy + timedelta(days=1))
-            elif cd['rango_tiempo'] == 'esta_semana':
-                inicio_semana = hoy - timedelta(days=hoy.weekday())
-                fin_semana = inicio_semana + timedelta(days=6)
-                citas = citas.filter(fecha_hora__date__range=[inicio_semana, fin_semana])
-            elif cd['rango_tiempo'] == 'proximo_mes':
-                inicio_mes = hoy.replace(day=1)
-                if inicio_mes.month == 12:
-                    fin_mes = inicio_mes.replace(year=inicio_mes.year + 1, month=1) - timedelta(days=1)
-                else:
-                    fin_mes = inicio_mes.replace(month=inicio_mes.month + 1) - timedelta(days=1)
-                citas = citas.filter(fecha_hora__date__range=[inicio_mes, fin_mes])
-            elif cd['rango_tiempo'] == 'vencidas':
-                citas = citas.filter(fecha_hora__lt=timezone.now())
     
     # Ordenar por fecha
     citas = citas.order_by('fecha_hora')
@@ -1773,7 +1754,7 @@ class ConsultaListView(LoginRequiredMixin, ListView):
                 qs = qs.filter(paciente__nombre_completo__icontains=cd["buscar"])
 
             if cd.get("fecha"):
-                qs = qs.filter(fecha_atencion__date=cd["fecha"])
+                qs = qs.filter(fecha_creacion__date=cd["fecha"])
 
             if cd.get("estado"):
                 qs = qs.filter(estado=cd["estado"])
