@@ -752,7 +752,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const w    = window.open("", "_blank","width=850,height=600");
         w.document.write(`
      <html><head>
+
        <link rel="stylesheet" href="/static/css/receta_a5.css">
+
        <title>Receta</title>
      </head><body></body></html>`);
         w.document.body.appendChild(node);
@@ -769,7 +771,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const nombreArchivo = `receta_${id}_${fname}_${fecha}.pdf`;
 
         html2pdf().set({
-            margin: [8,8],
+
+            margin: [10,10],
+
             filename: nombreArchivo,
             image: { type:'jpeg', quality:0.98 },
             html2canvas: { scale:3, useCORS:true },
