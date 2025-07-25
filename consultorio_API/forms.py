@@ -301,6 +301,10 @@ class ExpedienteForm(forms.ModelForm):
 
 class AntecedenteForm(forms.ModelForm):
     """Formulario para antecedentes médicos"""
+
+    def __init__(self, *args, expediente=None, **kwargs):
+        self.expediente = expediente
+        super().__init__(*args, **kwargs)
     
     class Meta:
         model = Antecedente
@@ -319,14 +323,8 @@ class AntecedenteForm(forms.ModelForm):
                 'type': 'date',
                 'class': 'form-control'
             }),
-            'severidad': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Severidad del antecedente'
-            }),
-            'estado_actual': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Estado actual'
-            }),
+            'severidad': forms.Select(attrs={'class': 'form-select'}),
+            'estado_actual': forms.Select(attrs={'class': 'form-select'}),
             'notas': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 2,
@@ -341,6 +339,23 @@ class AntecedenteForm(forms.ModelForm):
             'estado_actual': 'Estado Actual',
             'notas': 'Notas',
         }
+
+    def clean(self):
+        cleaned = super().clean()
+        expediente = self.expediente or getattr(self.instance, "expediente", None)
+        tipo = cleaned.get("tipo")
+        descripcion = cleaned.get("descripcion")
+        if expediente and tipo == "alergico" and descripcion:
+            qs = Antecedente.objects.filter(
+                expediente=expediente,
+                tipo="alergico",
+                descripcion__iexact=descripcion,
+            )
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                self.add_error("descripcion", "Esta alergia ya está registrada.")
+        return cleaned
 
 
 class MedicamentoActualForm(forms.ModelForm):
