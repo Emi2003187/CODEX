@@ -5,7 +5,6 @@
 
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
 <style>
 .cita-card {
     transition: all 0.3s ease;
@@ -205,9 +204,6 @@
                     <i class="bi bi-person-check me-1"></i>Mis Citas
                 </a>
                 {% endif %}
-                <button type="button" class="btn btn-outline-primary btn-action" onclick="mostrarCalendario()">
-                    <i class="bi bi-calendar3 me-1"></i>Calendario
-                </button>
             </div>
         </div>
     </div>
@@ -792,20 +788,6 @@
     </div>
 </div>
 
-<!-- MODAL CALENDARIO -->
-<div class="modal fade" id="calendarioModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Calendario de Citas</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="calendario"></div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- MODAL ASIGNAR MÉDICO -->
 <div class="modal fade" id="asignarMedicoModal" tabindex="-1">
@@ -877,7 +859,6 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script>
 // Función para mostrar alertas AJAX
 function mostrarAlerta(mensaje, tipo = 'success') {
@@ -925,31 +906,6 @@ $(document).ready(function() {
     });
 });
 
-function mostrarCalendario() {
-    const modal = new bootstrap.Modal(document.getElementById('calendarioModal'));
-    modal.show();
-    
-    // Inicializar FullCalendar
-    const calendarEl = document.getElementById('calendario');
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'es',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: '{% url "citas_calendario" %}',
-        eventClick: function(info) {
-            window.location.href = `/citas/${info.event.id}/`;
-        },
-        eventMouseEnter: function(info) {
-            info.el.title = `${info.event.extendedProps.numero_cita}\n${info.event.extendedProps.medico}\n${info.event.extendedProps.tipo}`;
-        }
-    });
-    
-    calendar.render();
-}
 
 function asignarMedico(citaId) {
     document.getElementById('citaIdAsignar').value = citaId;
