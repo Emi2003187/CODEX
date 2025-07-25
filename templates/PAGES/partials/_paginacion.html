@@ -12,11 +12,15 @@
     </li>
 
     {# « Anterior » #}
-    <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+  <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+    {% if page_obj.has_previous %}
       <a class="page-link" href="?{% url_replace request 'page' page_obj.previous_page_number %}">
         ‹ Anterior
       </a>
-    </li>
+    {% else %}
+      <span class="page-link">‹ Anterior</span>
+    {% endif %}
+  </li>
 
     {# números #}
     {% for n in page_obj.paginator.page_range %}
@@ -28,11 +32,15 @@
     {% endfor %}
 
     {# « Siguiente » #}
-    <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+  <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+    {% if page_obj.has_next %}
       <a class="page-link" href="?{% url_replace request 'page' page_obj.next_page_number %}">
         Siguiente ›
       </a>
-    </li>
+    {% else %}
+      <span class="page-link">Siguiente ›</span>
+    {% endif %}
+  </li>
 
     {# « Último » #}
     <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
