@@ -305,6 +305,11 @@ class AntecedenteForm(forms.ModelForm):
     def __init__(self, *args, expediente=None, **kwargs):
         self.expediente = expediente
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk and self.instance.fecha_diagnostico:
+            self.initial.setdefault(
+                "fecha_diagnostico",
+                self.instance.fecha_diagnostico.strftime("%Y-%m-%d"),
+            )
     
     class Meta:
         model = Antecedente
@@ -319,10 +324,13 @@ class AntecedenteForm(forms.ModelForm):
                 'rows': 3,
                 'placeholder': 'Descripción del antecedente...'
             }),
-            'fecha_diagnostico': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control'
-            }),
+            'fecha_diagnostico': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={
+                    'type': 'date',
+                    'class': 'form-control'
+                }
+            ),
             'severidad': forms.Select(attrs={'class': 'form-select'}),
             'estado_actual': forms.Select(attrs={'class': 'form-select'}),
             'notas': forms.Textarea(attrs={
@@ -330,6 +338,9 @@ class AntecedenteForm(forms.ModelForm):
                 'rows': 2,
                 'placeholder': 'Notas adicionales...'
             }),
+        }
+        input_formats = {
+            'fecha_diagnostico': ['%Y-%m-%d'],
         }
         labels = {
             'tipo': 'Tipo de Antecedente',
