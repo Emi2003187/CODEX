@@ -4,7 +4,7 @@
      class="receta"
      data-id="{{ receta.pk }}"
      data-paciente="{{ receta.consulta.paciente|slugify }}"
-     data-fecha="{{ receta.fecha_emision|date:'Y-m-d' }}">
+     data-fecha="{{ receta.consulta.fecha_hora|date:'Y-m-d' }}">
 
   <!-- CABECERA -->
   <header class="hdr">
@@ -32,7 +32,7 @@
   <!-- MÉDICO -->
   <section class="grid-2">
       <div><strong>Nombre y firma del médico:</strong> DR. {{ receta.consulta.medico.get_full_name }}</div>
-      <div class="right"><strong>Cédula Prof.:</strong> {{ receta.consulta.medico.cedula_profesional|default:"—" }}</div>
+      <div class="right"><strong>Cédula Prof.:</strong> {{ receta.consulta.medico.cedula|default:"—" }}</div>
   </section>
 
   <!-- SIGNOS VITALES -->
@@ -40,17 +40,17 @@
   <table class="tbl-signos">
       <tr><th>T.A.</th><th>F.C.</th><th>Temp.</th><th>Peso</th></tr>
       <tr>
-        <td>{{ receta.consulta.signos_vitales.tension_arterial|default:"—" }}</td>
-        <td>{{ receta.consulta.signos_vitales.frecuencia_cardiaca|default:"—" }}</td>
-        <td>{{ receta.consulta.signos_vitales.temperatura|default:"—" }}</td>
+        <td>{{ receta.consulta.signos_vitales.tension|default:"—" }}</td>
+        <td>{{ receta.consulta.signos_vitales.fc|default:"—" }}</td>
+        <td>{{ receta.consulta.signos_vitales.temp|default:"—" }}</td>
         <td>{{ receta.consulta.signos_vitales.peso|default:"—" }}</td>
       </tr>
       <tr><th>Talla</th><th>Circ. Abd.</th><th>IMC</th><th>&nbsp;</th></tr>
       <tr>
         <td>{{ receta.consulta.signos_vitales.talla|default:"—" }}</td>
-        <td>{{ receta.consulta.signos_vitales.circunferencia_abdominal|default:"—" }}</td>
+        <td>{{ receta.consulta.signos_vitales.circ_abd|default:"—" }}</td>
         <td>{{ receta.consulta.signos_vitales.imc|default:"—" }}</td>
-        <td>{{ ""|default:"—" }}</td>
+        <td></td>
       </tr>
   </table>
 
@@ -75,19 +75,16 @@
 
   <!-- OBSERVACIONES -->
   <h4 class="section-title">Observaciones</h4>
-  <div class="obs-box">{{ receta.notas|default:"" }}</div>
+  <div class="obs-box">{{ receta.observaciones|default:"" }}</div>
 
-  <div class="extra-box">
-    {% for _ in "123"|make_list %}
-        <div class="dotted"></div>
-    {% endfor %}
-  </div>
+  <!-- RECUADRO EXTRA -->
+  <div class="extra-box"></div>
 
   <!-- FIRMA -->
   <footer class="pie">
-      DR. {{ receta.consulta.medico.get_full_name|default:"—" }}<br>
-      CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula_profesional|default:"—" }} –
-      INSTITUCIÓN: {{ receta.consulta.medico.institucion_cedula|default:"—" }}<br>
-      DIRECCIÓN: {{ receta.consulta.medico.consultorio.ubicacion|default:"—" }}
+      DR. {{ receta.consulta.medico.get_full_name }}<br>
+      CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula|default:"—" }} –
+      INSTITUCIÓN: {{ receta.consulta.medico.institucion|default:"—" }}<br>
+      DIRECCIÓN: {{ receta.consulta.medico.direccion|default:"—" }}
   </footer>
 </div>

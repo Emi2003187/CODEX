@@ -749,31 +749,31 @@ document.addEventListener("DOMContentLoaded", () => {
       /* —— imprimir —— */
       btnPrint.onclick = () => {
         const node = bodyEl.querySelector('#receta-print-area').cloneNode(true);
-        const w    = window.open("", "_blank","width=850,height=600");
-        w.document.write(`
+        const win  = window.open("", "_blank","width=850,height=600");
+        win.document.write(`
      <html><head>
-       <link rel="stylesheet" href="/static/css/receta_a5.css">
-       <title>Receta</title>
+        <link rel="stylesheet" href="/static/css/receta.css">
+        <title>Receta</title>
      </head><body></body></html>`);
-        w.document.body.appendChild(node);
-        w.document.close();
-        w.onload = () => { w.focus(); w.print(); w.close(); };
+        win.document.body.appendChild(node);
+        win.document.close();
+        win.onload = () => { win.focus(); win.print(); win.close(); };
       };
 
       /* —— PDF —— */
       btnPdf.onclick = () => {
-        const node  = bodyEl.querySelector('#receta-print-area');
-        const id    = node.dataset.id;
-        const fname = node.dataset.paciente.replace(/-/g,'_');
-        const fecha = node.dataset.fecha;
-        const nombreArchivo = `receta_${id}_${fname}_${fecha}.pdf`;
+        const node    = bodyEl.querySelector('#receta-print-area');
+        const id      = node.dataset.id;
+        const pacient = node.dataset.paciente.replace(/-/g,' ');
+        const fecha   = node.dataset.fecha;
+        const nombre  = `${id} - ${pacient} - ${fecha}.pdf`;
 
         html2pdf().set({
-            margin: [8,8],
-            filename: nombreArchivo,
-            image: { type:'jpeg', quality:0.98 },
-            html2canvas: { scale:3, useCORS:true },
-            jsPDF: { unit:'mm', format:'a5', orientation:'portrait' }
+          margin:[10,10],
+          filename:nombre,
+          image:{type:'jpeg',quality:0.98},
+          html2canvas:{scale:2},
+          jsPDF:{unit:'mm',format:'a5',orientation:'portrait'}
         }).from(node).save();
       };
     });
