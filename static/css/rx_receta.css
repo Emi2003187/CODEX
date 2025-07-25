@@ -2,7 +2,7 @@
 body  { margin:0; }
 
 .receta{
-    width:126mm; height:178mm;
+    width:126mm; min-height:178mm;
     font:11pt/1.35 "Helvetica","Arial",sans-serif;
     display:flex; flex-direction:column;
     page-break-inside:avoid;
@@ -31,10 +31,11 @@ body  { margin:0; }
     min-height:40mm;
     border:0.4pt solid #666; padding:2mm; margin-bottom:3mm;
     white-space:pre-wrap;
+    break-inside:avoid; page-break-inside:avoid;
 }
 
 /* Recuadro adicional con líneas */
-.extra-box{ height:25mm; margin-bottom:10mm; }
+.extra-box{ height:25mm; margin-bottom:10mm; break-inside:avoid; page-break-inside:avoid; }
 .extra-box .dotted{
     border-bottom:0.25pt dotted #999; height:6mm; margin-bottom:2mm;
 }
