@@ -158,7 +158,7 @@
                     </span>
                   </td>
                   <td class="text-center">
-                    <a href="{% url 'citas_detalle' cita.id %}?next={{ request.path|urlencode }}" class="btn btn-outline-primary btn-sm action-btn">
+                    <a href="{% url 'citas_detalle' cita.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-primary btn-sm action-btn">
                       <i class="bi bi-eye me-1"></i>Ver Detalle
                     </a>
                   </td>
@@ -481,7 +481,7 @@
                         <span class="badge consultation-type-badge bg-info">{{ c.get_tipo_display }}</span>
                       </td>
                       <td>
-                        <a href="{% url 'consulta_detalle' c.pk %}" class="consultation-status-link">
+                        <a href="{% url 'consulta_detalle' c.pk %}?next={{ request.get_full_path|urlencode }}" class="consultation-status-link">
                           {{ c.get_estado_display }}
                         </a>
                       </td>
@@ -529,7 +529,7 @@
                           </button>
                           <ul class="dropdown-menu dropdown-menu-end shadow">
                             <li>
-                              <a class="dropdown-item" href="{% url 'consulta_detalle' c.pk %}">
+                              <a class="dropdown-item" href="{% url 'consulta_detalle' c.pk %}?next={{ request.get_full_path|urlencode }}">
                                 <i class="bi bi-eye me-2"></i>Ver detalle
                               </a>
                             </li>
@@ -589,7 +589,8 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border-radius: 20px !important;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
   }
 
   .patient-avatar-container {
@@ -652,6 +653,7 @@
     border: none;
     border-radius: 12px;
     padding: 0.5rem 0;
+    z-index: 1050;
   }
 
   /* TARJETAS DE ESTADÍSTICAS */

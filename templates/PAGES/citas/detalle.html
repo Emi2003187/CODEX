@@ -799,7 +799,7 @@
             </div>
             
             <div class="mt-3">
-              <a href="{% url 'consulta_detalle' consulta.id %}?next={{ request.path|urlencode }}" class="btn btn-ver-consulta">
+              <a href="{% url 'consulta_detalle' consulta.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-ver-consulta">
                 <i class="bi bi-eye"></i>
                 Ver Detalle de Consulta
               </a>
@@ -854,7 +854,7 @@
             <!-- Crear/Ver Consulta -->
             {% if cita.medico_asignado %}
               {% if consulta %}
-                <a href="{% url 'consulta_detalle' consulta.id %}?next={{ request.path|urlencode }}" class="btn btn-action btn-ver-consulta">
+                <a href="{% url 'consulta_detalle' consulta.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-action btn-ver-consulta">
                   <i class="bi bi-clipboard-pulse"></i>
                   Ver Consulta
                 </a>
