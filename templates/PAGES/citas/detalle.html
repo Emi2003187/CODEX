@@ -589,6 +589,18 @@
                   </span>
                 </div>
               </div>
+
+              {% if cita.cita_anterior %}
+              <div class="info-item d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="info-label">
+                    <i class="bi bi-arrow-counterclockwise"></i>Cita Anterior
+                  </div>
+                  <div class="info-value">{{ cita.cita_anterior.numero_cita }}</div>
+                </div>
+                <a href="{% url 'citas_detalle' cita.cita_anterior.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-primary btn-sm">Ver Cita</a>
+              </div>
+              {% endif %}
             </div>
           </div>
 
@@ -960,20 +972,6 @@
       </div>
 {% endif %}
 
-        <!-- Información Adicional -->
-        {% if cita.cita_anterior %}
-        <div class="alert alert-info mt-4">
-          <h6 class="alert-heading fw-bold">
-            <i class="bi bi-info-circle me-2"></i>
-            Cita Anterior
-          </h6>
-          <p class="mb-2">
-            Proviene de la cita <strong>{{ cita.cita_anterior.numero_cita }}</strong>
-            ({{ cita.cita_anterior.fecha_hora|date:"d/m/Y H:i" }})
-          </p>
-          <a class="btn btn-sm btn-primary" href="{% url 'citas_detalle' cita.cita_anterior.id %}?next={{ request.get_full_path|urlencode }}">Ver Cita</a>
-        </div>
-        {% endif %}
       </div>
     </div>
   </div>
@@ -1031,7 +1029,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         revisar();
         setInterval(revisar, 60000);
-    }
+
+    {% if user.rol == 'asistente' %}
+    const forbiddenForms = document.querySelectorAll("form[action*=cancelar], form[action*=eliminar], form[action*=no-asistio]");
+    forbiddenForms.forEach(f => {
+        f.addEventListener("submit", function(ev){
+            ev.preventDefault();
+            alert("No tienes permiso para cancelar o eliminar citas.");
+        });
+    });
+    {% endif %}
 });
 </script>
 {% endblock %}
