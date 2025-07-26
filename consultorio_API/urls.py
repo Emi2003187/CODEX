@@ -132,7 +132,6 @@ urlpatterns = [
     
     path("citas/<uuid:pk>/", CitaDetailView.as_view(), name="citas_detalle"),
     path("citas/<uuid:pk>/editar/", CitaUpdateView.as_view(), name="citas_editar"),
-    path('citas/<uuid:cita_id>/reprogramar/', viewscitas.reprogramar_cita, name='reprogramar_cita'),
      # Borrar (DeleteView)
     path('citas/<uuid:cita_id>/eliminar/', viewscitas.CitaDeleteView.as_view(), name='citas_eliminar'),
     # Cancelar (cambia estado)
@@ -149,11 +148,8 @@ urlpatterns = [
     
     
           path('ajax/horarios-disponibles/',
-        viewscitas.ajax_horarios_disponibles,
-        name='ajax_horarios_disponibles'),
-        path('ajax/citas-previas/',
-         viewscitas.ajax_citas_previas,
-         name='ajax_citas_previas'),
+         viewscitas.ajax_horarios_disponibles,
+         name='ajax_horarios_disponibles'),
     
         path("citas/<uuid:cita_id>/crear-consulta/", viewscitas.crear_consulta_desde_cita_view, name="citas_crear_desde_cita"),
 

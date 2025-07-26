@@ -4,8 +4,7 @@ from typing import List, Dict
 from django.utils import timezone
 from .models import Cita, Consultorio
 
-# Usamos paso de 1 minuto para mostrar todas las opciones
-PASO = 1
+PASO = 15
 ESTADOS_ACTIVOS = ("programada", "confirmada", "en_espera", "en_atencion")
 
 
@@ -50,39 +49,30 @@ def obtener_horarios_disponibles_para_select(
     if excluir_id:
         qs = qs.exclude(pk=excluir_id)
 
-    minutos_bloqueados: dict[int, str] = {}
+    minutos_bloqueados: set[int] = set()
 
-    for c in qs.select_related("paciente").only("fecha_hora", "duracion", "paciente__nombre_completo"):
+    for c in qs.only("fecha_hora", "duracion"):
         inicio = _to_local(c.fecha_hora)
         m_ini = _minutos(inicio.time())
         m_fin = m_ini + c.duracion
-        for m in range(m_ini, m_fin):
-            minutos_bloqueados[m] = c.paciente.nombre_completo
+        # 🔴  Inicios desde m_ini hasta m_fin INCLUSIVE
+        for m in range(m_ini, m_fin + PASO, PASO):
+            minutos_bloqueados.add(m)
 
     # 4) construir respuesta
     resp: list[Dict] = []
-    # timezone.localtime() falla con fechas naive; aseguramos valor valido
-    ahora = timezone.now()
-    if timezone.is_aware(ahora):
-        ahora = timezone.localtime(ahora)
-    hoy = ahora.date()
-
     for m_ini in range(ap_min, ci_min, PASO):
         if m_ini + dur_req > ci_min:
-            continue
-
-        if dia == hoy and m_ini < _minutos(ahora.time()):
-            continue
-
-        ocupado_por = minutos_bloqueados.get(m_ini)
-        libre = ocupado_por is None
+            break
+        libre = m_ini not in minutos_bloqueados
         h24, minute = divmod(m_ini, 60)
         h12 = (h24 % 12) or 12
         ampm = "AM" if h24 < 12 else "PM"
-        texto = f"{h12}:{minute:02d} {ampm}" if libre else f"Ocupado - {ocupado_por}"
-        resp.append({
-            "value": f"{h24:02d}:{minute:02d}",
-            "text": texto,
-            "estado": "libre" if libre else "ocupado",
-        })
+        resp.append(
+            {
+                "value": f"{h24:02d}:{minute:02d}",
+                "text": f"{h12}:{minute:02d} {ampm}",
+                "estado": "libre" if libre else "ocupado",
+            }
+        )
     return resp
