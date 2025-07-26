@@ -1714,14 +1714,11 @@ def puede_editar_cita(user, cita):
 
 
 def puede_reprogramar_cita(user, cita):
-    """Verifica si el usuario puede reprogramar la cita"""
-    if puede_editar_cita(user, cita):
+    """Permite reprogramar citas canceladas"""
+    if user.rol == 'admin':
         return True
-    if cita.estado == 'cancelada' and user.rol in ['admin', 'medico', 'asistente']:
-        if user.rol == 'admin':
-            return True
-        # Para médicos y asistentes solo verificamos pertenencia al consultorio
-        return cita.consultorio == user.consultorio
+    if user.rol in ['medico', 'asistente'] and cita.estado == 'cancelada':
+        return True
     return False
 
 
@@ -4643,13 +4640,11 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
         return False
 
     def _puede_reprogramar_cita(self, user, cita):
-        """Verifica si el usuario puede reprogramar la cita"""
-        if self._puede_editar_cita(user, cita):
+        """Permite reprogramar citas canceladas"""
+        if user.rol == 'admin':
             return True
-        if cita.estado == 'cancelada' and user.rol in ['admin', 'medico', 'asistente']:
-            if user.rol == 'admin':
-                return True
-            return cita.consultorio == user.consultorio
+        if user.rol in ['medico', 'asistente'] and cita.estado == 'cancelada':
+            return True
         return False
 
 
