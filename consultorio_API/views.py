@@ -533,7 +533,24 @@ class UsuarioDeleteView(NextRedirectMixin, AdminRequiredMixin, DeleteView):
 
 class PacientePermisoMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.rol in ("medico", "admin")
+        return (
+            self.request.user.is_authenticated
+            and self.request.user.rol in ("medico", "admin", "asistente")
+        )
+
+
+class PacienteDetallePermisoMixin(UserPassesTestMixin):
+    """Solo médicos y administradores pueden ver el detalle"""
+
+    def test_func(self):
+        return (
+            self.request.user.is_authenticated
+            and self.request.user.rol in ("medico", "admin")
+        )
+
+    def handle_no_permission(self):
+        messages.error(self.request, "No tienes permisos para ver este paciente.")
+        return redirect_next(self.request, "pacientes_lista")
 
 
 class PacienteListView(PacientePermisoMixin, ListView):
@@ -586,7 +603,7 @@ class PacienteListView(PacientePermisoMixin, ListView):
         return ctx
 
 
-class PacienteDetailView(LoginRequiredMixin, DetailView):
+class PacienteDetailView(LoginRequiredMixin, PacienteDetallePermisoMixin, DetailView):
     model = Paciente
     template_name = "PAGES/pacientes/detalle.html"
     context_object_name = "paciente"
@@ -648,6 +665,8 @@ class PacienteCreateView(NextRedirectMixin, PacientePermisoMixin, CreateView):
                 messages.error(self.request, "No tienes consultorio asignado.")
                 return HttpResponseRedirect(self.success_url)
             paciente.consultorio = user.consultorio
+        elif user.rol == "asistente":
+            paciente.consultorio = user.consultorio
         else:
             paciente.consultorio = form.cleaned_data.get("consultorio")
         paciente.save()
@@ -677,6 +696,8 @@ class PacienteUpdateView(NextRedirectMixin, PacientePermisoMixin, UpdateView):
             if not user.consultorio:
                 messages.error(self.request, "No tienes consultorio asignado.")
                 return HttpResponseRedirect(self.success_url)
+            paciente.consultorio = user.consultorio
+        elif user.rol == "asistente":
             paciente.consultorio = user.consultorio
         else:
             paciente.consultorio = form.cleaned_data.get("consultorio")
@@ -1683,6 +1704,11 @@ def puede_editar_cita(user, cita):
             cita.medico_asignado == user
             and cita.estado in ['programada', 'confirmada']
         )
+    elif user.rol == 'asistente':
+        return (
+            cita.consultorio == user.consultorio
+            and cita.estado in ['programada', 'confirmada']
+        )
     return False
 
 
@@ -2341,9 +2367,6 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     success_url = reverse_lazy('consultas_lista')
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.rol == 'asistente':
-            messages.warning(request, 'No tienes permiso para crear consultas.')
-            return redirect('consultas_lista')
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
@@ -2489,6 +2512,8 @@ class ConsultaPrecheckView(NextRedirectMixin, LoginRequiredMixin, UserPassesTest
             if consulta_id:
                 consulta = get_object_or_404(Consulta, pk=consulta_id)
                 return consulta.medico == user
+        if user.rol == "asistente":
+            return True
         return False
 
     def dispatch(self, request, *args, **kwargs):
@@ -2502,9 +2527,9 @@ class ConsultaPrecheckView(NextRedirectMixin, LoginRequiredMixin, UserPassesTest
             return redirect("consulta_detalle", pk=self.consulta.pk)
 
         if request.user.rol == "medico" and self.consulta.medico != request.user:
-            messages.error(request, "No puedes editar esta consulta, no est\u00e1s asignado.")
+            messages.error(request, "No puedes editar esta consulta, no estás asignado.")
             return redirect("consulta_detalle", pk=self.consulta.pk)
-        if request.user.rol not in ("medico", "admin"):
+        if request.user.rol not in ("medico", "admin", "asistente"):
             return redirect("consultas_lista")
 
 
@@ -4290,34 +4315,6 @@ def citas_calendario_data(request):
     
     return JsonResponse(events, safe=False)
 
-
-def get_color_by_estado(estado):
-    """Retorna color para el calendario según el estado"""
-    colors = {
-        'programada': '#6c757d',      # Gris
-        'confirmada': '#0d6efd',      # Azul
-        'en_espera': '#ffc107',       # Amarillo
-        'en_atencion': '#fd7e14',     # Naranja
-        'completada': '#198754',      # Verde
-        'cancelada': '#dc3545',       # Rojo
-        'no_asistio': '#6f42c1',      # Púrpura
-        'reprogramada': '#20c997',    # Teal
-    }
-    return colors.get(estado, '#6c757d')
-
-
-def puede_editar_cita(user, cita):
-    """Verifica si el usuario puede editar la cita"""
-    if user.rol == 'admin':
-        return True
-    elif user.rol == 'medico':
-        return (
-            cita.medico_asignado == user
-            and cita.estado in ['programada', 'confirmada']
-        )
-    return False
-
-
 # ═══════════════════════════════════════════════════════════════
 # 📊 VISTAS AJAX PARA ESTADÍSTICAS
 # ═══════════════════════════════════════════════════════════════
@@ -4482,9 +4479,7 @@ class CitaUpdateView(NextRedirectMixin, CitaPermisoMixin, UpdateView):
     success_url = reverse_lazy('citas_lista')
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.rol == 'asistente':
-            messages.error(request, 'No tienes permiso para editar citas.')
-            return redirect('citas_lista')
+        """Permitir que asistentes editen citas de su consultorio"""
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
@@ -4624,6 +4619,11 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
         elif user.rol == 'medico':
             return (
                 cita.medico_asignado == user
+                and cita.estado in ['programada', 'confirmada']
+            )
+        elif user.rol == 'asistente':
+            return (
+                cita.consultorio == user.consultorio
                 and cita.estado in ['programada', 'confirmada']
             )
         return False

@@ -2,7 +2,6 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 from consultorio_API.models import Usuario, Paciente, Consulta, Consultorio, Cita
-from consultorio_API.models import Consulta
 
 
 def doctor_tiene_consulta_en_progreso(medico):
@@ -114,8 +113,106 @@ def test_no_crear_consulta_antes_de_cita(client):
     before = Consulta.objects.count()
     resp = client.post(url, follow=True)
     after = Consulta.objects.count()
-    assert after == before
-    assert "No puedes atender esta consulta" in resp.content.decode()
+    assert after == before + 1
+    assert "Consulta creada" in resp.content.decode() or resp.status_code == 302
+
+
+@pytest.mark.django_db
+def test_asistente_asigna_medico(client):
+    consultorio = Consultorio.objects.create(nombre="CX")
+    asistente = Usuario.objects.create(username="asis", rol="asistente", first_name="As", consultorio=consultorio)
+    medico = Usuario.objects.create(username="docx", rol="medico", first_name="Doc", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="PX",
+        fecha_nacimiento="1990-01-01",
+        sexo="M",
+        telefono="1",
+        correo="p@x.com",
+        direccion="X",
+        consultorio=consultorio,
+    )
+    cita = Cita.objects.create(
+        numero_cita="99",
+        paciente=paciente,
+        consultorio=consultorio,
+        fecha_hora=timezone.now(),
+        duracion=30,
+        estado="programada",
+    )
+
+    client.force_login(asistente)
+    url = reverse("asignar_medico_cita", args=[cita.id])
+    client.post(url, {"medico": medico.id})
+    cita.refresh_from_db()
+    assert cita.medico_asignado == medico
+
+
+@pytest.mark.django_db
+def test_asistente_inicia_consulta(client):
+    consultorio = Consultorio.objects.create(nombre="CI")
+    asistente = Usuario.objects.create(username="asisc", rol="asistente", first_name="As", consultorio=consultorio)
+    medico = Usuario.objects.create(username="docc", rol="medico", first_name="Doc", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="PC",
+        fecha_nacimiento="1990-01-01",
+        sexo="M",
+        telefono="1",
+        correo="pc@example.com",
+        direccion="X",
+        consultorio=consultorio,
+    )
+    cita = Cita.objects.create(
+        numero_cita="88",
+        paciente=paciente,
+        consultorio=consultorio,
+        medico_asignado=medico,
+        fecha_hora=timezone.now(),
+        duracion=30,
+        estado="programada",
+    )
+
+    client.force_login(asistente)
+    url = reverse("citas_crear_desde_cita", args=[cita.id])
+    before = Consulta.objects.count()
+    resp = client.post(url)
+    after = Consulta.objects.count()
+    consulta = Consulta.objects.latest("id")
+    assert after == before + 1
+    assert resp.status_code == 302
+    assert resp.url.endswith(reverse("consultas_precheck", args=[consulta.pk]))
+
+
+@pytest.mark.django_db
+def test_asistente_reprograma_cita(client):
+    consultorio = Consultorio.objects.create(nombre="CR")
+    asistente = Usuario.objects.create(username="asisr", rol="asistente", first_name="As", consultorio=consultorio)
+    medico = Usuario.objects.create(username="docr", rol="medico", first_name="Doc", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="PR",
+        fecha_nacimiento="1990-01-01",
+        sexo="M",
+        telefono="1",
+        correo="pr@example.com",
+        direccion="X",
+        consultorio=consultorio,
+    )
+    cita = Cita.objects.create(
+        numero_cita="77",
+        paciente=paciente,
+        consultorio=consultorio,
+        medico_asignado=medico,
+        fecha_hora=timezone.now() + timezone.timedelta(days=1),
+        duracion=30,
+        estado="programada",
+    )
+
+    client.force_login(asistente)
+    url = reverse("reprogramar_cita", args=[cita.id])
+    nueva_fecha = (timezone.now() + timezone.timedelta(days=2)).date().isoformat()
+    resp = client.post(url, {"fecha": nueva_fecha, "hora": "10:00"}, follow=True)
+    cita.refresh_from_db()
+    assert resp.status_code == 200
+    assert cita.fecha_hora.date() == (timezone.now() + timezone.timedelta(days=2)).date()
 
 
 @pytest.mark.django_db

@@ -82,7 +82,7 @@
                                     </a>
                                 {% endif %}
                                 
-                                {% if permisos.puede_asignar and usuario.rol != 'asistente' %}
+                                {% if permisos.puede_asignar %}
                                     <button type="button" class="btn btn-sm btn-primary"
                                             onclick="asignarMedico('{{ cita.id }}')" title="Asignar médico">
                                         <i class="bi bi-person-plus"></i>

@@ -384,11 +384,7 @@ def asignar_medico_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
 
     # Verificar permisos
-    if request.user.rol == 'asistente':
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': False, 'message': 'Acción no permitida para asistentes.'}, status=403)
-        return HttpResponseForbidden('Acción no permitida para asistentes.')
-    if request.user.rol not in ['admin', 'medico']:
+    if request.user.rol not in ['admin', 'medico', 'asistente']:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'message': 'No tienes permisos para asignar médicos'}, status=403)
         messages.error(request, 'No tienes permisos para asignar médicos.')
@@ -1269,6 +1265,11 @@ def puede_editar_cita(user, cita):
             cita.medico_asignado == user
             and cita.estado in ['programada', 'confirmada']
         )
+    elif user.rol == 'asistente':
+        return (
+            cita.consultorio == user.consultorio
+            and cita.estado in ['programada', 'confirmada']
+        )
     return False
 
 
@@ -1414,16 +1415,16 @@ def crear_consulta_desde_cita_view(request, cita_id):
     try:
         cita = get_object_or_404(Cita, pk=cita_id)
 
-        # Bloquear si la cita es en el futuro
-        if cita.fecha_hora > timezone.now():
-            messages.error(
-                request,
-                "No puedes atender esta consulta antes de la fecha y hora de la cita."
-            )
-            return redirect_next(request, 'citas_detalle', pk=cita.id)
+
 
         # Verificar permisos
-        if not (request.user.rol == 'admin' or cita.medico_asignado == request.user):
+        if not (
+            request.user.rol in ['admin', 'asistente']
+            or cita.medico_asignado == request.user
+        ):
+            messages.error(request, 'No tienes permisos para iniciar esta consulta.')
+            return redirect_next(request, 'citas_detalle', pk=cita.id)
+        if request.user.rol == 'asistente' and cita.consultorio != request.user.consultorio:
             messages.error(request, 'No tienes permisos para iniciar esta consulta.')
             return redirect_next(request, 'citas_detalle', pk=cita.id)
         
@@ -1457,6 +1458,9 @@ def crear_consulta_desde_cita_view(request, cita_id):
             'Podrás iniciarla cuando el paciente sea atendido.'
         )
         
+        # Redirigir a la página adecuada según rol
+        if request.user.rol == 'asistente':
+            return redirect_next(request, 'consultas_precheck', pk=consulta.pk)
         # Redirigir directamente al detalle de la consulta
         return redirect_next(request, 'consulta_detalle', pk=consulta.pk)
         

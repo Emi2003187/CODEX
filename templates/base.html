@@ -533,7 +533,7 @@
             <div class="menu-section">
                 <div class="menu-section-title">Gestión Clínica</div>
                 
-                {% if usuario.rol == "admin" or usuario.rol == "medico" %}
+                {% if usuario.rol == "admin" or usuario.rol == "medico" or usuario.rol == "asistente" %}
                 <a href="{% url 'pacientes_lista' %}" class="menu-item {% if 'pacientes' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pacientes">
                     <i class="bi bi-person-hearts"></i>
                     <span class="menu-item-text">Pacientes</span>

@@ -160,8 +160,15 @@
 
                     <!-- Acciones para asistentes -->
                     {% if usuario.rol == 'asistente' %}
-                        {# Botón de asignar médico oculto para asistentes #}
-                        {% if false %}{% endif %}
+                        {% if not cita.medico_asignado %}
+                        <a href="{% url 'asignar_medico_cita' cita_id=cita.id %}"
+                            class="btn-action btn-primary-action"
+                           data-bs-toggle="tooltip"
+                            title="Asignar médico">
+                            <i class="bi bi-person-plus"></i>
+                            Asignar
+                        </a>
+                        {% endif %}
 
                         <!-- Cambiar estado -->
                         {% if cita.estado == 'programada' %}

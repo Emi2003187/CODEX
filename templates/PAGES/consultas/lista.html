@@ -30,7 +30,6 @@
       <p class="text-muted mb-0">Administra y supervisa todas las consultas médicas</p>
     </div>
     <div class="col-md-6 d-flex justify-content-md-end mt-3 mt-md-0 gap-2">
-      {% if usuario.rol != 'asistente' %}
       <div class="dropdown">
         <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
           <i class="bi bi-plus-circle me-1"></i>Nueva Consulta
@@ -47,8 +46,7 @@
             </a>
           </li>
         </ul>
-      </div>
-      {% endif %}
+        </div>
       
       <!-- BOTÓN PARA RECARGAR PÁGINA -->
       <button class="btn btn-outline-primary" onclick="location.reload()">

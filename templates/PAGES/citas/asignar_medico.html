@@ -136,7 +136,7 @@
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>Dr. {{ medico.get_full_name }}</span>
 
-                {% if user.rol in 'admin,asistente' %}
+                  {% if user.rol in ['admin', 'asistente'] %}
                   <form method="post" action="{% url 'asignar_medico_cita' cita.id %}"
                         class="d-inline">
                     {% csrf_token %}
