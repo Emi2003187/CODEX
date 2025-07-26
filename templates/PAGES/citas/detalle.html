@@ -898,7 +898,7 @@
       {% endif %}
 
       <!-- Médicos Disponibles -->
-{% if user.rol != 'asistente' and puede_asignar_medico and medicos_disponibles and not cita.medico_asignado and cita.estado != 'cancelada' and cita.estado != 'completada' %}
+{% if puede_asignar_medico and medicos_disponibles and not cita.medico_asignado and cita.estado != 'cancelada' and cita.estado != 'completada' %}
       <div class="card medicos-card mt-4">
         <div class="medicos-header">
           <h6 class="mb-0">

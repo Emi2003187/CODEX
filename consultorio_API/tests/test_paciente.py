@@ -64,3 +64,15 @@ def test_asistente_crea_paciente_auto_consultorio(client):
     client.post(url, data)
     paciente = Paciente.objects.get(nombre_completo='Mario')
     assert paciente.consultorio == consultorio
+
+
+@pytest.mark.django_db
+def test_asistente_no_puede_ver_detalle_paciente(client):
+    consultorio = Consultorio.objects.create(nombre="CD")
+    asistente = Usuario.objects.create(username="asis2", rol="asistente", first_name="As", consultorio=consultorio)
+    paciente = Paciente.objects.create(nombre_completo="Juan", fecha_nacimiento="1990-01-01", sexo='M', telefono='1', correo='j@j.com', direccion='x', consultorio=consultorio)
+    client.force_login(asistente)
+    url = reverse('paciente_detalle', args=[paciente.pk])
+    resp = client.get(url, follow=True)
+    assert resp.redirect_chain  # redireccionado
+    assert "No tienes permisos" in resp.content.decode()

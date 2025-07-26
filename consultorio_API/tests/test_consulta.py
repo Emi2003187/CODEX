@@ -119,6 +119,36 @@ def test_no_crear_consulta_antes_de_cita(client):
 
 
 @pytest.mark.django_db
+def test_asistente_asigna_medico(client):
+    consultorio = Consultorio.objects.create(nombre="CX")
+    asistente = Usuario.objects.create(username="asis", rol="asistente", first_name="As", consultorio=consultorio)
+    medico = Usuario.objects.create(username="docx", rol="medico", first_name="Doc", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="PX",
+        fecha_nacimiento="1990-01-01",
+        sexo="M",
+        telefono="1",
+        correo="p@x.com",
+        direccion="X",
+        consultorio=consultorio,
+    )
+    cita = Cita.objects.create(
+        numero_cita="99",
+        paciente=paciente,
+        consultorio=consultorio,
+        fecha_hora=timezone.now(),
+        duracion=30,
+        estado="programada",
+    )
+
+    client.force_login(asistente)
+    url = reverse("asignar_medico_cita", args=[cita.id])
+    client.post(url, {"medico": medico.id})
+    cita.refresh_from_db()
+    assert cita.medico_asignado == medico
+
+
+@pytest.mark.django_db
 def test_bloqueo_registrar_signos_cancelada(client):
     consultorio = Consultorio.objects.create(nombre="BC")
     medico = Usuario.objects.create(username="medb", rol="medico", first_name="Med", consultorio=consultorio)

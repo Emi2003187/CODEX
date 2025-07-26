@@ -533,7 +533,24 @@ class UsuarioDeleteView(NextRedirectMixin, AdminRequiredMixin, DeleteView):
 
 class PacientePermisoMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.rol in ("medico", "admin", "asistente")
+        return (
+            self.request.user.is_authenticated
+            and self.request.user.rol in ("medico", "admin", "asistente")
+        )
+
+
+class PacienteDetallePermisoMixin(UserPassesTestMixin):
+    """Solo médicos y administradores pueden ver el detalle"""
+
+    def test_func(self):
+        return (
+            self.request.user.is_authenticated
+            and self.request.user.rol in ("medico", "admin")
+        )
+
+    def handle_no_permission(self):
+        messages.error(self.request, "No tienes permisos para ver este paciente.")
+        return redirect_next(self.request, "pacientes_lista")
 
 
 class PacienteListView(PacientePermisoMixin, ListView):
@@ -586,7 +603,7 @@ class PacienteListView(PacientePermisoMixin, ListView):
         return ctx
 
 
-class PacienteDetailView(LoginRequiredMixin, DetailView):
+class PacienteDetailView(LoginRequiredMixin, PacienteDetallePermisoMixin, DetailView):
     model = Paciente
     template_name = "PAGES/pacientes/detalle.html"
     context_object_name = "paciente"

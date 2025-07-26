@@ -384,11 +384,7 @@ def asignar_medico_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
 
     # Verificar permisos
-    if request.user.rol == 'asistente':
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': False, 'message': 'Acción no permitida para asistentes.'}, status=403)
-        return HttpResponseForbidden('Acción no permitida para asistentes.')
-    if request.user.rol not in ['admin', 'medico']:
+    if request.user.rol not in ['admin', 'medico', 'asistente']:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'message': 'No tienes permisos para asignar médicos'}, status=403)
         messages.error(request, 'No tienes permisos para asignar médicos.')
