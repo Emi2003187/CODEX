@@ -287,6 +287,12 @@ def test_reprogramar_cita_cancelada_medico_y_asistente(client):
     assert resp.status_code == 200
     assert "Reprogramar" in resp.content.decode()
 
+    # Asistente también ve el botón
+    client.force_login(asistente)
+    resp = client.get(reverse("citas_detalle", args=[cita.id]))
+    assert resp.status_code == 200
+    assert "Reprogramar" in resp.content.decode()
+
 
 @pytest.mark.django_db
 def test_eliminar_cita_reprogramada_medico(client):
@@ -315,6 +321,69 @@ def test_eliminar_cita_reprogramada_medico(client):
     resp = client.get(reverse("citas_detalle", args=[cita.id]))
     assert resp.status_code == 200
     assert "Eliminar Cita" in resp.content.decode()
+
+
+@pytest.mark.django_db
+def test_reprogramar_cita_no_asistio_medico_y_asistente(client):
+    consultorio = Consultorio.objects.create(nombre="CN")
+    medico = Usuario.objects.create(username="medn", rol="medico", consultorio=consultorio)
+    asistente = Usuario.objects.create(username="asisn", rol="asistente", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="PN",
+        fecha_nacimiento="1990-01-01",
+        sexo="M",
+        telefono="1",
+        correo="pn@example.com",
+        direccion="X",
+        consultorio=consultorio,
+    )
+    cita = Cita.objects.create(
+        numero_cita="66",
+        paciente=paciente,
+        consultorio=consultorio,
+        fecha_hora=timezone.now(),
+        duracion=30,
+        estado="no_asistio",
+    )
+
+    client.force_login(medico)
+    resp = client.get(reverse("citas_detalle", args=[cita.id]))
+    assert resp.status_code == 200
+    assert "Reprogramar" in resp.content.decode()
+
+    client.force_login(asistente)
+    resp = client.get(reverse("citas_detalle", args=[cita.id]))
+    assert resp.status_code == 200
+    assert "Reprogramar" in resp.content.decode()
+
+
+@pytest.mark.django_db
+def test_iniciar_consulta_no_aparece_cancelada(client):
+    consultorio = Consultorio.objects.create(nombre="CI")
+    medico = Usuario.objects.create(username="medi", rol="medico", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="PI",
+        fecha_nacimiento="1990-01-01",
+        sexo="M",
+        telefono="1",
+        correo="pi@example.com",
+        direccion="X",
+        consultorio=consultorio,
+    )
+    cita = Cita.objects.create(
+        numero_cita="55",
+        paciente=paciente,
+        consultorio=consultorio,
+        medico_asignado=medico,
+        fecha_hora=timezone.now(),
+        duracion=30,
+        estado="cancelada",
+    )
+
+    client.force_login(medico)
+    resp = client.get(reverse("citas_detalle", args=[cita.id]))
+    assert resp.status_code == 200
+    assert "Iniciar Consulta" not in resp.content.decode()
 
 
 @pytest.mark.django_db

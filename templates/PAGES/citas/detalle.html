@@ -861,7 +861,7 @@
             {% endif %}
 
             <!-- Crear/Ver Consulta -->
-            {% if cita.medico_asignado %}
+            {% if cita.medico_asignado and cita.estado != 'cancelada' and cita.estado != 'no_asistio' %}
               {% if consulta %}
                 <a href="{% url 'consulta_detalle' consulta.id %}?next={{ request.get_full_path|urlencode }}" class="btn btn-action btn-ver-consulta">
                   <i class="bi bi-clipboard-pulse"></i>
@@ -939,7 +939,7 @@
               Reprogramar
             </a>
             {% endif %}
-            {% if cita.medico_asignado and not consulta %}
+            {% if cita.medico_asignado and not consulta and cita.estado != 'cancelada' and cita.estado != 'no_asistio' %}
             <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
               <input type="hidden" name="next" value="{{ volver_a }}">

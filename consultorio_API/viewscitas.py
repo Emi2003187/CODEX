@@ -1323,7 +1323,7 @@ def puede_reprogramar_cita(user, cita):
     """Verifica si el usuario puede reprogramar la cita"""
     if puede_editar_cita(user, cita):
         return True
-    if cita.estado == 'cancelada' and user.rol in ['admin', 'medico', 'asistente']:
+    if cita.estado in ['cancelada', 'no_asistio'] and user.rol in ['admin', 'medico', 'asistente']:
         if user.rol == 'admin':
             return True
         return cita.consultorio == user.consultorio
