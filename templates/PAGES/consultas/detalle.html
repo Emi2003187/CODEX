@@ -41,7 +41,7 @@
         </a>
       {% endif %}
       {% if consulta.estado == 'espera' or consulta.estado == 'en_progreso' %}
-      <form method="post" action="{% url 'consulta_cancelar' consulta.pk %}" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar?');">
+      <form method="post" action="{% url 'consulta_cancelar' consulta.pk %}" class="d-inline js-consulta-cancelar" data-confirm="¿Estás seguro de eliminar?">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ volver_a }}">
         <button class="btn btn-warning me-1" type="submit">
@@ -51,7 +51,7 @@
       {% endif %}
 
       {% if consulta.estado != 'en_progreso' %}
-      <form method="post" action="{% url 'consulta_eliminar' consulta.pk %}" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar?');">
+      <form method="post" action="{% url 'consulta_eliminar' consulta.pk %}" class="d-inline js-consulta-eliminar" data-confirm="¿Estás seguro de eliminar?">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ volver_a }}">
         <button class="btn btn-danger me-1" type="submit">
