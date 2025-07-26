@@ -33,7 +33,7 @@ from .forms import (
     CitaForm, CitaFiltroForm, AsignarMedicoForm,
     ConsultaSinCitaForm, SignosVitalesForm, RecetaForm,
     PacienteForm, ExpedienteForm, AntecedenteForm, MedicamentoActualForm,
-    ReprogramarCitaForm,
+    ReprogramarCitaForm, _fecha_hora_from_fields,
 )
 
 # ═══════════════════════════════════════════════════════════════
@@ -1031,14 +1031,30 @@ def ajax_horarios_disponibles(request):
 def ajax_citas_previas(request):
     pid = request.GET.get("paciente_id")
     excluir = request.GET.get("excluir_id")
+    fecha = request.GET.get("fecha")
+    hora = request.GET.get("hora")
     try:
         paciente = Paciente.objects.get(pk=int(pid))
     except (TypeError, ValueError, Paciente.DoesNotExist):
         return JsonResponse({"citas": []})
 
-    qs = Cita.objects.filter(paciente=paciente).order_by("-fecha_hora")
+    qs = Cita.objects.filter(paciente=paciente)
+
+    if fecha:
+        try:
+            fecha_dt = datetime.strptime(fecha, "%Y-%m-%d").date()
+            if hora:
+                limite = _fecha_hora_from_fields(fecha_dt, hora)
+                qs = qs.filter(fecha_hora__lt=limite)
+            else:
+                qs = qs.filter(fecha_hora__date__lt=fecha_dt)
+        except ValueError:
+            pass
+
+    qs = qs.order_by("fecha_hora")
     if excluir:
         qs = qs.exclude(pk=excluir)
+
     citas = [
         {
             "id": c.id,
