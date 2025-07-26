@@ -634,7 +634,7 @@ def citas_disponibles(request):
     # Solo médicos pueden acceder, admin puede ver todas
     if user.rol not in ['medico', 'admin']:
         messages.error(request, 'Solo los médicos pueden ver citas disponibles.')
-        return redirect_next(request, 'dashboard')
+        return redirect_next(request, 'home')
     
     # Filtrar citas según rol
     if user.rol == 'admin':
@@ -643,7 +643,7 @@ def citas_disponibles(request):
         citas_base = Cita.objects.filter(consultorio=user.consultorio)
     else:
         messages.error(request, 'No tienes consultorio asignado.')
-        return redirect_next(request, 'dashboard')
+        return redirect_next(request, 'home')
     
     # Filtrar citas sin médico asignado
     citas_disponibles = citas_base.filter(
@@ -728,7 +728,7 @@ def mis_citas_asignadas(request):
     """Citas asignadas al médico actual - CORREGIDA"""
     if request.user.rol != 'medico':
         messages.error(request, 'Solo los médicos pueden ver sus citas asignadas.')
-        return redirect_next(request, 'dashboard')
+        return redirect_next(request, 'home')
     
     citas = Cita.objects.filter(
         medico_asignado=request.user
