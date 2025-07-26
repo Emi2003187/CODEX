@@ -2421,6 +2421,14 @@ class ConsultaPrecheckView(NextRedirectMixin, LoginRequiredMixin, UserPassesTest
     def dispatch(self, request, *args, **kwargs):
         self.consulta = get_object_or_404(Consulta, pk=kwargs["pk"])
 
+        # Si la consulta está cancelada, no permitir registrar signos
+        if self.consulta.estado == "cancelada":
+            messages.error(
+                request,
+                "No se pueden registrar signos vitales en una consulta cancelada."
+            )
+            return redirect("consulta_detalle", pk=self.consulta.pk)
+
         if request.user.rol == "medico" and self.consulta.medico != request.user:
             messages.error(request, "No puedes editar esta consulta, no est\u00e1s asignado.")
             return redirect("consulta_detalle", pk=self.consulta.pk)
