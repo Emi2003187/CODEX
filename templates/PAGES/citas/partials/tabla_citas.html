@@ -1,4 +1,5 @@
 {% load static %}
+{% load icons %}
 
 <div class="table-responsive">
     {% if citas %}
@@ -20,7 +21,7 @@
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="me-2">
-                                <i class="bi bi-person-circle fs-4 text-muted"></i>
+                                {% icon 'person-circle' css_class='fs-4 text-muted' %}
                             </div>
                             <div>
                                 <div class="fw-bold">{{ cita.paciente.nombre_completo }}</div>
@@ -35,12 +36,12 @@
                     <td>
                         {% if cita.medico_asignado %}
                             <span class="badge bg-success">
-                                <i class="bi bi-person-check me-1"></i>
+                                {% icon 'person-check' css_class='me-1' %}
                                 {{ cita.medico_asignado.get_full_name }}
                             </span>
                         {% else %}
                             <span class="badge bg-warning text-dark">
-                                <i class="bi bi-person-x me-1"></i>
+                                {% icon 'person-x' css_class='me-1' %}
                                 Sin asignar
                             </span>
                         {% endif %}
@@ -71,21 +72,21 @@
                         <div class="btn-group" role="group">
                             <a href="{% url 'citas_detalle' cita.id %}" 
                                class="btn btn-sm btn-outline-info" title="Ver detalles">
-                                <i class="bi bi-eye"></i>
+                                {% icon 'eye' %}
                             </a>
                             
                             {% if tipo == 'sin_asignar' %}
                                 {% if usuario.rol == 'medico' and cita.consultorio == usuario.consultorio %}
                                     <a href="{% url 'tomar_cita' cita.id %}" 
                                        class="btn btn-sm btn-success" title="Tomar cita">
-                                        <i class="bi bi-hand-index"></i>
+                                        {% icon 'hand-index' %}
                                     </a>
                                 {% endif %}
                                 
                                 {% if permisos.puede_asignar and usuario.rol != 'asistente' %}
                                     <button type="button" class="btn btn-sm btn-primary"
                                             onclick="asignarMedico('{{ cita.id }}')" title="Asignar médico">
-                                        <i class="bi bi-person-plus"></i>
+                                        {% icon 'person-plus' %}
                                     </button>
                                 {% endif %}
                             {% endif %}
@@ -96,13 +97,13 @@
                                         <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-sm btn-success" title="Iniciar consulta">
-                                                <i class="bi bi-play"></i>
+                                                {% icon 'play' %}
                                             </button>
                                         </form>
                                     {% else %}
                                         <a href="{% url 'consulta_detalle' cita.consulta.id %}" 
                                            class="btn btn-sm btn-info" title="Ver consulta">
-                                            <i class="bi bi-clipboard-pulse"></i>
+                                            {% icon 'clipboard-pulse' %}
                                         </a>
                                     {% endif %}
                                 {% endif %}
@@ -110,7 +111,7 @@
                                 {% if permisos.puede_liberar %}
                                     <a href="{% url 'liberar_cita' cita.id %}" 
                                        class="btn btn-sm btn-warning" title="Liberar cita">
-                                        <i class="bi bi-unlock"></i>
+                                        {% icon 'unlock' %}
                                     </a>
                                 {% endif %}
                             {% endif %}
@@ -118,7 +119,7 @@
                             {% if tipo == 'completadas' and cita.consulta %}
                                 <a href="{% url 'consulta_detalle' cita.consulta.id %}" 
                                    class="btn btn-sm btn-outline-success" title="Ver consulta">
-                                    <i class="bi bi-clipboard-pulse"></i>
+                                    {% icon 'clipboard-pulse' %}
                                 </a>
                             {% endif %}
                         </div>
@@ -129,7 +130,7 @@
         </table>
     {% else %}
         <div class="text-center py-5">
-            <i class="bi bi-calendar-x display-1 text-muted"></i>
+            {% icon 'calendar-x' css_class='display-1 text-muted' %}
             <h4 class="mt-3">No hay citas disponibles</h4>
             <p class="text-muted">No se encontraron citas que coincidan con los filtros aplicados.</p>
         </div>

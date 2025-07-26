@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load icons %}
 
 {% block title %}{{ titulo|default:"Nueva Cita" }}{% endblock %}
 
@@ -85,7 +86,7 @@
                 </div>
                 <div>
                     <a href="{% url 'citas_lista' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>Volver
+                        {% icon 'arrow-left' css_class='me-1' %}Volver
                     </a>
                 </div>
             </div>
@@ -99,7 +100,7 @@
                     <div class="col-lg-8">
                         <!-- Información del Paciente -->
                         <div class="form-section">
-                            <h5><i class="bi bi-person me-2"></i>Información del Paciente</h5>
+                            <h5>{% icon 'person' css_class='me-2' %}Información del Paciente</h5>
                             <div class="row">
                                 <div class="col-md-6 required-field">
                                     <label for="{{ form.paciente.id_for_label }}" class="form-label">Paciente</label>
@@ -120,7 +121,7 @@
 
                         <!-- Fecha y Hora -->
                         <div class="form-section">
-                            <h5><i class="bi bi-calendar3 me-2"></i>Fecha y Hora</h5>
+                            <h5>{% icon 'calendar3' css_class='me-2' %}Fecha y Hora</h5>
                             <div class="row">
                                 <div class="col-md-4 required-field">
                                     <label for="{{ form.fecha.id_for_label }}" class="form-label">Fecha</label>
@@ -150,7 +151,7 @@
                                 <label class="form-label">Horarios Disponibles</label>
                                 <div class="horarios-disponibles" id="listaHorarios">
                                     <div class="text-center text-muted">
-                                        <i class="bi bi-clock me-2"></i>Seleccione una fecha para ver horarios disponibles
+                                        {% icon 'clock' css_class='me-2' %}Seleccione una fecha para ver horarios disponibles
                                     </div>
                                 </div>
                             </div>
@@ -158,7 +159,7 @@
 
                         <!-- Detalles de la Cita -->
                         <div class="form-section">
-                            <h5><i class="bi bi-clipboard me-2"></i>Detalles de la Cita</h5>
+                            <h5>{% icon 'clipboard' css_class='me-2' %}Detalles de la Cita</h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <label for="{{ form.tipo_cita.id_for_label }}" class="form-label">Tipo de Cita</label>
@@ -199,7 +200,7 @@
 
                         <!-- Información de Contacto -->
                         <div class="form-section">
-                            <h5><i class="bi bi-telephone me-2"></i>Información de Contacto</h5>
+                            <h5>{% icon 'telephone' css_class='me-2' %}Información de Contacto</h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <label for="{{ form.telefono_contacto.id_for_label }}" class="form-label">Teléfono de Contacto</label>
@@ -224,7 +225,7 @@
                         <!-- Información Rápida -->
                         <div class="card">
                             <div class="card-header">
-                                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información</h6>
+                                <h6 class="mb-0">{% icon 'info-circle' css_class='me-2' %}Información</h6>
                             </div>
                             <div class="card-body">
                                 <div class="alert alert-info">
@@ -243,10 +244,10 @@
                             <div class="card-body">
                                 <div class="d-grid gap-2">
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-check-circle me-2"></i>Guardar Cita
+                                        {% icon 'check-circle' css_class='me-2' %}Guardar Cita
                                     </button>
                                     <a href="{% url 'citas_lista' %}" class="btn btn-outline-secondary">
-                                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                                        {% icon 'x-circle' css_class='me-2' %}Cancelar
                                     </a>
                                 </div>
                             </div>

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 {% block title %}{{ titulo }} - {{ paciente.nombre_completo }}{% endblock %}
 
 {% block content %}
@@ -32,7 +33,7 @@
   <div class="row align-items-center mb-4">
     <div class="col-md-8">
       <h1 class="fw-bold text-primary mb-0">
-        <i class="bi bi-heart-pulse me-2"></i>{{ titulo }}
+        {% icon 'heart-pulse' css_class='me-2' %}{{ titulo }}
       </h1>
       <p class="text-muted mb-0">
         Paciente: <strong>{{ paciente.nombre_completo }}</strong> 
@@ -49,7 +50,7 @@
     </div>
     <div class="col-md-4 text-md-end mt-3 mt-md-0">
       <a href="{{ next }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Volver
+        {% icon 'arrow-left' css_class='me-1' %}Volver
       </a>
     </div>
   </div>
@@ -60,7 +61,7 @@
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-primary text-white">
           <h4 class="mb-0">
-            <i class="bi bi-clipboard-heart me-2"></i>
+            {% icon 'clipboard-heart' css_class='me-2' %}
             {% if signos_existentes %}
               Actualizar Signos Vitales
             {% else %}
@@ -71,7 +72,7 @@
         <div class="card-body p-4">
           {% if signos_existentes %}
             <div class="alert alert-info">
-              <i class="bi bi-info-circle me-2"></i>
+              {% icon 'info-circle' css_class='me-2' %}
               <strong>Signos existentes:</strong> Estos signos vitales fueron registrados el 
               {{ signos_existentes.fecha_registro|date:"d/m/Y a las H:i" }}. 
               Puede actualizarlos con nuevos valores.
@@ -86,7 +87,7 @@
             <div class="row mb-4">
               <div class="col-12">
                 <h5 class="text-primary border-bottom pb-2 mb-3">
-                  <i class="bi bi-activity me-2"></i>Signos Vitales Básicos
+                  {% icon 'activity' css_class='me-2' %}Signos Vitales Básicos
                 </h5>
               </div>
               
@@ -97,7 +98,7 @@
                 </label>
                 {{ form.tension_arterial }}
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i>{{ form.tension_arterial.help_text }}
+                  {% icon 'info-circle' css_class='me-1' %}{{ form.tension_arterial.help_text }}
                 </div>
                 {% if form.tension_arterial.errors %}
                   <div class="text-danger small">{{ form.tension_arterial.errors.0 }}</div>
@@ -111,7 +112,7 @@
                 </label>
                 {{ form.frecuencia_cardiaca }}
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i>{{ form.frecuencia_cardiaca.help_text }}
+                  {% icon 'info-circle' css_class='me-1' %}{{ form.frecuencia_cardiaca.help_text }}
                 </div>
                 {% if form.frecuencia_cardiaca.errors %}
                   <div class="text-danger small">{{ form.frecuencia_cardiaca.errors.0 }}</div>
@@ -125,7 +126,7 @@
                 </label>
                 {{ form.frecuencia_respiratoria }}
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i>{{ form.frecuencia_respiratoria.help_text }}
+                  {% icon 'info-circle' css_class='me-1' %}{{ form.frecuencia_respiratoria.help_text }}
                 </div>
                 {% if form.frecuencia_respiratoria.errors %}
                   <div class="text-danger small">{{ form.frecuencia_respiratoria.errors.0 }}</div>
@@ -139,7 +140,7 @@
                 </label>
                 {{ form.temperatura }}
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i>{{ form.temperatura.help_text }}
+                  {% icon 'info-circle' css_class='me-1' %}{{ form.temperatura.help_text }}
                 </div>
                 {% if form.temperatura.errors %}
                   <div class="text-danger small">{{ form.temperatura.errors.0 }}</div>
@@ -151,7 +152,7 @@
             <div class="row mb-4">
               <div class="col-12">
                 <h5 class="text-success border-bottom pb-2 mb-3">
-                  <i class="bi bi-rulers me-2"></i>Medidas Antropométricas
+                  {% icon 'rulers' css_class='me-2' %}Medidas Antropométricas
                 </h5>
               </div>
               
@@ -161,7 +162,7 @@
                 </label>
                 {{ form.peso }}
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i>{{ form.peso.help_text }}
+                  {% icon 'info-circle' css_class='me-1' %}{{ form.peso.help_text }}
                 </div>
                 {% if form.peso.errors %}
                   <div class="text-danger small">{{ form.peso.errors.0 }}</div>
@@ -174,7 +175,7 @@
                 </label>
                 {{ form.talla }}
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i>{{ form.talla.help_text }}
+                  {% icon 'info-circle' css_class='me-1' %}{{ form.talla.help_text }}
                 </div>
                 {% if form.talla.errors %}
                   <div class="text-danger small">{{ form.talla.errors.0 }}</div>
@@ -187,7 +188,7 @@
                 </label>
                 {{ form.circunferencia_abdominal }}
                 <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i>{{ form.circunferencia_abdominal.help_text }}
+                  {% icon 'info-circle' css_class='me-1' %}{{ form.circunferencia_abdominal.help_text }}
                 </div>
                 {% if form.circunferencia_abdominal.errors %}
                   <div class="text-danger small">{{ form.circunferencia_abdominal.errors.0 }}</div>
@@ -201,7 +202,7 @@
                   <span class="text-muted">Se calculará automáticamente</span>
                 </div>
                 <div class="form-text">
-                  <i class="bi bi-calculator me-1"></i>Se calcula automáticamente: peso(kg) / talla(m)²
+                  {% icon 'calculator' css_class='me-1' %}Se calcula automáticamente: peso(kg) / talla(m)²
                 </div>
               </div>
             </div>
@@ -210,7 +211,7 @@
             <div class="row mb-4">
               <div class="col-12">
                 <h5 class="text-warning border-bottom pb-2 mb-3">
-                  <i class="bi bi-clipboard-data me-2"></i>Información Clínica
+                  {% icon 'clipboard-data' css_class='me-2' %}Información Clínica
                 </h5>
               </div>
               
@@ -221,7 +222,7 @@
                 </label>
                 {{ form.alergias }}
                 <div class="form-text">
-                  <i class="bi bi-exclamation-triangle me-1"></i>{{ form.alergias.help_text }}
+                  {% icon 'exclamation-triangle' css_class='me-1' %}{{ form.alergias.help_text }}
                 </div>
                 {% if form.alergias.errors %}
                   <div class="text-danger small">{{ form.alergias.errors.0 }}</div>
@@ -235,7 +236,7 @@
                 </label>
                 {{ form.sintomas }}
                 <div class="form-text">
-                  <i class="bi bi-clipboard-pulse me-1"></i>{{ form.sintomas.help_text }}
+                  {% icon 'clipboard-pulse' css_class='me-1' %}{{ form.sintomas.help_text }}
                 </div>
                 {% if form.sintomas.errors %}
                   <div class="text-danger small">{{ form.sintomas.errors.0 }}</div>
@@ -249,16 +250,16 @@
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
                     <small class="text-muted">
-                      <i class="bi bi-info-circle me-1"></i>
+                      {% icon 'info-circle' css_class='me-1' %}
                       Los campos marcados con <span class="text-danger">*</span> son obligatorios
                     </small>
                   </div>
                   <div class="d-flex gap-2">
                     <a href="{{ next }}" class="btn btn-secondary px-4">
-                      <i class="bi bi-x-circle me-1"></i>Cancelar
+                      {% icon 'x-circle' css_class='me-1' %}Cancelar
                     </a>
                     <button type="submit" class="btn btn-primary px-4" id="btnGuardar">
-                      <i class="bi bi-check-circle me-1"></i>
+                      {% icon 'check-circle' css_class='me-1' %}
                       {% if signos_existentes %}Actualizar{% else %}Guardar{% endif %} Signos
                     </button>
                   </div>
@@ -361,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     form.addEventListener('submit', function(e) {
         btnGuardar.disabled = true;
-        btnGuardar.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Guardando...';
+        btnGuardar.innerHTML = '{% icon 'hourglass-split' css_class='me-1' %}Guardando...';
     });
     
     // Validación de tensión arterial en tiempo real
@@ -370,7 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const valor = this.value.trim();
         if (valor && !valor.includes('/')) {
             this.classList.add('is-invalid');
-            this.nextElementSibling.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Formato incorrecto. Use: sistólica/diastólica (ej: 120/80)';
+            this.nextElementSibling.innerHTML = '{% icon 'exclamation-triangle' css_class='me-1' %}Formato incorrecto. Use: sistólica/diastólica (ej: 120/80)';
         } else {
             this.classList.remove('is-invalid');
         }

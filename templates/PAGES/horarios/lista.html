@@ -1,3 +1,4 @@
+{% load icons %}
 {% extends "base.html" %}
 {% block title %}Gestión de Horarios{% endblock %}
 
@@ -10,7 +11,7 @@
     </div>
     {% if usuario.rol == "admin" %}
     <a href="{% url 'horarios_crear' %}" class="btn btn-primary d-flex align-items-center shadow-sm">
-    <i class="bi bi-calendar-plus me-2"></i> Crear Horario
+    {% icon 'calendar-plus' css_class='me-2' %} Crear Horario
     </a>
 
     {% endif %}
@@ -55,12 +56,12 @@
                 <td class="text-center">
                   <div class="d-flex justify-content-center gap-2">
                     <a href="{% url 'horarios_editar' h.pk %}" class="btn btn-sm btn-outline-primary d-flex align-items-center">
-                      <i class="bi bi-pencil me-1"></i> Editar
+                      {% icon 'pencil' css_class='me-1' %} Editar
                     </a>
                     <form method="post" action="{% url 'horarios_eliminar' h.pk %}" onsubmit="return confirm('¿Eliminar este horario?');">
                       {% csrf_token %}
                       <button type="submit" class="btn btn-sm btn-outline-danger d-flex align-items-center">
-                        <i class="bi bi-trash me-1"></i> Eliminar
+                        {% icon 'trash' css_class='me-1' %} Eliminar
                       </button>
                     </form>
                   </div>
@@ -71,7 +72,7 @@
           {% else %}
             <tr>
               <td colspan="{% if usuario.rol == 'admin' %}6{% else %}5{% endif %}" class="text-center py-5 text-muted">
-                <i class="bi bi-calendar-x fs-4 d-block mb-2"></i>
+                {% icon 'calendar-x' css_class='fs-4 d-block mb-2' %}
                 No hay horarios registrados aún.
               </td>
             </tr>

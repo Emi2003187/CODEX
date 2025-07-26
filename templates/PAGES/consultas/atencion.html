@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 {% block title %}Atención Médica{% endblock %}
 
 {% block extra_css %}
@@ -395,13 +396,13 @@ textarea.form-control {
     <div class="header-section">
       <div class="header-content">
         <h2 class="mb-0">
-          <i class="bi bi-clipboard-heart me-2"></i>
+          {% icon 'clipboard-heart' css_class='me-2' %}
           Atención Médica
         </h2>
         <div class="patient-info">
           <h4 class="mb-1">{{ consulta.paciente.nombre_completo }}</h4>
           <p class="mb-0">
-            <i class="bi bi-calendar-event me-1"></i>
+            {% icon 'calendar-event' css_class='me-1' %}
             {{ consulta.fecha_hora|date:"d/m/Y H:i" }} - {{ consulta.fecha_hora|date:"l" }}
           </p>
         </div>
@@ -415,13 +416,13 @@ textarea.form-control {
       </div>
       <div class="step-indicators">
         <div class="step-indicator active" data-step="1">
-          <i class="bi bi-clipboard-data"></i>
+          {% icon 'clipboard-data' %}
         </div>
         <div class="step-indicator pending" data-step="2">
-          <i class="bi bi-file-earmark-medical"></i>
+          {% icon 'file-earmark-medical' %}
         </div>
         <div class="step-indicator pending" data-step="3">
-          <i class="bi bi-capsule"></i>
+          {% icon 'capsule' %}
         </div>
       </div>
     </div>
@@ -433,7 +434,7 @@ textarea.form-control {
       <!-- Paso 1: Motivo y Diagnóstico -->
       <div class="wizard-step active" data-step="1">
         <h3 class="step-title">
-          <i class="bi bi-clipboard-data me-2"></i>
+          {% icon 'clipboard-data' css_class='me-2' %}
           Motivo y Diagnóstico
         </h3>
         
@@ -443,7 +444,7 @@ textarea.form-control {
           <div class="col-md-6">
             <div class="form-group">
               <label class="form-label">
-                <i class="bi bi-chat-text"></i>
+                {% icon 'chat-text' %}
                 Motivo de Consulta
               </label>
               {{ consulta_form.motivo_consulta }}
@@ -452,7 +453,7 @@ textarea.form-control {
           <div class="col-md-6">
             <div class="form-group">
               <label class="form-label">
-                <i class="bi bi-search"></i>
+                {% icon 'search' %}
                 Diagnóstico
               </label>
               {{ consulta_form.diagnostico }}
@@ -464,7 +465,7 @@ textarea.form-control {
           <div class="col-md-6">
             <div class="form-group">
               <label class="form-label">
-                <i class="bi bi-bandaid"></i>
+                {% icon 'bandaid' %}
                 Tratamiento
               </label>
               {{ consulta_form.tratamiento }}
@@ -473,7 +474,7 @@ textarea.form-control {
           <div class="col-md-6">
             <div class="form-group">
               <label class="form-label">
-                <i class="bi bi-journal-text"></i>
+                {% icon 'journal-text' %}
                 Observaciones
               </label>
               {{ consulta_form.observaciones }}
@@ -485,7 +486,7 @@ textarea.form-control {
       <!-- Paso 2: Receta -->
       <div class="wizard-step" data-step="2">
         <h3 class="step-title">
-          <i class="bi bi-file-earmark-medical me-2"></i>
+          {% icon 'file-earmark-medical' css_class='me-2' %}
           Receta Médica
         </h3>
         
@@ -493,7 +494,7 @@ textarea.form-control {
           <div class="col-md-8">
             <div class="form-group">
               <label class="form-label">
-                <i class="bi bi-list-ul"></i>
+                {% icon 'list-ul' %}
                 Indicaciones Generales
               </label>
               {{ receta_form.indicaciones_generales }}
@@ -502,7 +503,7 @@ textarea.form-control {
           <div class="col-md-4">
             <div class="form-group">
               <label class="form-label">
-                <i class="bi bi-calendar-check"></i>
+                {% icon 'calendar-check' %}
                 Válido Hasta
               </label>
               {{ receta_form.valido_hasta }}
@@ -512,7 +513,7 @@ textarea.form-control {
         
         <div class="form-group">
           <label class="form-label">
-            <i class="bi bi-sticky"></i>
+            {% icon 'sticky' %}
             Notas Adicionales
           </label>
           {{ receta_form.notas }}
@@ -522,7 +523,7 @@ textarea.form-control {
       <!-- Paso 3: Medicamentos -->
       <div class="wizard-step" data-step="3">
         <h3 class="step-title">
-          <i class="bi bi-capsule me-2"></i>
+          {% icon 'capsule' css_class='me-2' %}
           Medicamentos Recetados
         </h3>
         
@@ -535,7 +536,7 @@ textarea.form-control {
                 <div class="medication-header">
                   <div class="medication-number">{{ forloop.counter }}</div>
                   <button type="button" class="btn-remove-med">
-                    <i class="bi bi-trash me-1"></i>Eliminar
+                    {% icon 'trash' css_class='me-1' %}Eliminar
                   </button>
                 </div>
                 
@@ -543,7 +544,7 @@ textarea.form-control {
                   <div class="col-md-6">
                     <div class="form-group">
                       <label class="form-label">
-                        <i class="bi bi-capsule"></i>
+                        {% icon 'capsule' %}
                         Nombre del Medicamento
                       </label>
                       {{ form.nombre }}
@@ -552,7 +553,7 @@ textarea.form-control {
                   <div class="col-md-6">
                     <div class="form-group">
                       <label class="form-label">
-                        <i class="bi bi-molecule"></i>
+                        {% icon 'molecule' %}
                         Principio Activo
                       </label>
                       {{ form.principio_activo }}
@@ -564,7 +565,7 @@ textarea.form-control {
                   <div class="col-md-3">
                     <div class="form-group">
                       <label class="form-label">
-                        <i class="bi bi-speedometer2"></i>
+                        {% icon 'speedometer2' %}
                         Dosis
                       </label>
                       {{ form.dosis }}
@@ -573,7 +574,7 @@ textarea.form-control {
                   <div class="col-md-3">
                     <div class="form-group">
                       <label class="form-label">
-                        <i class="bi bi-clock"></i>
+                        {% icon 'clock' %}
                         Frecuencia
                       </label>
                       {{ form.frecuencia }}
@@ -582,7 +583,7 @@ textarea.form-control {
                   <div class="col-md-3">
                     <div class="form-group">
                       <label class="form-label">
-                        <i class="bi bi-arrow-right"></i>
+                        {% icon 'arrow-right' %}
                         Vía
                       </label>
                       {{ form.via_administracion }}
@@ -591,7 +592,7 @@ textarea.form-control {
                   <div class="col-md-3">
                     <div class="form-group">
                       <label class="form-label">
-                        <i class="bi bi-hourglass"></i>
+                        {% icon 'hourglass' %}
                         Duración
                       </label>
                       {{ form.duracion }}
@@ -603,7 +604,7 @@ textarea.form-control {
                   <div class="col-md-6">
                     <div class="form-group">
                       <label class="form-label">
-                        <i class="bi bi-123"></i>
+                        {% icon '123' %}
                         Cantidad
                       </label>
                       {{ form.cantidad }}
@@ -612,7 +613,7 @@ textarea.form-control {
                   <div class="col-md-6">
                     <div class="form-group">
                       <label class="form-label">
-                        <i class="bi bi-info-circle"></i>
+                        {% icon 'info-circle' %}
                         Indicaciones Específicas
                       </label>
                       {{ form.indicaciones_especificas }}
@@ -624,7 +625,7 @@ textarea.form-control {
           </div>
           
           <button type="button" class="btn-add-medication" id="add-med-btn">
-            <i class="bi bi-plus-circle"></i>
+            {% icon 'plus-circle' %}
             Agregar Medicamento
           </button>
         </div>
@@ -633,16 +634,16 @@ textarea.form-control {
       <!-- Navigation Buttons -->
       <div class="navigation-buttons">
         <button type="button" class="btn-nav btn-prev" style="display: none;">
-          <i class="bi bi-arrow-left"></i>
+          {% icon 'arrow-left' %}
           Anterior
         </button>
         <div></div>
         <button type="button" class="btn-nav btn-next">
           Siguiente
-          <i class="bi bi-arrow-right"></i>
+          {% icon 'arrow-right' %}
         </button>
         <button type="submit" name="action" value="finish" class="btn-nav btn-finish" style="display: none;">
-          <i class="bi bi-check-circle"></i>
+          {% icon 'check-circle' %}
           Terminar Consulta
         </button>
       </div>

@@ -1,3 +1,4 @@
+{% load icons %}
 {% extends "base.html" %}
 {% block title %}Consultorio {{ object.nombre }}{% endblock %}
 {% block content %}
@@ -18,10 +19,10 @@
       <p class="mb-3"><strong>Horario:</strong> {{ object.horario_apertura|time:'H:i' }} - {{ object.horario_cierre|time:'H:i' }}</p>
       <div class="d-flex gap-2">
         <a href="{% url 'consultorio_editar' object.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-primary">
-          <i class="bi bi-pencil me-1"></i> Editar
+          {% icon 'pencil' css_class='me-1' %} Editar
         </a>
         <a href="{% url 'consultorio_eliminar' object.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-outline-danger">
-          <i class="bi bi-trash me-1"></i> Eliminar
+          {% icon 'trash' css_class='me-1' %} Eliminar
         </a>
       </div>
     </div>

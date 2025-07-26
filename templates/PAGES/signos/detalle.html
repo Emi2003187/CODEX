@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Signos Vitales - {{ signos.consulta.paciente.nombre_completo }}{% endblock %}
 
@@ -31,7 +32,7 @@
   <div class="row align-items-center mb-4">
     <div class="col-md-8">
       <h1 class="fw-bold text-primary mb-0">
-        <i class="bi bi-heart-pulse me-2"></i>Signos Vitales
+        {% icon 'heart-pulse' css_class='me-2' %}Signos Vitales
       </h1>
       <p class="text-muted mb-0">
         Paciente: <strong>{{ signos.consulta.paciente.nombre_completo }}</strong> 
@@ -41,16 +42,16 @@
     <div class="col-md-4 text-md-end mt-3 mt-md-0">
       <div class="d-flex gap-2 justify-content-md-end">
         <a class="btn btn-outline-secondary" href="{% url 'consultas_lista' %}">
-          <i class="bi bi-arrow-left me-1"></i>Volver
+          {% icon 'arrow-left' css_class='me-1' %}Volver
         </a>
         {% if usuario.rol in 'medico,asistente,admin' %}
           <a href="{% url 'signos_editar' signos.pk %}?next={{ request.get_full_path }}"
              class="btn btn-warning">
-            <i class="bi bi-pencil me-1"></i>Editar
+            {% icon 'pencil' css_class='me-1' %}Editar
           </a>
           {% if usuario.rol in 'medico,admin' %}
             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarSignosModal">
-              <i class="bi bi-trash me-1"></i>Eliminar
+              {% icon 'trash' css_class='me-1' %}Eliminar
             </button>
           {% endif %}
         {% endif %}
@@ -101,7 +102,7 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header bg-primary text-white">
           <h5 class="mb-0">
-            <i class="bi bi-activity me-2"></i>Signos Vitales Básicos
+            {% icon 'activity' css_class='me-2' %}Signos Vitales Básicos
           </h5>
         </div>
         <div class="card-body">
@@ -109,7 +110,7 @@
             <div class="col-6">
               <div class="d-flex align-items-center p-3 bg-light rounded">
                 <div class="me-3">
-                  <i class="bi bi-heart text-danger" style="font-size: 1.5rem;"></i>
+                  {% icon 'heart' size=24 css_class='text-danger' %}
                 </div>
                 <div>
                   <small class="text-muted d-block">Tensión Arterial</small>
@@ -120,7 +121,7 @@
             <div class="col-6">
               <div class="d-flex align-items-center p-3 bg-light rounded">
                 <div class="me-3">
-                  <i class="bi bi-heart-pulse text-primary" style="font-size: 1.5rem;"></i>
+                  {% icon 'heart-pulse' size=24 css_class='text-primary' %}
                 </div>
                 <div>
                   <small class="text-muted d-block">Frecuencia Cardíaca</small>
@@ -137,7 +138,7 @@
             <div class="col-6">
               <div class="d-flex align-items-center p-3 bg-light rounded">
                 <div class="me-3">
-                  <i class="bi bi-lungs text-info" style="font-size: 1.5rem;"></i>
+                  {% icon 'lungs' size=24 css_class='text-info' %}
                 </div>
                 <div>
                   <small class="text-muted d-block">Frecuencia Respiratoria</small>
@@ -154,7 +155,7 @@
             <div class="col-6">
               <div class="d-flex align-items-center p-3 bg-light rounded">
                 <div class="me-3">
-                  <i class="bi bi-thermometer text-warning" style="font-size: 1.5rem;"></i>
+                  {% icon 'thermometer' size=24 css_class='text-warning' %}
                 </div>
                 <div>
                   <small class="text-muted d-block">Temperatura</small>
@@ -178,7 +179,7 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header bg-success text-white">
           <h5 class="mb-0">
-            <i class="bi bi-rulers me-2"></i>Medidas Antropométricas
+            {% icon 'rulers' css_class='me-2' %}Medidas Antropométricas
           </h5>
         </div>
         <div class="card-body">
@@ -186,7 +187,7 @@
             <div class="col-6">
               <div class="d-flex align-items-center p-3 bg-light rounded">
                 <div class="me-3">
-                  <i class="bi bi-speedometer2 text-success" style="font-size: 1.5rem;"></i>
+                  {% icon 'speedometer2' size=24 css_class='text-success' %}
                 </div>
                 <div>
                   <small class="text-muted d-block">Peso</small>
@@ -203,7 +204,7 @@
             <div class="col-6">
               <div class="d-flex align-items-center p-3 bg-light rounded">
                 <div class="me-3">
-                  <i class="bi bi-arrows-vertical text-info" style="font-size: 1.5rem;"></i>
+                  {% icon 'arrows-vertical' size=24 css_class='text-info' %}
                 </div>
                 <div>
                   <small class="text-muted d-block">Talla</small>
@@ -220,7 +221,7 @@
             <div class="col-6">
               <div class="d-flex align-items-center p-3 bg-light rounded">
                 <div class="me-3">
-                  <i class="bi bi-calculator text-primary" style="font-size: 1.5rem;"></i>
+                  {% icon 'calculator' size=24 css_class='text-primary' %}
                 </div>
                 <div>
                   <small class="text-muted d-block">IMC</small>
@@ -246,7 +247,7 @@
             <div class="col-6">
               <div class="d-flex align-items-center p-3 bg-light rounded">
                 <div class="me-3">
-                  <i class="bi bi-circle text-warning" style="font-size: 1.5rem;"></i>
+                  {% icon 'circle' size=24 css_class='text-warning' %}
                 </div>
                 <div>
                   <small class="text-muted d-block">Circunferencia Abdominal</small>
@@ -270,14 +271,14 @@
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-info text-white">
           <h5 class="mb-0">
-            <i class="bi bi-clipboard-data me-2"></i>Información Adicional
+            {% icon 'clipboard-data' css_class='me-2' %}Información Adicional
           </h5>
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-md-6">
               <h6 class="fw-bold text-danger">
-                <i class="bi bi-exclamation-triangle me-2"></i>Alergias del Paciente
+                {% icon 'exclamation-triangle' css_class='me-2' %}Alergias del Paciente
               </h6>
               <div class="p-3 bg-light rounded">
                 {% if signos.alergias %}
@@ -289,7 +290,7 @@
             </div>
             <div class="col-md-6">
               <h6 class="fw-bold text-primary">
-                <i class="bi bi-clipboard-pulse me-2"></i>Síntomas o Padecimientos Actuales
+                {% icon 'clipboard-pulse' css_class='me-2' %}Síntomas o Padecimientos Actuales
               </h6>
               <div class="p-3 bg-light rounded">
                 {% if signos.sintomas %}
@@ -312,7 +313,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+          {% icon 'exclamation-triangle' css_class='text-danger me-2' %}
           Confirmar Eliminación
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -320,7 +321,7 @@
       <div class="modal-body">
         <p>¿Está seguro de que desea eliminar los signos vitales de este paciente?</p>
         <div class="alert alert-warning">
-          <i class="bi bi-warning me-2"></i>
+          {% icon 'warning' css_class='me-2' %}
           <strong>Advertencia:</strong> Esta acción no se puede deshacer. 
           Se perderán todos los datos registrados.
         </div>
@@ -329,13 +330,13 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-circle me-1"></i>Cancelar
+          {% icon 'x-circle' css_class='me-1' %}Cancelar
         </button>
         <form method="post" action="{% url 'signos_eliminar' signos.pk %}" style="display: inline;">
           {% csrf_token %}
           <input type="hidden" name="next" value="{{ volver_a }}">
           <button type="submit" class="btn btn-danger">
-            <i class="bi bi-trash me-1"></i>Eliminar Signos
+            {% icon 'trash' css_class='me-1' %}Eliminar Signos
           </button>
         </form>
       </div>

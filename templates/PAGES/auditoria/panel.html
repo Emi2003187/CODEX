@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Panel de Auditoría{% endblock %}
 
 {% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <style>
 .audit-card {
     transition: all 0.3s ease;
@@ -90,13 +90,13 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h2 class="text-primary mb-1">
-                        <i class="bi bi-shield-lock me-2"></i>Panel de Auditoría
+                        {% icon 'shield-lock' css_class='me-2' %}Panel de Auditoría
                     </h2>
                     <p class="text-muted mb-0">Monitoreo completo de actividades del sistema</p>
                 </div>
                 <div>
                     <a href="{% url 'auditoria_exportar_csv' %}" class="btn btn-outline-success">
-                        <i class="bi bi-download me-1"></i>Exportar CSV
+                        {% icon 'download' css_class='me-1' %}Exportar CSV
                     </a>
                 </div>
             </div>
@@ -108,7 +108,7 @@
         <div class="col-md-3 mb-3">
             <div class="card stats-card h-100 text-center p-3">
                 <div class="card-body">
-                    <i class="bi bi-clipboard-data fs-1 mb-2"></i>
+                    {% icon 'clipboard-data' css_class='fs-1 mb-2' %}
                     <h3 class="mb-1">{{ stats.total_registros|floatformat:0 }}</h3>
                     <p class="mb-0">Total Registros</p>
                 </div>
@@ -117,7 +117,7 @@
         <div class="col-md-3 mb-3">
             <div class="card stats-card-2 h-100 text-center p-3">
                 <div class="card-body">
-                    <i class="bi bi-calendar-day fs-1 mb-2"></i>
+                    {% icon 'calendar-day' css_class='fs-1 mb-2' %}
                     <h3 class="mb-1">{{ stats.registros_hoy }}</h3>
                     <p class="mb-0">Registros Hoy</p>
                 </div>
@@ -126,7 +126,7 @@
         <div class="col-md-3 mb-3">
             <div class="card stats-card-3 h-100 text-center p-3">
                 <div class="card-body">
-                    <i class="bi bi-people fs-1 mb-2"></i>
+                    {% icon 'people' css_class='fs-1 mb-2' %}
                     <h3 class="mb-1">{{ stats.usuarios_activos|length }}</h3>
                     <p class="mb-0">Usuarios Activos</p>
                 </div>
@@ -135,7 +135,7 @@
         <div class="col-md-3 mb-3">
             <div class="card stats-card-4 h-100 text-center p-3">
                 <div class="card-body">
-                    <i class="bi bi-activity fs-1 mb-2"></i>
+                    {% icon 'activity' css_class='fs-1 mb-2' %}
                     <h3 class="mb-1">{{ stats.acciones_comunes|length }}</h3>
                     <p class="mb-0">Tipos de Acciones</p>
                 </div>
@@ -148,7 +148,7 @@
         <div class="col-lg-3 mb-4">
             <div class="card filter-card">
                 <div class="card-header bg-transparent">
-                    <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filtros</h5>
+                    <h5 class="mb-0">{% icon 'funnel' css_class='me-2' %}Filtros</h5>
                 </div>
                 <div class="card-body">
                     <form method="get" id="filtroForm">
@@ -202,10 +202,10 @@
                         
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-sm">
-                                <i class="bi bi-search me-1"></i>Filtrar
+                                {% icon 'search' css_class='me-1' %}Filtrar
                             </button>
                             <a href="{% url 'auditoria_lista' %}" class="btn btn-outline-secondary btn-sm">
-                                <i class="bi bi-x-circle me-1"></i>Limpiar
+                                {% icon 'x-circle' css_class='me-1' %}Limpiar
                             </a>
                         </div>
                     </form>
@@ -215,7 +215,7 @@
             <!-- Top Usuarios -->
             <div class="card mt-3">
                 <div class="card-header bg-transparent">
-                    <h6 class="mb-0"><i class="bi bi-trophy me-2"></i>Usuarios Más Activos</h6>
+                    <h6 class="mb-0">{% icon 'trophy' css_class='me-2' %}Usuarios Más Activos</h6>
                 </div>
                 <div class="card-body p-2">
                     {% for usuario in stats.usuarios_activos|slice:":5" %}
@@ -230,7 +230,7 @@
             <!-- Acciones Comunes -->
             <div class="card mt-3">
                 <div class="card-header bg-transparent">
-                    <h6 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Acciones Más Comunes</h6>
+                    <h6 class="mb-0">{% icon 'bar-chart' css_class='me-2' %}Acciones Más Comunes</h6>
                 </div>
                 <div class="card-body p-2">
                     {% for accion in stats.acciones_comunes|slice:":5" %}
@@ -249,12 +249,12 @@
                 <div class="card-header bg-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="bi bi-list-ul me-2"></i>Registros de Auditoría
+                            {% icon 'list-ul' css_class='me-2' %}Registros de Auditoría
                             <span class="badge bg-secondary ms-2">{{ page_obj.paginator.count }}</span>
                         </h5>
                         <div class="btn-group btn-group-sm">
                             <button class="btn btn-outline-primary" onclick="refreshAudit()">
-                                <i class="bi bi-arrow-clockwise"></i>
+                                {% icon 'arrow-clockwise' %}
                             </button>
                         </div>
                     </div>
@@ -271,17 +271,17 @@
                                             <div class="d-flex align-items-center mb-2">
                                                 <div class="me-3">
                                                     {% if 'crear' in registro.accion %}
-                                                        <i class="bi bi-plus-circle text-success fs-5"></i>
+                                                        {% icon 'plus-circle' css_class='text-success fs-5' %}
                                                     {% elif 'editar' in registro.accion %}
-                                                        <i class="bi bi-pencil-square text-primary fs-5"></i>
+                                                        {% icon 'pencil-square' css_class='text-primary fs-5' %}
                                                     {% elif 'eliminar' in registro.accion %}
-                                                        <i class="bi bi-trash text-danger fs-5"></i>
+                                                        {% icon 'trash' css_class='text-danger fs-5' %}
                                                     {% elif 'login' in registro.accion %}
-                                                        <i class="bi bi-box-arrow-in-right text-success fs-5"></i>
+                                                        {% icon 'box-arrow-in-right' css_class='text-success fs-5' %}
                                                     {% elif 'logout' in registro.accion %}
-                                                        <i class="bi bi-box-arrow-right text-secondary fs-5"></i>
+                                                        {% icon 'box-arrow-right' css_class='text-secondary fs-5' %}
                                                     {% else %}
-                                                        <i class="bi bi-gear text-info fs-5"></i>
+                                                        {% icon 'gear' css_class='text-info fs-5' %}
                                                     {% endif %}
                                                 </div>
                                                 <div>
@@ -302,11 +302,11 @@
                                                 </span>
                                             </div>
                                             <small class="text-muted">
-                                                <i class="bi bi-clock me-1"></i>{{ registro.fecha|date:"d/m/Y H:i" }}
+                                                {% icon 'clock' css_class='me-1' %}{{ registro.fecha|date:"d/m/Y H:i" }}
                                             </small>
                                             {% if registro.ip_address %}
                                                 <br><small class="text-muted">
-                                                    <i class="bi bi-geo-alt me-1"></i>{{ registro.ip_address }}
+                                                    {% icon 'geo-alt' css_class='me-1' %}{{ registro.ip_address }}
                                                 </small>
                                             {% endif %}
                                         </div>
@@ -315,7 +315,7 @@
                             </div>
                         {% empty %}
                             <div class="text-center py-5">
-                                <i class="bi bi-inbox fs-1 text-muted"></i>
+                                {% icon 'inbox' css_class='fs-1 text-muted' %}
                                 <h5 class="text-muted mt-3">No hay registros</h5>
                                 <p class="text-muted">No se encontraron registros con los filtros aplicados.</p>
                             </div>
@@ -368,7 +368,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="bi bi-info-circle me-2"></i>Detalle del Registro
+                    {% icon 'info-circle' css_class='me-2' %}Detalle del Registro
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -453,7 +453,7 @@ function cargarDetalle(registroId) {
             } else {
                 content.innerHTML = `
                     <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        {% icon 'exclamation-triangle' css_class='me-2' %}
                         Error al cargar los detalles: ${data.error}
                     </div>
                 `;
@@ -462,7 +462,7 @@ function cargarDetalle(registroId) {
         .catch(error => {
             content.innerHTML = `
                 <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {% icon 'exclamation-triangle' css_class='me-2' %}
                     Error de conexión: ${error.message}
                 </div>
             `;

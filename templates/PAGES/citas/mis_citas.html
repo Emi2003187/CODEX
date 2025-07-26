@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Mis Citas{% endblock %}
 
@@ -119,7 +120,7 @@
             </div>
             <div class="col-md-3 d-flex gap-2">
                 <button type="submit" class="btn btn-primary btn-sm">
-                    <i class="bi bi-search"></i> Filtrar
+                    {% icon 'search' %} Filtrar
                 </button>
                 <a href="{% url 'mis_citas_asignadas' %}" class="btn btn-outline-secondary btn-sm">Limpiar</a>
             </div>
@@ -176,7 +177,7 @@
                                 </div>
                                 <div class="text-end">
                                     <a href="{% url 'citas_detalle' cita.id %}" class="btn btn-outline-primary btn-sm mt-2">
-                                        <i class="bi bi-eye"></i> Ver Detalle
+                                        {% icon 'eye' %} Ver Detalle
                                     </a>
                                 </div>
                             </div>

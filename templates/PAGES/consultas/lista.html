@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Gestión de Consultas{% endblock %}
 
@@ -25,7 +26,7 @@
   <div class="row align-items-center mb-4">
     <div class="col-md-6">
       <h1 class="fw-bold text-primary mb-0">
-        <i class="bi bi-clipboard-pulse me-2"></i>Gestión de Consultas
+        {% icon 'clipboard-pulse' css_class='me-2' %}Gestión de Consultas
       </h1>
       <p class="text-muted mb-0">Administra y supervisa todas las consultas médicas</p>
     </div>
@@ -33,17 +34,17 @@
       {% if usuario.rol != 'asistente' %}
       <div class="dropdown">
         <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
-          <i class="bi bi-plus-circle me-1"></i>Nueva Consulta
+          {% icon 'plus-circle' css_class='me-1' %}Nueva Consulta
         </button>
         <ul class="dropdown-menu">
           <li>
             <a class="dropdown-item" href="{% url 'consultas_crear_sin_cita' %}">
-              <i class="bi bi-clipboard-plus me-2"></i>Consulta Sin Cita
+              {% icon 'clipboard-plus' css_class='me-2' %}Consulta Sin Cita
             </a>
           </li>
           <li>
             <a class="dropdown-item" href="{% url 'citas_crear' %}">
-              <i class="bi bi-calendar-plus me-2"></i>Programar Cita
+              {% icon 'calendar-plus' css_class='me-2' %}Programar Cita
             </a>
           </li>
         </ul>
@@ -52,7 +53,7 @@
       
       <!-- BOTÓN PARA RECARGAR PÁGINA -->
       <button class="btn btn-outline-primary" onclick="location.reload()">
-        <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+        {% icon 'arrow-clockwise' css_class='me-1' %}Actualizar
       </button>
     </div>
   </div>
@@ -64,7 +65,7 @@
             <div class="card-body text-center">
                 <div class="d-flex align-items-center justify-content-center">
                     <div class="me-3">
-                        <i class="bi bi-hourglass-split text-warning" style="font-size: 2rem;"></i>
+                        {% icon 'hourglass-split' size=32 css_class='text-warning' %}
                     </div>
                     <div>
                         <h4 class="mb-0 fw-bold">{{ stats.pendientes|default:0 }}</h4>
@@ -79,7 +80,7 @@
             <div class="card-body text-center">
                 <div class="d-flex align-items-center justify-content-center">
                     <div class="me-3">
-                        <i class="bi bi-activity text-primary" style="font-size: 2rem;"></i>
+                        {% icon 'activity' size=32 css_class='text-primary' %}
                     </div>
                     <div>
                         <h4 class="mb-0 fw-bold">{{ stats.en_progreso|default:0 }}</h4>
@@ -94,7 +95,7 @@
             <div class="card-body text-center">
                 <div class="d-flex align-items-center justify-content-center">
                     <div class="me-3">
-                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                        {% icon 'check-circle' size=32 css_class='text-success' %}
                     </div>
                     <div>
                         <h4 class="mb-0 fw-bold">{{ stats.finalizadas|default:0 }}</h4>
@@ -109,7 +110,7 @@
             <div class="card-body text-center">
                 <div class="d-flex align-items-center justify-content-center">
                     <div class="me-3">
-                        <i class="bi bi-x-circle text-danger" style="font-size: 2rem;"></i>
+                        {% icon 'x-circle' size=32 css_class='text-danger' %}
                     </div>
                     <div>
                         <h4 class="mb-0 fw-bold">{{ stats.canceladas|default:0 }}</h4>
@@ -124,7 +125,7 @@
             <div class="card-body text-center">
                 <div class="d-flex align-items-center justify-content-center">
                     <div class="me-3">
-                        <i class="bi bi-calendar-check text-info" style="font-size: 2rem;"></i>
+                        {% icon 'calendar-check' size=32 css_class='text-info' %}
                     </div>
                     <div>
                         <h4 class="mb-0 fw-bold">{{ stats.con_cita|default:0 }}</h4>
@@ -139,7 +140,7 @@
             <div class="card-body text-center">
                 <div class="d-flex align-items-center justify-content-center">
                     <div class="me-3">
-                        <i class="bi bi-clipboard text-secondary" style="font-size: 2rem;"></i>
+                        {% icon 'clipboard' size=32 css_class='text-secondary' %}
                     </div>
                     <div>
                         <h4 class="mb-0 fw-bold">{{ stats.sin_cita|default:0 }}</h4>
@@ -160,7 +161,7 @@
           <button class="nav-link active fw-medium py-3 px-4" id="pendientes-tab"
                   data-bs-toggle="tab" data-bs-target="#pendientes"
                   type="button" role="tab">
-            <i class="bi bi-hourglass me-2"></i>Pendientes
+            {% icon 'hourglass' css_class='me-2' %}Pendientes
             <span class="badge bg-warning ms-2">{{ stats.pendientes|default:0 }}</span>
           </button>
         </li>
@@ -168,7 +169,7 @@
           <button class="nav-link fw-medium py-3 px-4" id="en-progreso-tab"
                   data-bs-toggle="tab" data-bs-target="#en-progreso"
                   type="button" role="tab">
-            <i class="bi bi-activity me-2"></i>En Progreso
+            {% icon 'activity' css_class='me-2' %}En Progreso
             <span class="badge bg-primary ms-2">{{ stats.en_progreso|default:0 }}</span>
           </button>
         </li>
@@ -176,7 +177,7 @@
           <button class="nav-link fw-medium py-3 px-4" id="finalizadas-tab"
                   data-bs-toggle="tab" data-bs-target="#finalizadas"
                   type="button" role="tab">
-            <i class="bi bi-check-circle me-2"></i>Finalizadas
+            {% icon 'check-circle' css_class='me-2' %}Finalizadas
             <span class="badge bg-success ms-2">{{ stats.finalizadas|default:0 }}</span>
           </button>
         </li>
@@ -184,7 +185,7 @@
           <button class="nav-link fw-medium py-3 px-4" id="canceladas-tab"
                   data-bs-toggle="tab" data-bs-target="#canceladas"
                   type="button" role="tab">
-            <i class="bi bi-x-circle me-2"></i>Canceladas
+            {% icon 'x-circle' css_class='me-2' %}Canceladas
             <span class="badge bg-danger ms-2">{{ stats.canceladas|default:0 }}</span>
           </button>
         </li>
@@ -222,10 +223,10 @@
         </div>
         <div class="col-md-2 d-flex align-items-end">
           <button type="submit" class="btn btn-primary me-2 btn-action">
-            <i class="bi bi-search me-1"></i>Filtrar
+            {% icon 'search' css_class='me-1' %}Filtrar
           </button>
           <a href="{% url 'consultas_lista' %}" class="btn btn-outline-secondary btn-action">
-            <i class="bi bi-x-circle me-1"></i>Limpiar
+            {% icon 'x-circle' css_class='me-1' %}Limpiar
           </a>
         </div>
       </form>
@@ -240,7 +241,7 @@
             {% empty %}
               <div class="col-12">
                 <div class="text-center py-5">
-                  <i class="bi bi-clipboard-x text-muted" style="font-size: 4rem;"></i>
+                  {% icon 'clipboard-x' size=64 css_class='text-muted' %}
                   <h5 class="text-muted mt-3">No hay consultas pendientes</h5>
                   <p class="text-muted">Todas las consultas están al día</p>
                 </div>
@@ -257,7 +258,7 @@
             {% empty %}
               <div class="col-12">
                 <div class="text-center py-5">
-                  <i class="bi bi-activity text-muted" style="font-size: 4rem;"></i>
+                  {% icon 'activity' size=64 css_class='text-muted' %}
                   <h5 class="text-muted mt-3">No hay consultas en progreso</h5>
                   <p class="text-muted">No hay consultas siendo atendidas actualmente</p>
                 </div>
@@ -274,7 +275,7 @@
             {% empty %}
               <div class="col-12">
                 <div class="text-center py-5">
-                  <i class="bi bi-check-circle text-muted" style="font-size: 4rem;"></i>
+                  {% icon 'check-circle' size=64 css_class='text-muted' %}
                   <h5 class="text-muted mt-3">No hay consultas finalizadas</h5>
                   <p class="text-muted">Aún no se han completado consultas</p>
                 </div>
@@ -291,7 +292,7 @@
             {% empty %}
               <div class="col-12">
                 <div class="text-center py-5">
-                  <i class="bi bi-x-circle text-muted" style="font-size: 4rem;"></i>
+                  {% icon 'x-circle' size=64 css_class='text-muted' %}
                   <h5 class="text-muted mt-3">No hay consultas canceladas</h5>
                   <p class="text-muted">Excelente, no hay cancelaciones</p>
                 </div>
@@ -525,7 +526,7 @@ function updateEmptyStates() {
                 emptyDiv.className = 'col-12 empty-state';
                 emptyDiv.innerHTML = `
                     <div class="text-center py-5">
-                        <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+                        {% icon 'search' size=64 css_class='text-muted' %}
                         <h5 class="text-muted mt-3">No se encontraron resultados</h5>
                         <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
                     </div>

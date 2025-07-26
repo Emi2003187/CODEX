@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 {% block title %}Eliminar Signos Vitales - {{ paciente.nombre_completo }}{% endblock %}
 
 {% block content %}
@@ -33,7 +34,7 @@
   <div class="row align-items-center mb-4">
     <div class="col-md-8">
       <h1 class="fw-bold text-danger mb-0">
-        <i class="bi bi-trash me-2"></i>Eliminar Signos Vitales
+        {% icon 'trash' css_class='me-2' %}Eliminar Signos Vitales
       </h1>
       <p class="text-muted mb-0">
         Paciente: <strong>{{ paciente.nombre_completo }}</strong> 
@@ -46,7 +47,7 @@
     </div>
     <div class="col-md-4 text-md-end mt-3 mt-md-0">
       <a href="{{ next }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Cancelar
+        {% icon 'arrow-left' css_class='me-1' %}Cancelar
       </a>
     </div>
   </div>
@@ -57,14 +58,14 @@
       <div class="card border-danger">
         <div class="card-header bg-danger text-white">
           <h4 class="mb-0">
-            <i class="bi bi-exclamation-triangle me-2"></i>
+            {% icon 'exclamation-triangle' css_class='me-2' %}
             Confirmar Eliminación
           </h4>
         </div>
         <div class="card-body">
           <div class="alert alert-danger">
             <h5 class="alert-heading">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              {% icon 'exclamation-triangle-fill' css_class='me-2' %}
               ¡Atención! Esta acción no se puede deshacer
             </h5>
             <p class="mb-0">
@@ -78,7 +79,7 @@
           <div class="row mb-4">
             <div class="col-12">
               <h5 class="text-primary border-bottom pb-2 mb-3">
-                <i class="bi bi-clipboard-data me-2"></i>Datos que se eliminarán:
+                {% icon 'clipboard-data' css_class='me-2' %}Datos que se eliminarán:
               </h5>
             </div>
             
@@ -135,16 +136,16 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <small class="text-muted">
-                  <i class="bi bi-info-circle me-1"></i>
+                  {% icon 'info-circle' css_class='me-1' %}
                   Solo los médicos y administradores pueden eliminar signos vitales
                 </small>
               </div>
               <div class="d-flex gap-2">
                 <a href="{{ next }}" class="btn btn-secondary px-4">
-                  <i class="bi bi-x-circle me-1"></i>Cancelar
+                  {% icon 'x-circle' css_class='me-1' %}Cancelar
                 </a>
                 <button type="submit" class="btn btn-danger px-4" onclick="return confirm('¿Está completamente seguro de que desea eliminar estos signos vitales? Esta acción no se puede deshacer.')">
-                  <i class="bi bi-trash me-1"></i>Eliminar Definitivamente
+                  {% icon 'trash' css_class='me-1' %}Eliminar Definitivamente
                 </button>
               </div>
             </div>

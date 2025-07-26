@@ -1,3 +1,4 @@
+{% load icons %}
 {# ───────────────────────────────────────────────────────────────
   PAGES/citas/editar.html
   ─────────────────────────────────────────────────────────────── #}
@@ -51,7 +52,7 @@
   <div class="card shadow-sm border-0">
     <div class="card-header bg-primary bg-gradient text-white">
       <h2 class="mb-0">
-        <i class="bi bi-pencil-square me-2"></i>Editar Cita {{ cita.numero_cita }}
+        {% icon 'pencil-square' css_class='me-2' %}Editar Cita {{ cita.numero_cita }}
       </h2>
     </div>
     <div class="card-body">
@@ -145,10 +146,10 @@
 
     <div class="mt-4 d-flex justify-content-between">
       <a href="{% url 'citas_lista' %}" class="btn btn-secondary">
-        <i class="bi bi-x-lg me-1"></i>Cancelar
+        {% icon 'x-lg' css_class='me-1' %}Cancelar
       </a>
       <button type="submit" class="btn btn-primary">
-        <i class="bi bi-save me-1"></i>Actualizar
+        {% icon 'save' css_class='me-1' %}Actualizar
       </button>
     </div>
       </form>

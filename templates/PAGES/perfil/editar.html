@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load icons %}
 {% load form_filters %}
 
 {% block title %}Editar Perfil{% endblock %}
@@ -12,13 +13,13 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="text-primary fw-bold mb-1">
-                        <i class="bi bi-person-gear me-2"></i>Editar Mi Perfil
+                        {% icon 'person-gear' css_class='me-2' %}Editar Mi Perfil
                     </h2>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
                                 <a href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'citas_lista' %}{% endif %}" class="text-decoration-none">
-                                    <i class="bi bi-house-door me-1"></i>Dashboard
+                                    {% icon 'house-door' css_class='me-1' %}Dashboard
                                 </a>
                             </li>
                             <li class="breadcrumb-item">
@@ -43,7 +44,7 @@
                                 {% else %}
                                     <div class="rounded-circle border border-3 border-white shadow bg-white d-flex align-items-center justify-content-center" 
                                          style="width: 80px; height: 80px;" id="profile-preview">
-                                        <i class="bi bi-person-fill text-primary" style="font-size: 2rem;"></i>
+                                        {% icon 'person-fill' css_class='text-primary' %}
                                     </div>
                                 {% endif %}
                             </div>
@@ -52,7 +53,13 @@
                             <h4 class="mb-1 fw-bold">{{ usuario.get_full_name|default:usuario.username }}</h4>
                             <p class="mb-1 opacity-75">@{{ usuario.username }}</p>
                             <span class="badge bg-white text-primary px-3 py-2">
-                                <i class="bi bi-{% if usuario.rol == 'admin' %}shield-fill-check{% elif usuario.rol == 'medico' %}heart-pulse-fill{% else %}person-gear{% endif %} me-1"></i>
+                                {% if usuario.rol == "admin" %}
+                                    {% icon 'shield-fill-check' css_class='me-1' %}
+                                {% elif usuario.rol == "medico" %}
+                                    {% icon 'heart-pulse-fill' css_class='me-1' %}
+                                {% else %}
+                                    {% icon 'person-gear' css_class='me-1' %}
+                                {% endif %}
                                 {{ usuario.get_rol_display }}
                             </span>
                         </div>
@@ -70,53 +77,53 @@
                                 <div class="card h-100 border-0 bg-light rounded-3">
                                     <div class="card-body p-4">
                                         <h5 class="card-title text-primary mb-4">
-                                            <i class="bi bi-person-lines-fill me-2"></i>Información Personal
+                                            {% icon 'person-lines-fill' css_class='me-2' %}Información Personal
                                         </h5>
                                         
                                         <div class="mb-4">
                                             <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold">
-                                                <i class="bi bi-person me-1"></i>{{ form.first_name.label }}
+                                                {% icon 'person' css_class='me-1' %}{{ form.first_name.label }}
                                             </label>
                                             {{ form.first_name|add_class:"form-control form-control-lg" }}
                                             {% for error in form.first_name.errors %}
                                                 <div class="text-danger small mt-1">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                    {% icon 'exclamation-circle' css_class='me-1' %}{{ error }}
                                                 </div>
                                             {% endfor %}
                                         </div>
                                         
                                         <div class="mb-4">
                                             <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold">
-                                                <i class="bi bi-person me-1"></i>{{ form.last_name.label }}
+                                                {% icon 'person' css_class='me-1' %}{{ form.last_name.label }}
                                             </label>
                                             {{ form.last_name|add_class:"form-control form-control-lg" }}
                                             {% for error in form.last_name.errors %}
                                                 <div class="text-danger small mt-1">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                    {% icon 'exclamation-circle' css_class='me-1' %}{{ error }}
                                                 </div>
                                             {% endfor %}
                                         </div>
                                         
                                         <div class="mb-4">
                                             <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">
-                                                <i class="bi bi-envelope me-1"></i>{{ form.email.label }}
+                                                {% icon 'envelope' css_class='me-1' %}{{ form.email.label }}
                                             </label>
                                             {{ form.email|add_class:"form-control form-control-lg" }}
                                             {% for error in form.email.errors %}
                                                 <div class="text-danger small mt-1">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                    {% icon 'exclamation-circle' css_class='me-1' %}{{ error }}
                                                 </div>
                                             {% endfor %}
                                         </div>
                                         
                                         <div class="mb-0">
                                             <label for="{{ form.telefono.id_for_label }}" class="form-label fw-semibold">
-                                                <i class="bi bi-telephone me-1"></i>{{ form.telefono.label }}
+                                                {% icon 'telephone' css_class='me-1' %}{{ form.telefono.label }}
                                             </label>
                                             {{ form.telefono|add_class:"form-control form-control-lg" }}
                                             {% for error in form.telefono.errors %}
                                                 <div class="text-danger small mt-1">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                    {% icon 'exclamation-circle' css_class='me-1' %}{{ error }}
                                                 </div>
                                             {% endfor %}
                                         </div>
@@ -129,30 +136,30 @@
                                 <div class="card h-100 border-0 bg-light rounded-3">
                                     <div class="card-body p-4">
                                         <h5 class="card-title text-success mb-4">
-                                            <i class="bi bi-briefcase-fill me-2"></i>Información Profesional
+                                            {% icon 'briefcase-fill' css_class='me-2' %}Información Profesional
                                         </h5>
                                         
                                         {% if usuario.rol == 'medico' %}
                                         <div class="mb-4">
                                             <label for="{{ form.cedula_profesional.id_for_label }}" class="form-label fw-semibold">
-                                                <i class="bi bi-card-text me-1"></i>{{ form.cedula_profesional.label }}
+                                                {% icon 'card-text' css_class='me-1' %}{{ form.cedula_profesional.label }}
                                             </label>
                                             {{ form.cedula_profesional|add_class:"form-control form-control-lg" }}
                                             {% for error in form.cedula_profesional.errors %}
                                                 <div class="text-danger small mt-1">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                    {% icon 'exclamation-circle' css_class='me-1' %}{{ error }}
                                                 </div>
                                             {% endfor %}
                                         </div>
                                         
                                         <div class="mb-4">
                                             <label for="{{ form.institucion_cedula.id_for_label }}" class="form-label fw-semibold">
-                                                <i class="bi bi-bank me-1"></i>{{ form.institucion_cedula.label }}
+                                                {% icon 'bank' css_class='me-1' %}{{ form.institucion_cedula.label }}
                                             </label>
                                             {{ form.institucion_cedula|add_class:"form-control form-control-lg" }}
                                             {% for error in form.institucion_cedula.errors %}
                                                 <div class="text-danger small mt-1">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                    {% icon 'exclamation-circle' css_class='me-1' %}{{ error }}
                                                 </div>
                                             {% endfor %}
                                         </div>
@@ -161,7 +168,7 @@
                                         <!-- Vista previa de foto -->
                                         <div class="mb-4">
                                             <label class="form-label fw-semibold">
-                                                <i class="bi bi-image me-1"></i>Vista Previa
+                                                {% icon 'image' css_class='me-1' %}Vista Previa
                                             </label>
                                             <div class="text-center">
                                                 <div id="photo-preview-container" class="mb-3">
@@ -171,7 +178,7 @@
                                                     {% else %}
                                                         <div class="rounded-circle border shadow bg-light d-flex align-items-center justify-content-center mx-auto" 
                                                              style="width: 100px; height: 100px;" id="photo-preview">
-                                                            <i class="bi bi-person-fill text-muted" style="font-size: 2.5rem;"></i>
+                                                            {% icon 'person-fill' css_class='text-muted' %}
                                                         </div>
                                                     {% endif %}
                                                 </div>
@@ -180,16 +187,16 @@
                                         
                                         <div class="mb-0">
                                             <label for="{{ form.foto.id_for_label }}" class="form-label fw-semibold">
-                                                <i class="bi bi-camera me-1"></i>{{ form.foto.label }}
+                                                {% icon 'camera' css_class='me-1' %}{{ form.foto.label }}
                                             </label>
                                             {{ form.foto|add_class:"form-control form-control-lg" }}
                                             {% for error in form.foto.errors %}
                                                 <div class="text-danger small mt-1">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                    {% icon 'exclamation-circle' css_class='me-1' %}{{ error }}
                                                 </div>
                                             {% endfor %}
                                             <div class="form-text">
-                                                <i class="bi bi-info-circle me-1"></i>Formatos permitidos: JPG, JPEG, PNG (máx. 5MB)
+                                                {% icon 'info-circle' css_class='me-1' %}Formatos permitidos: JPG, JPEG, PNG (máx. 5MB)
                                             </div>
                                         </div>
                                     </div>
@@ -201,14 +208,14 @@
                         <div class="card border-0 bg-light rounded-3 mt-4">
                             <div class="card-body p-4">
                                 <h5 class="card-title text-warning mb-4">
-                                    <i class="bi bi-shield-lock-fill me-2"></i>Seguridad
+                                    {% icon 'shield-lock-fill' css_class='me-2' %}Seguridad
                                 </h5>
                                 
                                 <div class="mb-4">
                                     <div class="form-check form-switch">
                                         {{ form.cambiar_password|add_class:"form-check-input" }}
                                         <label class="form-check-label fw-semibold" for="{{ form.cambiar_password.id_for_label }}">
-                                            <i class="bi bi-key me-1"></i>{{ form.cambiar_password.label }}
+                                            {% icon 'key' css_class='me-1' %}{{ form.cambiar_password.label }}
                                         </label>
                                     </div>
                                 </div>
@@ -217,40 +224,40 @@
                                     <div class="row g-3">
                                         <div class="col-md-4">
                                             <label for="{{ form.password_actual.id_for_label }}" class="form-label fw-semibold">
-                                                <i class="bi bi-lock me-1"></i>{{ form.password_actual.label }}
+                                                {% icon 'lock' css_class='me-1' %}{{ form.password_actual.label }}
                                             </label>
                                             {{ form.password_actual|add_class:"form-control" }}
                                             {% for error in form.password_actual.errors %}
                                                 <div class="text-danger small mt-1">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                    {% icon 'exclamation-circle' css_class='me-1' %}{{ error }}
                                                 </div>
                                             {% endfor %}
                                         </div>
                                         <div class="col-md-4">
                                             <label for="{{ form.password_nueva.id_for_label }}" class="form-label fw-semibold">
-                                                <i class="bi bi-key me-1"></i>{{ form.password_nueva.label }}
+                                                {% icon 'key' css_class='me-1' %}{{ form.password_nueva.label }}
                                             </label>
                                             {{ form.password_nueva|add_class:"form-control" }}
                                             {% for error in form.password_nueva.errors %}
                                                 <div class="text-danger small mt-1">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                    {% icon 'exclamation-circle' css_class='me-1' %}{{ error }}
                                                 </div>
                                             {% endfor %}
                                         </div>
                                         <div class="col-md-4">
                                             <label for="{{ form.password_confirmacion.id_for_label }}" class="form-label fw-semibold">
-                                                <i class="bi bi-check-circle me-1"></i>{{ form.password_confirmacion.label }}
+                                                {% icon 'check-circle' css_class='me-1' %}{{ form.password_confirmacion.label }}
                                             </label>
                                             {{ form.password_confirmacion|add_class:"form-control" }}
                                             {% for error in form.password_confirmacion.errors %}
                                                 <div class="text-danger small mt-1">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                    {% icon 'exclamation-circle' css_class='me-1' %}{{ error }}
                                                 </div>
                                             {% endfor %}
                                         </div>
                                     </div>
                                     <div class="alert alert-info mt-3">
-                                        <i class="bi bi-info-circle me-2"></i>
+                                        {% icon 'info-circle' css_class='me-2' %}
                                         <strong>Requisitos de contraseña:</strong> Mínimo 8 caracteres, debe incluir letras y números.
                                     </div>
                                 </div>
@@ -260,7 +267,7 @@
                         <!-- Errores generales del formulario -->
                         {% if form.non_field_errors %}
                             <div class="alert alert-danger mt-4">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                {% icon 'exclamation-triangle-fill' css_class='me-2' %}
                                 {% for error in form.non_field_errors %}
                                     <div>{{ error }}</div>
                                 {% endfor %}
@@ -270,13 +277,13 @@
                         <!-- Botones de acción -->
                         <div class="d-flex flex-wrap justify-content-end gap-3 mt-5">
                             <a href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'citas_lista' %}{% endif %}" class="btn btn-outline-secondary btn-lg px-4">
-                                <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
+                                {% icon 'arrow-left' css_class='me-2' %}Volver al Dashboard
                             </a>
                             <a href="{% url 'ver_perfil' %}" class="btn btn-outline-secondary btn-lg px-4">
-                                <i class="bi bi-x-lg me-2"></i>Cancelar
+                                {% icon 'x-lg' css_class='me-2' %}Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary btn-lg px-4 shadow-sm">
-                                <i class="bi bi-check-lg me-2"></i>Guardar Cambios
+                                {% icon 'check-lg' css_class='me-2' %}Guardar Cambios
                             </button>
                         </div>
                     </form>
