@@ -340,6 +340,7 @@ def detalle_cita(request, cita_id):
         'puede_editar': puede_editar_cita(request.user, cita),
         'usuario': request.user,
         'ahora': timezone.localtime(),
+        'now': timezone.localtime(),
     }
     return render(request, 'PAGES/citas/detalle.html', context)
 
@@ -347,6 +348,10 @@ def detalle_cita(request, cita_id):
 @login_required
 def reprogramar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
+
+    # Asegurar que la fecha sea "aware" para evitar errores de localtime
+    if timezone.is_naive(cita.fecha_hora):
+        cita.fecha_hora = timezone.make_aware(cita.fecha_hora)
 
     if not puede_editar_cita(request.user, cita):
         messages.error(request, "No tienes permisos para reprogramar esta cita.")

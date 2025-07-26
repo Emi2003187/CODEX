@@ -35,27 +35,6 @@
         margin-top: 0.5rem;
         font-size: 0.875rem;
     }
-    .info-horarios {
-        background: #eff6ff;
-        border: 1px solid var(--primary-light);
-        border-radius: 4px;
-        padding: 0.75rem;
-        margin-bottom: 1rem;
-        font-size: 0.875rem;
-    }
-    .info-horarios h6 {
-        color: var(--primary-dark);
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-    }
-    .info-horarios ul {
-        margin-bottom: 0;
-        padding-left: 1.2rem;
-    }
-    .info-horarios li {
-        color: var(--primary-dark);
-        margin-bottom: 0.25rem;
-    }
     .form-control option:disabled {
         color: var(--text-secondary);
         background-color: var(--bg-color);
@@ -187,13 +166,14 @@
                         <!-- Fecha y Hora -->
                         <div class="form-section">
                             <h6><i class="fas fa-calendar-alt me-2"></i>Fecha y Hora</h6>
-                            <div class="info-horarios">
-                                <h6><i class="fas fa-info-circle me-2"></i>Información de Horarios</h6>
-                                <ul>
-                                    <li>Horario de atención: 7:00 AM - 6:00 PM</li>
-                                    <li>Los horarios se actualizan automáticamente según disponibilidad</li>
-                                    <li>Solo se muestran horarios disponibles para la duración seleccionada</li>
-                                </ul>
+                            <div class="alert alert-info d-flex align-items-start">
+                                <i class="bi bi-info-circle-fill me-2 fs-4"></i>
+                                <div>
+                                    <strong>Información de Horarios</strong><br>
+                                    • Horario de atención: 7:00 AM - 6:00 PM <br>
+                                    • Los horarios se actualizan automáticamente según disponibilidad <br>
+                                    • Solo se muestran horarios disponibles para la duración seleccionada
+                                </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-4">

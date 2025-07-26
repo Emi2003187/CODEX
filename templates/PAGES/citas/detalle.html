@@ -884,8 +884,9 @@
             <form method="post" action="{% url 'cita_marcar_no_asistio' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
               <input type="hidden" name="next" value="{{ volver_a }}">
-              {% with ahora < cita.fecha_hora as deshabilitar %}
-              <button type="submit" id="btnNoAsistio" class="btn btn-action btn-no-asistio" onclick="return confirm('¿Marcar esta cita como NO ASISTIÓ?');" {% if deshabilitar %}disabled{% endif %}>
+              <button type="submit" id="btnNoAsistio" class="btn btn-action btn-no-asistio"
+                onclick="return confirm('¿Marcar esta cita como NO ASISTIÓ?');"
+                {% if cita.fecha_hora|date:"U" > now|date:"U" %}disabled data-bs-toggle="tooltip" title="Disponible cuando la hora de la cita haya iniciado"{% endif %}>
                 <i class="bi bi-person-x"></i>
                 No Asistió
               </button>

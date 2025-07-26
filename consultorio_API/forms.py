@@ -493,26 +493,27 @@ class CitaForm(forms.ModelForm):
             self.paciente_nombre = paciente_fijo.nombre_completo
 
         # preparar opciones de cita anterior según el paciente
-        paciente_id = (
-            (paciente_fijo.pk if paciente_fijo else None)
-            or self.data.get("paciente")
-            or self.initial.get("paciente")
-            or getattr(self.instance, "paciente_id", None)
-        )
-        if paciente_id:
+        paciente = self.instance.paciente or paciente_fijo
+        if not paciente:
+            pid = self.data.get("paciente") or self.initial.get("paciente")
             try:
-                pid = int(paciente_id)
-            except (TypeError, ValueError):
-                qs_prev = Cita.objects.none()
-            else:
-                qs_prev = (
-                    Cita.objects.filter(paciente_id=pid)
-                    .exclude(pk=self.instance.pk)
-                    .order_by("-fecha_hora")
-                )
+                paciente = Paciente.objects.get(pk=int(pid))
+            except (TypeError, ValueError, Paciente.DoesNotExist):
+                paciente = None
+
+        if paciente:
+            qs_prev = (
+                Cita.objects.filter(paciente=paciente)
+                .exclude(id=self.instance.id)
+                .order_by("-fecha_hora")
+            )
             self.fields["cita_anterior"].queryset = qs_prev
+            self.fields["cita_anterior"].empty_label = (
+                "No hay citas anteriores" if not qs_prev.exists() else "---------"
+            )
         else:
             self.fields["cita_anterior"].queryset = Cita.objects.none()
+            self.fields["cita_anterior"].empty_label = "No hay citas anteriores"
 
         # edición
         if self.instance.pk and self.instance.consultorio_id and self.instance.fecha_hora:
