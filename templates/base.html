@@ -721,20 +721,17 @@
           <div class="modal-body text-center py-4">Cargando…</div>
           <div class="modal-footer">
             <button id="modalRecetaPrint"  class="btn btn-primary">Imprimir</button>
-            <button id="modalRecetaDownload" class="btn btn-success">Descargar PDF</button>
             <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
           </div>
         </div>
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
 document.addEventListener("DOMContentLoaded", () => {
   const modal      = new bootstrap.Modal('#modalReceta');
   const bodyEl     = document.querySelector('#modalReceta .modal-body');
   const btnPrint   = document.getElementById('modalRecetaPrint');
-  const btnPdf     = document.getElementById('modalRecetaDownload');
 
   document.querySelectorAll('.btn-preview-receta').forEach(btn => {
     btn.addEventListener('click', e => {
@@ -762,24 +759,6 @@ document.addEventListener("DOMContentLoaded", () => {
         w.onload = () => { w.focus(); w.print(); w.close(); };
       };
 
-      /* —— PDF —— */
-      btnPdf.onclick = () => {
-        const node  = bodyEl.querySelector('#receta-print-area');
-        const id    = node.dataset.id;
-        const fname = node.dataset.paciente.replace(/-/g,'_');
-        const fecha = node.dataset.fecha;
-        const nombreArchivo = `receta_${id}_${fname}_${fecha}.pdf`;
-
-        html2pdf().set({
-
-            margin: [10,10],
-
-            filename: nombreArchivo,
-            image: { type:'jpeg', quality:0.98 },
-            html2canvas: { scale:3, useCORS:true },
-            jsPDF: { unit:'mm', format:'a5', orientation:'portrait' }
-        }).from(node).save();
-      };
     });
   });
 });

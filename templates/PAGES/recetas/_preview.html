@@ -7,7 +7,12 @@
   <h5 class="mt-3">Medicamentos</h5>
   <ul class="mb-2">
     {% for m in receta.medicamentos.all %}
-      <li>{{ m.nombre }} – {{ m.indicaciones }}</li>
+      <li>
+        {{ m.nombre }} – Dosis: {{ m.dosis }}, Frecuencia: {{ m.frecuencia }},
+        Duración: {{ m.duracion }}, Cantidad: {{ m.cantidad|default:"—" }}{% if m.indicaciones_especificas %},
+        Notas: {{ m.indicaciones_especificas }}{% elif m.indicaciones %},
+        Notas: {{ m.indicaciones }}{% endif %}
+      </li>
     {% empty %}
       <li>No hay medicamentos.</li>
     {% endfor %}

@@ -26,7 +26,6 @@
             <div class="data-row">
                 <div class="data-item">
                     <b>Paciente:</b>
-                    <span class="rx-symbol">Rx</span>
                     <span>{{ receta.consulta.paciente }}</span>
                 </div>
                 <div class="data-item right-align">
@@ -103,8 +102,10 @@
                     <li>
                         <b>{{ m.nombre|title }}</b> – Dosis: {{ m.dosis }},
                         Frecuencia: {{ m.frecuencia }},
-                        Duración: {{ m.duracion }}{% if m.indicaciones and m.indicaciones != "N/A" %},
-                        Indicaciones: {{ m.indicaciones }}{% endif %}
+                        Duración: {{ m.duracion }},
+                        Cantidad: {{ m.cantidad|default:"—" }}{% if m.indicaciones_especificas %},
+                        Notas: {{ m.indicaciones_especificas }}{% elif m.indicaciones and m.indicaciones != "N/A" %},
+                        Notas: {{ m.indicaciones }}{% endif %}
                     </li>
                 {% empty %}
                     <li>No hay medicamentos.</li>
@@ -116,7 +117,7 @@
         <div class="bottom-block">
             <section class="obs">
                 <div class="obs-box">
-                    <span class="obs-title-inner">NOTAS</span>
+                    
                     <div class="obs-text">{{ receta.observaciones|default:"" }}</div>
                 </div>
             </section>
