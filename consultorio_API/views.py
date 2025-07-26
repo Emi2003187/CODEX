@@ -1230,6 +1230,8 @@ def detalle_cita(request, cita_id):
         ),
         'puede_tomar_cita': puede_tomar_cita(request.user, cita),
         'puede_editar': puede_editar_cita(request.user, cita),
+        'puede_reprogramar': puede_reprogramar_cita(request.user, cita),
+        'puede_eliminar': puede_eliminar_cita(request.user, cita),
         'usuario': request.user,
     }
     return render(request, 'PAGES/citas/detalle.html', context)
@@ -1245,14 +1247,14 @@ def asignar_medico_cita(request, cita_id):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'message': 'No tienes permisos para asignar médicos'}, status=403)
         messages.error(request, 'No tienes permisos para asignar médicos.')
-        return redirect_next(request, 'detalle_cita', cita_id=cita.id)
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
     
     # Verificar que la cita puede tener médico asignado
     if not cita.puede_asignar_medico:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'message': 'Esta cita ya tiene médico asignado o no se puede asignar'}, status=400)
         messages.error(request, 'Esta cita ya tiene médico asignado o no se puede asignar.')
-        return redirect_next(request, 'detalle_cita', cita_id=cita.id)
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
     
     if request.method == 'POST':
         # Determinar si es una solicitud AJAX
@@ -1329,7 +1331,7 @@ def asignar_medico_cita(request, cita_id):
                         f'Médico {medico.get_full_name()} asignado exitosamente a la cita {cita.numero_cita}.'
                     )
                     
-                    return redirect_next(request, 'detalle_cita', cita_id=cita.id)
+                    return redirect_next(request, 'citas_detalle', pk=cita.id)
                     
                 except Exception as e:
                     messages.error(request, f'Error al asignar médico: {str(e)}')
@@ -1434,16 +1436,16 @@ def liberar_cita(request, cita_id):
     # Verificar permisos
     if not (request.user.rol == 'admin' or cita.medico_asignado == request.user):
         messages.error(request, 'No tienes permisos para liberar esta cita.')
-        return redirect_next(request, 'detalle_cita', cita_id=cita.id)
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
     
     # Verificar que la cita se puede liberar
     if not cita.medico_asignado:
         messages.error(request, 'Esta cita no tiene médico asignado.')
-        return redirect_next(request, 'detalle_cita', cita_id=cita.id)
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
     
     if cita.estado in ['completada', 'cancelada']:
         messages.error(request, 'No se puede liberar una cita completada o cancelada.')
-        return redirect_next(request, 'detalle_cita', cita_id=cita.id)
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
     
     if request.method == 'POST':
         try:
@@ -1475,7 +1477,7 @@ def liberar_cita(request, cita_id):
                 f'Ahora está disponible para otros médicos del {cita.consultorio.nombre}.'
             )
             
-            return redirect_next(request, 'detalle_cita', cita_id=cita.id)
+            return redirect_next(request, 'citas_detalle', pk=cita.id)
             
         except Exception as e:
             messages.error(request, f'Error al liberar la cita: {str(e)}')
@@ -1717,11 +1719,23 @@ def puede_reprogramar_cita(user, cita):
     """Verifica si el usuario puede reprogramar la cita"""
     if puede_editar_cita(user, cita):
         return True
-    if cita.estado == 'cancelada' and user.rol in ['admin', 'medico', 'asistente']:
+    if cita.estado in ['cancelada', 'no_asistio'] and user.rol in ['admin', 'medico', 'asistente']:
         if user.rol == 'admin':
             return True
         # Para médicos y asistentes solo verificamos pertenencia al consultorio
         return cita.consultorio == user.consultorio
+    return False
+
+
+def puede_eliminar_cita(user, cita):
+    """Verifica si el usuario puede eliminar la cita"""
+    if user.rol == 'admin':
+        return cita.estado != 'completada'
+    if user.rol == 'medico':
+        return (
+            cita.estado == 'reprogramada'
+            and cita.medico_asignado == user
+        )
     return False
 
 
@@ -4607,6 +4621,7 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
             'puede_tomar_cita': self._puede_tomar_cita(user, cita),
             'puede_editar': self._puede_editar_cita(user, cita),
             'puede_reprogramar': self._puede_reprogramar_cita(user, cita),
+            'puede_eliminar': self._puede_eliminar_cita(user, cita),
             'usuario': user,
             'now': timezone.now(),
         })
@@ -4646,10 +4661,21 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
         """Verifica si el usuario puede reprogramar la cita"""
         if self._puede_editar_cita(user, cita):
             return True
-        if cita.estado == 'cancelada' and user.rol in ['admin', 'medico', 'asistente']:
+        if cita.estado in ['cancelada', 'no_asistio'] and user.rol in ['admin', 'medico', 'asistente']:
             if user.rol == 'admin':
                 return True
             return cita.consultorio == user.consultorio
+        return False
+
+    def _puede_eliminar_cita(self, user, cita):
+        """Verifica si el usuario puede eliminar la cita"""
+        if user.rol == 'admin':
+            return cita.estado != 'completada'
+        if user.rol == 'medico':
+            return (
+                cita.estado == 'reprogramada'
+                and cita.medico_asignado == user
+            )
         return False
 
 

@@ -283,7 +283,7 @@ def editar_cita(request, cita_id):
                     request,
                     f"Cita {cita.numero_cita} actualizada correctamente.",
                 )
-                return redirect("detalle_cita", cita_id=cita.id)
+                return redirect("citas_detalle", pk=cita.id)
 
     # ───────── GET (o POST inválido) ─────────
     else:
@@ -344,6 +344,7 @@ def detalle_cita(request, cita_id):
         'puede_tomar_cita': puede_tomar_cita(request.user, cita),
         'puede_editar': puede_editar_cita(request.user, cita),
         'puede_reprogramar': puede_reprogramar_cita(request.user, cita),
+        'puede_eliminar': puede_eliminar_cita(request.user, cita),
         'usuario': request.user,
         # Evitar ValueError si USE_TZ=False
         'ahora': timezone.now(),
@@ -1322,10 +1323,22 @@ def puede_reprogramar_cita(user, cita):
     """Verifica si el usuario puede reprogramar la cita"""
     if puede_editar_cita(user, cita):
         return True
-    if cita.estado == 'cancelada' and user.rol in ['admin', 'medico', 'asistente']:
+    if cita.estado in ['cancelada', 'no_asistio'] and user.rol in ['admin', 'medico', 'asistente']:
         if user.rol == 'admin':
             return True
         return cita.consultorio == user.consultorio
+    return False
+
+
+def puede_eliminar_cita(user, cita):
+    """Verifica si el usuario puede eliminar la cita"""
+    if user.rol == 'admin':
+        return cita.estado != 'completada'
+    if user.rol == 'medico':
+        return (
+            cita.estado == 'reprogramada'
+            and cita.medico_asignado == user
+        )
     return False
 
 
