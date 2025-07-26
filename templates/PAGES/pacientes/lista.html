@@ -105,9 +105,11 @@
 
               <td class="text-end pe-4">
                 <div class="d-flex justify-content-end gap-2">
+                  {% if usuario.rol != 'asistente' %}
                   <a href="{% url 'paciente_detalle' p.pk %}" class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="Ver ficha">
                     <i class="bi bi-eye-fill"></i>
                   </a>
+                  {% endif %}
                   <a href="{% url 'pacientes_editar' p.pk %}" class="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="Editar">
                     <i class="bi bi-pencil-fill"></i>
                   </a>
