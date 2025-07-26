@@ -516,10 +516,15 @@ class CitaForm(forms.ModelForm):
             else:
                 fecha_val = self.data.get("fecha") or self.initial.get("fecha")
                 hora_val = self.data.get("hora") or self.initial.get("hora")
-                if fecha_val and hora_val:
+                if fecha_val:
                     try:
                         fecha_dt = datetime.strptime(fecha_val, "%Y-%m-%d").date()
-                        limite_dt = _fecha_hora_from_fields(fecha_dt, hora_val)
+                        if hora_val:
+                            limite_dt = _fecha_hora_from_fields(fecha_dt, hora_val)
+                        else:
+                            limite_dt = datetime.combine(fecha_dt, time.min)
+                            if settings.USE_TZ and timezone.is_naive(limite_dt):
+                                limite_dt = timezone.make_aware(limite_dt)
                     except ValueError:
                         limite_dt = None
 

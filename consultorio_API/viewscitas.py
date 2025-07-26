@@ -1040,11 +1040,14 @@ def ajax_citas_previas(request):
 
     qs = Cita.objects.filter(paciente=paciente)
 
-    if fecha and hora:
+    if fecha:
         try:
             fecha_dt = datetime.strptime(fecha, "%Y-%m-%d").date()
-            limite = _fecha_hora_from_fields(fecha_dt, hora)
-            qs = qs.filter(fecha_hora__lt=limite)
+            if hora:
+                limite = _fecha_hora_from_fields(fecha_dt, hora)
+                qs = qs.filter(fecha_hora__lt=limite)
+            else:
+                qs = qs.filter(fecha_hora__date__lt=fecha_dt)
         except ValueError:
             pass
 
