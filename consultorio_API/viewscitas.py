@@ -1189,12 +1189,12 @@ def exportar_citas_csv(request):
 
 def puede_ver_cita(user, cita):
     """Verifica si el usuario puede ver la cita"""
-    if user.rol == 'admin':
+    if user.rol == "admin":
         return True
-    elif user.rol == 'medico':
-        return (cita.consultorio == user.consultorio or
-                cita.medico_asignado == user)
-    elif user.rol == 'asistente':
+    if user.rol == "medico":
+        # Los médicos pueden acceder al detalle de cualquier cita
+        return True
+    if user.rol == "asistente":
         return cita.consultorio == user.consultorio
     return False
 

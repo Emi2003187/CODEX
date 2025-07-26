@@ -1664,12 +1664,12 @@ def cambiar_estado_cita(request, pk):
 
 def puede_ver_cita(user, cita):
     """Verifica si el usuario puede ver la cita"""
-    if user.rol == 'admin':
+    if user.rol == "admin":
         return True
-    elif user.rol == 'medico':
-        return (cita.consultorio == user.consultorio or 
-                cita.medico_asignado == user)
-    elif user.rol == 'asistente':
+    if user.rol == "medico":
+        # Los médicos pueden acceder al detalle de cualquier cita
+        return True
+    if user.rol == "asistente":
         return cita.consultorio == user.consultorio
     return False
 
@@ -4546,21 +4546,22 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
     context_object_name = 'cita'
 
     def test_func(self):
+        """Permisos de visualización para el detalle de la cita."""
         if not super().test_func():
             return False
-        
-        cita = self.get_object()
+
         user = self.request.user
-        
-        # Verificar permisos de visualización
-        if user.rol == 'admin':
+        cita = self.get_object()
+
+        if user.rol == "admin":
             return True
-        elif user.rol == 'medico':
-            return (cita.consultorio == user.consultorio or 
-                   cita.medico_asignado == user)
-        elif user.rol == 'asistente':
+        if user.rol == "medico":
+            # Los médicos autenticados pueden ver cualquier cita
+            return True
+        if user.rol == "asistente":
+            # Los asistentes mantienen la restricción por consultorio
             return cita.consultorio == user.consultorio
-        
+
         return False
 
     def get_context_data(self, **kwargs):
