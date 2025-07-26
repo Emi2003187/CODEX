@@ -960,12 +960,20 @@ def cola_virtual_data(request):
 # ═══════════════════════════════════════════════════════════════
 
 def marcar_citas_vencidas():
-    """Marca como no asistió las citas vencidas y cancela su consulta."""
+    """Marca como 'no asistió' las citas vencidas y cancela su consulta.
+
+    Una cita se considera vencida diez minutos después de la hora
+    programada. Esto aplica también a citas reprogramadas.
+    """
     ahora = timezone.now()
-    citas = Cita.objects.filter(
-        fecha_hora__lt=ahora,
-        estado__in=["programada", "confirmada"],
-    ).select_related("consulta")
+    limite = ahora - timedelta(minutes=10)
+    citas = (
+        Cita.objects.filter(
+            fecha_hora__lt=limite,
+            estado__in=["programada", "confirmada", "reprogramada"],
+        )
+        .select_related("consulta")
+    )
 
     for cita in citas:
         cita.estado = "no_asistio"
