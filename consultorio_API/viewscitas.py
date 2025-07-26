@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.db.models import Q, Count
 from django.utils import timezone
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -31,7 +32,8 @@ from .models import (
 from .forms import (
     CitaForm, CitaFiltroForm, AsignarMedicoForm,
     ConsultaSinCitaForm, SignosVitalesForm, RecetaForm,
-    PacienteForm, ExpedienteForm, AntecedenteForm, MedicamentoActualForm
+    PacienteForm, ExpedienteForm, AntecedenteForm, MedicamentoActualForm,
+    ReprogramarCitaForm,
 )
 
 # ═══════════════════════════════════════════════════════════════
@@ -241,7 +243,11 @@ def editar_cita(request, cita_id):
 
     # ───────── helper para construir los initial ──────────
     def _build_initial(cita_obj):
-        fh_local = timezone.localtime(cita_obj.fecha_hora)
+        fh = cita_obj.fecha_hora
+        if timezone.is_aware(fh):
+            fh_local = timezone.localtime(fh)
+        else:
+            fh_local = fh
         return {
             "fecha":    fh_local.date().isoformat(),
             "hora":     fh_local.strftime("%H:%M"),
@@ -338,8 +344,39 @@ def detalle_cita(request, cita_id):
         'puede_tomar_cita': puede_tomar_cita(request.user, cita),
         'puede_editar': puede_editar_cita(request.user, cita),
         'usuario': request.user,
+        # Evitar ValueError si USE_TZ=False
+        'ahora': timezone.now(),
+        'now': timezone.now(),
     }
     return render(request, 'PAGES/citas/detalle.html', context)
+
+
+@login_required
+def reprogramar_cita(request, cita_id):
+    cita = get_object_or_404(Cita, id=cita_id)
+
+    # Asegurar que la fecha sea "aware" para evitar errores de localtime
+    if settings.USE_TZ and timezone.is_naive(cita.fecha_hora):
+        cita.fecha_hora = timezone.make_aware(cita.fecha_hora)
+
+    if not puede_editar_cita(request.user, cita):
+        messages.error(request, "No tienes permisos para reprogramar esta cita.")
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
+
+    if request.method == 'POST':
+        form = ReprogramarCitaForm(request.POST, cita=cita)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cita reprogramada correctamente.')
+            return redirect_next(request, 'citas_detalle', pk=cita.id)
+    else:
+        form = ReprogramarCitaForm(cita=cita)
+
+    return render(request, 'PAGES/citas/reprogramar.html', {
+        'form': form,
+        'cita': cita,
+        'usuario': request.user,
+    })
 
 @login_required
 def asignar_medico_cita(request, cita_id):
@@ -991,6 +1028,29 @@ def ajax_horarios_disponibles(request):
 
     except Exception as exc:
         return JsonResponse({"error": str(exc)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def ajax_citas_previas(request):
+    pid = request.GET.get("paciente_id")
+    excluir = request.GET.get("excluir_id")
+    try:
+        paciente = Paciente.objects.get(pk=int(pid))
+    except (TypeError, ValueError, Paciente.DoesNotExist):
+        return JsonResponse({"citas": []})
+
+    qs = Cita.objects.filter(paciente=paciente).order_by("-fecha_hora")
+    if excluir:
+        qs = qs.exclude(pk=excluir)
+    citas = [
+        {
+            "id": c.id,
+            "text": f"{c.numero_cita} ({c.fecha_hora.strftime('%d/%m/%Y %H:%M')})",
+        }
+        for c in qs
+    ]
+    return JsonResponse({"citas": citas})
 
 
 @login_required
