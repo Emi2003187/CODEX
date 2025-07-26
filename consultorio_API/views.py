@@ -937,17 +937,26 @@ def cola_virtual_data(request):
 # ═══════════════════════════════════════════════════════════════
 
 def marcar_citas_vencidas():
-    """Marca como no asistió las citas pasadas sin consulta y las cancela."""
+    """Marca como no asistió las citas vencidas y cancela su consulta."""
     ahora = timezone.now()
-    Cita.objects.filter(
+    citas = Cita.objects.filter(
         fecha_hora__lt=ahora,
         estado__in=["programada", "confirmada"],
-        consulta__isnull=True,
-    ).update(
-        estado="no_asistio",
-        fecha_cancelacion=ahora,
-        motivo_cancelacion="No asistió",
-    )
+    ).select_related("consulta")
+
+    for cita in citas:
+        cita.estado = "no_asistio"
+        cita.fecha_cancelacion = ahora
+        cita.motivo_cancelacion = "No asistió a la cita"
+        cita.save()
+
+        # ✅ También cancelamos la consulta asociada si la cita cambia a “no asistió”
+        if hasattr(cita, "consulta") and cita.consulta:
+            consulta = cita.consulta
+            consulta.estado = "cancelada"
+            if hasattr(consulta, "motivo_cancelacion"):
+                consulta.motivo_cancelacion = "No asistió a la cita"
+            consulta.save()
 
 class CitaPermisoMixin(UserPassesTestMixin):
     def test_func(self):
@@ -2420,6 +2429,13 @@ class ConsultaPrecheckView(NextRedirectMixin, LoginRequiredMixin, UserPassesTest
 
     def dispatch(self, request, *args, **kwargs):
         self.consulta = get_object_or_404(Consulta, pk=kwargs["pk"])
+
+        if self.consulta.estado == "cancelada":
+            messages.error(
+                request,
+                "No se pueden registrar signos vitales en una consulta cancelada."
+            )
+            return redirect("consulta_detalle", pk=self.consulta.pk)
 
         if request.user.rol == "medico" and self.consulta.medico != request.user:
             messages.error(request, "No puedes editar esta consulta, no est\u00e1s asignado.")
