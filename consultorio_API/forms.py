@@ -508,11 +508,30 @@ class CitaForm(forms.ModelForm):
                 paciente = None
 
         if paciente:
-            qs_prev = (
-                Cita.objects.filter(paciente=paciente)
-                .exclude(id=self.instance.id)
-                .order_by("-fecha_hora")
-            )
+            qs_prev = Cita.objects.filter(paciente=paciente).exclude(id=self.instance.id)
+
+            limite_dt = None
+            if self.instance.pk and self.instance.fecha_hora:
+                limite_dt = self.instance.fecha_hora
+            else:
+                fecha_val = self.data.get("fecha") or self.initial.get("fecha")
+                hora_val = self.data.get("hora") or self.initial.get("hora")
+                if fecha_val:
+                    try:
+                        fecha_dt = datetime.strptime(fecha_val, "%Y-%m-%d").date()
+                        if hora_val:
+                            limite_dt = _fecha_hora_from_fields(fecha_dt, hora_val)
+                        else:
+                            limite_dt = datetime.combine(fecha_dt, time.min)
+                            if settings.USE_TZ and timezone.is_naive(limite_dt):
+                                limite_dt = timezone.make_aware(limite_dt)
+                    except ValueError:
+                        limite_dt = None
+
+            if limite_dt:
+                qs_prev = qs_prev.filter(fecha_hora__lt=limite_dt)
+
+            qs_prev = qs_prev.order_by("fecha_hora")
             self.fields["cita_anterior"].queryset = qs_prev
             self.fields["cita_anterior"].empty_label = (
                 "No hay citas anteriores" if not qs_prev.exists() else "---------"
