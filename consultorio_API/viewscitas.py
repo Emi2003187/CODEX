@@ -780,9 +780,19 @@ def cancelar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
 
     if request.user.rol == "asistente":
-        return HttpResponseForbidden("Acción no permitida para asistentes.")
-    if request.user.rol != "admin":
+        return HttpResponse(
+            "<script>alert('No tienes permiso para esta acción');"
+            "history.back();</script>"
+        )
+
+    if request.user.rol not in ["admin", "medico"]:
         messages.error(request, "No tienes permisos para cancelar citas.")
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
+
+    if request.user.rol == "medico" and (
+        cita.medico_asignado != request.user or cita.estado != "reprogramada"
+    ):
+        messages.error(request, "No tienes permisos para cancelar esta cita.")
         return redirect_next(request, 'citas_detalle', pk=cita.id)
 
     if cita.estado in ("cancelada", "completada"):
@@ -824,8 +834,10 @@ def marcar_no_asistio(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
 
     if request.user.rol not in ["admin", "medico"]:
-        messages.error(request, "No tienes permisos para marcar esta cita.")
-        return redirect_next(request, 'citas_detalle', pk=cita.id)
+        return HttpResponse(
+            "<script>alert('No tienes permiso para esta acción');"
+            "history.back();</script>"
+        )
 
     if request.method == "POST":
         cita.estado = "no_asistio"
@@ -854,12 +866,27 @@ def marcar_no_asistio(request, cita_id):
 # ───────────────────────────────────────────
 class CitaDeleteView(NextRedirectMixin, CitaPermisoMixin, DeleteView):
     model            = Cita
-    pk_url_kwarg     = 'cita_id'                  
+    pk_url_kwarg     = 'cita_id'
     template_name    = "PAGES/citas/eliminar.html"
     success_url      = reverse_lazy("citas_lista")
 
     def test_func(self):
-        return super().test_func() and self.request.user.rol == "admin"
+        if not super().test_func():
+            return False
+        user = self.request.user
+        if user.rol == "admin":
+            return True
+        if user.rol == "medico":
+            cita = self.get_object()
+            return (
+                cita.estado == "reprogramada" and cita.medico_asignado == user
+            )
+        return False
+
+    def handle_no_permission(self):
+        return HttpResponse(
+            "<script>alert('No tienes permiso para esta acción');history.back();</script>"
+        )
 
     def delete(self, request, *args, **kwargs):
         self.object: Cita = self.get_object()
@@ -1263,12 +1290,12 @@ def puede_editar_cita(user, cita):
     elif user.rol == 'medico':
         return (
             cita.medico_asignado == user
-            and cita.estado in ['programada', 'confirmada']
+            and cita.estado in ['programada', 'confirmada', 'reprogramada']
         )
     elif user.rol == 'asistente':
         return (
             cita.consultorio == user.consultorio
-            and cita.estado in ['programada', 'confirmada']
+            and cita.estado in ['programada', 'confirmada', 'reprogramada']
         )
     return False
 

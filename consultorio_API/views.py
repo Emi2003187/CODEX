@@ -4619,12 +4619,12 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
         elif user.rol == 'medico':
             return (
                 cita.medico_asignado == user
-                and cita.estado in ['programada', 'confirmada']
+                and cita.estado in ['programada', 'confirmada', 'reprogramada']
             )
         elif user.rol == 'asistente':
             return (
                 cita.consultorio == user.consultorio
-                and cita.estado in ['programada', 'confirmada']
+                and cita.estado in ['programada', 'confirmada', 'reprogramada']
             )
         return False
 
