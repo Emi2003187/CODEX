@@ -1418,7 +1418,13 @@ def crear_consulta_desde_cita_view(request, cita_id):
 
 
         # Verificar permisos
-        if not (request.user.rol == 'admin' or cita.medico_asignado == request.user):
+        if not (
+            request.user.rol in ['admin', 'asistente']
+            or cita.medico_asignado == request.user
+        ):
+            messages.error(request, 'No tienes permisos para iniciar esta consulta.')
+            return redirect_next(request, 'citas_detalle', pk=cita.id)
+        if request.user.rol == 'asistente' and cita.consultorio != request.user.consultorio:
             messages.error(request, 'No tienes permisos para iniciar esta consulta.')
             return redirect_next(request, 'citas_detalle', pk=cita.id)
         
@@ -1452,6 +1458,9 @@ def crear_consulta_desde_cita_view(request, cita_id):
             'Podrás iniciarla cuando el paciente sea atendido.'
         )
         
+        # Redirigir a la página adecuada según rol
+        if request.user.rol == 'asistente':
+            return redirect_next(request, 'consultas_precheck', pk=consulta.pk)
         # Redirigir directamente al detalle de la consulta
         return redirect_next(request, 'consulta_detalle', pk=consulta.pk)
         

@@ -798,8 +798,8 @@
 
       <!-- Panel de Acciones -->
       {% if user.rol != 'asistente' %}
-      <div class="col-lg-4">
-        <div class="actions-card">
+        <div class="col-lg-4">
+          <div class="actions-card">
           <div class="actions-header">
             <h5 class="mb-0">
               <i class="bi bi-gear me-2"></i>
@@ -895,6 +895,35 @@
             {% endif %}
           </div>
         </div>
+      {% else %}
+      <div class="col-lg-4">
+        <div class="actions-card">
+          <div class="actions-header">
+            <h5 class="mb-0">
+              <i class="bi bi-gear me-2"></i>
+              Acciones Disponibles
+            </h5>
+          </div>
+          <div class="actions-body">
+            {% if puede_editar %}
+            <a href="{% url 'reprogramar_cita' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-warning">
+              <i class="bi bi-clock-history"></i>
+              Reprogramar
+            </a>
+            {% endif %}
+            {% if cita.medico_asignado and not consulta %}
+            <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline w-100">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ volver_a }}">
+              <button type="submit" class="btn btn-action btn-iniciar-consulta">
+                <i class="bi bi-play-circle"></i>
+                Iniciar Consulta
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
       {% endif %}
 
       <!-- Médicos Disponibles -->
