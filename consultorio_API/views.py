@@ -1370,15 +1370,15 @@ def tomar_cita(request, cita_id):
 
     
     # Verificar conflictos de horario del médico
-        conflictos = Cita.objects.filter(
-            medico_asignado=user,
-            fecha_hora__date=cita.fecha_hora.date(),
-            fecha_hora__time__range=[
-                (cita.fecha_hora - timedelta(minutes=15)).time(),
-                (cita.fecha_hora + timedelta(minutes=cita.duracion + 15)).time()
-            ],
-            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
-        ).exclude(id=cita.id)
+    conflictos = Cita.objects.filter(
+        medico_asignado=user,
+        fecha_hora__date=cita.fecha_hora.date(),
+        fecha_hora__time__range=[
+            (cita.fecha_hora - timedelta(minutes=15)).time(),
+            (cita.fecha_hora + timedelta(minutes=cita.duracion + 15)).time()
+        ],
+        estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
+    ).exclude(id=cita.id)
     
     if conflictos.exists() and not request.POST.get('confirmar'):
         conflicto = conflictos.first()
@@ -2248,11 +2248,11 @@ def cola_virtual_data(request):
         citas = get_citas_queryset(user)
         
         # Aplicar filtros base
-            citas_proximas = citas.filter(
-                consultorio=consultorio,
-                fecha_hora__gte=ahora,  # Solo citas futuras
-                estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']  # Solo estados activos
-            )
+        citas_proximas = citas.filter(
+            consultorio=consultorio,
+            fecha_hora__gte=ahora,  # Solo citas futuras
+            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']  # Solo estados activos
+        )
         
         # ✅ Filtro por estado ANTES del slice
         estado_filtro = request.GET.get('estado')
@@ -2263,11 +2263,11 @@ def cola_virtual_data(request):
         citas_proximas = citas_proximas.order_by('fecha_hora')[:20]  # Limitar a 20 citas próximas
         
         # Calcular estadísticas (sin slice para contar correctamente)
-            citas_stats = citas.filter(
-                consultorio=consultorio,
-                fecha_hora__gte=ahora,
-                estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
-            )
+        citas_stats = citas.filter(
+            consultorio=consultorio,
+            fecha_hora__gte=ahora,
+            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
+        )
         
         if estado_filtro:
             citas_stats = citas_stats.filter(estado=estado_filtro)
@@ -4417,12 +4417,12 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
             return self.form_invalid(form)
         
         # Validar conflictos de horario en el consultorio
-            conflictos = Cita.objects.filter(
-                consultorio=cita.consultorio,
-                fecha_hora__date=cita.fecha_hora.date(),
-                fecha_hora__time=cita.fecha_hora.time(),
-                estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
-            ).exclude(pk=cita.pk if cita.pk else None)
+        conflictos = Cita.objects.filter(
+            consultorio=cita.consultorio,
+            fecha_hora__date=cita.fecha_hora.date(),
+            fecha_hora__time=cita.fecha_hora.time(),
+            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
+        ).exclude(pk=cita.pk if cita.pk else None)
         
         if conflictos.exists():
             messages.warning(

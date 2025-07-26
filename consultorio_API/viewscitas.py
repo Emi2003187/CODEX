@@ -510,15 +510,15 @@ def tomar_cita(request, cita_id):
         return redirect_next(request, 'citas_disponibles')
     
     # Verificar conflictos de horario del médico
-        conflictos = Cita.objects.filter(
-            medico_asignado=user,
-            fecha_hora__date=cita.fecha_hora.date(),
-            fecha_hora__time__range=[
-                (cita.fecha_hora - timedelta(minutes=15)).time(),
-                (cita.fecha_hora + timedelta(minutes=cita.duracion + 15)).time()
-            ],
-            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
-        ).exclude(id=cita.id)
+    conflictos = Cita.objects.filter(
+        medico_asignado=user,
+        fecha_hora__date=cita.fecha_hora.date(),
+        fecha_hora__time__range=[
+            (cita.fecha_hora - timedelta(minutes=15)).time(),
+            (cita.fecha_hora + timedelta(minutes=cita.duracion + 15)).time()
+        ],
+        estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
+    ).exclude(id=cita.id)
     
     if conflictos.exists() and not request.POST.get('confirmar'):
         conflicto = conflictos.first()
