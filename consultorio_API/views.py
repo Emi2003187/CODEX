@@ -2286,15 +2286,26 @@ class ConsultaDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         consulta = self.get_object()
-        
-        context.update({
-            'usuario': self.request.user,
-            'signos_vitales': getattr(consulta, 'signos_vitales', None),
-            'receta': getattr(consulta, 'receta', None),
-            'cita': consulta.cita,
-            'puede_editar': self.request.user == consulta.medico or self.request.user.rol == 'admin',
-        })
-        
+
+        context.update(
+            {
+                "usuario": self.request.user,
+                "signos_vitales": getattr(consulta, "signos_vitales", None),
+                "receta": getattr(consulta, "receta", None),
+                "cita": consulta.cita,
+                "puede_editar": self.request.user == consulta.medico
+                or self.request.user.rol == "admin",
+            }
+        )
+
+        next_url = self.request.GET.get("next")
+        if next_url and url_has_allowed_host_and_scheme(
+            next_url, allowed_hosts={self.request.get_host()}
+        ):
+            context["volver_a"] = next_url
+        else:
+            context["volver_a"] = reverse("consultas_lista")
+
         return context
 
 
@@ -2816,7 +2827,7 @@ def consulta_cancelar(request, pk):
             consulta.cita.estado = "cancelada"
             consulta.cita.save()
 
-    return redirect("consultas_lista")
+    return redirect_next(request, "consultas_lista")
 
 
 # ═══════════════════════════════════════════════════════════════
