@@ -120,17 +120,22 @@
                     <div class="obs-text">{{ receta.observaciones|default:"" }}</div>
                 </div>
             </section>
-            
-            <!-- 7 · FIRMA ------------------------------------------------------->
-            <div class="firma-line"></div>
-            
-            <!-- 8 · PIE --------------------------------------------------------->
-            <footer class="pie">
-                Dr. {{ receta.consulta.medico.get_full_name }}<br>
-                CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula_profesional|default:"—" }} –
-                INSTITUCIÓN: {{ receta.consulta.medico.institucion_cedula|default:"—" }}<br>
-                DIRECCIÓN: {{ receta.consulta.medico.consultorio.ubicacion|default:"—" }}
-            </footer>
+
+            <div class="firma-sello">
+                <div class="firma-box">
+                    <div class="firma-line"></div>
+                    <span class="firma-label">Firma</span>
+                </div>
+                <div class="sello-box">
+                    <footer class="pie">
+                        Dr. {{ receta.consulta.medico.get_full_name }}<br>
+                        CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula_profesional|default:"—" }} –
+                        INSTITUCIÓN: {{ receta.consulta.medico.institucion_cedula|default:"—" }}<br>
+                        DIRECCIÓN: {{ receta.consulta.medico.consultorio.ubicacion|default:"—" }}
+                    </footer>
+                    <span class="sello-label">Sello Profesional</span>
+                </div>
+            </div>
         </div>
     </div>
     {% endwith %}
