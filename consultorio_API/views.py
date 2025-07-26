@@ -4510,6 +4510,7 @@ class CitaUpdateView(NextRedirectMixin, CitaPermisoMixin, UpdateView):
             'titulo': f'Editar Cita {self.object.numero_cita}',
             'accion': 'Actualizar',
             'usuario': self.request.user,
+            'next': self.get_next_url() or reverse('citas_detalle', args=[self.object.pk]),
         })
         return context
 
@@ -4589,7 +4590,13 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
             'usuario': user,
             'now': timezone.now(),
         })
-        
+
+        next_url = self.request.GET.get('next')
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={self.request.get_host()}):
+            context['volver_a'] = next_url
+        else:
+            context['volver_a'] = reverse('citas_lista')
+
         return context
 
     def _puede_tomar_cita(self, user, cita):

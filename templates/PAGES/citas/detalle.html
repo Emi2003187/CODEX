@@ -521,9 +521,9 @@
           <h1 class="page-title">Detalle de Cita</h1>
           <p class="page-subtitle">Información completa de la cita médica</p>
         </div>
-        <a href="{% url 'citas_lista' %}" class="volver-btn">
+        <a href="{{ volver_a }}" class="volver-btn">
           <i class="bi bi-arrow-left"></i>
-          Volver a Lista
+          Volver
         </a>
       </div>
     </div>
@@ -823,7 +823,7 @@
             
             <!-- Editar Cita -->
             {% if puede_editar %}
-            <a href="{% url 'citas_editar' cita.id %}" class="btn btn-action btn-editar">
+            <a href="{% url 'citas_editar' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-editar">
               <i class="bi bi-pencil-square"></i>
               Editar Cita
             </a>
@@ -832,7 +832,7 @@
             <!-- Liberar Cita -->
             {% if user.rol == 'admin' or cita.medico_asignado == user %}
               {% if cita.medico_asignado and cita.estado != 'en_atencion' and cita.estado != 'completada' and cita.estado != 'cancelada' %}
-              <a href="{% url 'liberar_cita' cita.id %}" class="btn btn-action btn-liberar">
+              <a href="{% url 'liberar_cita' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-liberar">
                 <i class="bi bi-unlock"></i>
                 Liberar Cita
               </a>
@@ -843,6 +843,7 @@
             {% if puede_tomar_cita %}
             <form method="post" action="{% url 'tomar_cita' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
+              <input type="hidden" name="next" value="{{ volver_a }}">
               <button type="submit" class="btn btn-action btn-tomar" onclick="return confirm('¿Confirmas que deseas tomar esta cita?');">
                 <i class="bi bi-hand-thumbs-up"></i>
                 Tomar Cita
@@ -861,6 +862,7 @@
                 {% if cita.fecha_hora <= now %}
                   <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline w-100">
                     {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ volver_a }}">
                     <button type="submit" class="btn btn-action btn-iniciar-consulta">
                       <i class="bi bi-play-circle"></i>
                       Iniciar Consulta
@@ -879,6 +881,7 @@
             {% if puede_editar and cita.estado != 'completada' and cita.estado != 'cancelada' and cita.estado != 'no_asistio' %}
             <form method="post" action="{% url 'cancelar_cita' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
+              <input type="hidden" name="next" value="{{ volver_a }}">
               <button type="submit" class="btn btn-action btn-cancelar" onclick="return confirm('¿Confirmas que deseas cancelar esta cita?');">
                 <i class="bi bi-x-circle"></i>
                 Cancelar Cita
@@ -889,6 +892,7 @@
             {% if cita.estado == 'programada' and not consulta or cita.estado == 'confirmada' and not consulta %}
             <form method="post" action="{% url 'cita_marcar_no_asistio' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
+              <input type="hidden" name="next" value="{{ volver_a }}">
               <button type="submit" class="btn btn-action btn-no-asistio" onclick="return confirm('¿Marcar esta cita como NO ASISTIÓ?');">
                 <i class="bi bi-person-x"></i>
                 No Asistió
@@ -898,7 +902,7 @@
 
             <!-- Eliminar Cita (Solo Admin) -->
             {% if user.rol == 'admin' and cita.estado != 'completada' %}
-            <a href="{% url 'citas_eliminar' cita.id %}" class="btn btn-action btn-eliminar" onclick="return confirm('¿Estás seguro? Esta acción eliminará permanentemente la cita.');">
+            <a href="{% url 'citas_eliminar' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-eliminar" onclick="return confirm('¿Estás seguro? Esta acción eliminará permanentemente la cita.');">
               <i class="bi bi-trash"></i>
               Eliminar Cita
             </a>
@@ -926,6 +930,7 @@
             <form method="post" action="{% url 'asignar_medico_cita' cita.id %}" class="d-inline">
               {% csrf_token %}
               <input type="hidden" name="medico" value="{{ medico.id }}">
+              <input type="hidden" name="next" value="{{ volver_a }}">
               <button type="submit" class="btn btn-asignar">
                 Asignar
               </button>

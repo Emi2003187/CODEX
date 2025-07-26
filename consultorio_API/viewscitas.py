@@ -16,6 +16,7 @@ import csv
 from consultorio_API.utils_horarios import obtener_horarios_disponibles_para_select
 from django.urls import reverse_lazy
 from .utils import redirect_next
+from .views import NextRedirectMixin
 from django.views.decorators.http import require_POST
 
 # Importaciones de modelos
@@ -749,11 +750,11 @@ def cancelar_cita(request, cita_id):
         return HttpResponseForbidden("Acción no permitida para asistentes.")
     if request.user.rol != "admin":
         messages.error(request, "No tienes permisos para cancelar citas.")
-        return redirect("citas_detalle", pk=cita.id)
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
 
     if cita.estado in ("cancelada", "completada"):
         messages.warning(request, "La cita ya está cancelada o completada.")
-        return redirect("citas_detalle", pk=cita.id)
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
 
     if request.method == "POST":
         motivo = request.POST.get("motivo_cancelacion", "").strip()
@@ -775,7 +776,7 @@ def cancelar_cita(request, cita_id):
             consulta.estado = "cancelada"
             consulta.save(update_fields=["estado"])
         messages.success(request, f"Cita {cita.numero_cita} cancelada correctamente.")
-        return redirect("citas_detalle", pk=cita.id)
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
 
     return render(
         request,
@@ -791,7 +792,7 @@ def marcar_no_asistio(request, cita_id):
 
     if request.user.rol not in ["admin", "medico"]:
         messages.error(request, "No tienes permisos para marcar esta cita.")
-        return redirect("citas_detalle", pk=cita.id)
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
 
     if request.method == "POST":
         cita.estado = "no_asistio"
@@ -812,13 +813,13 @@ def marcar_no_asistio(request, cita_id):
             f"Cita {cita.numero_cita} marcada como 'No asistió'.",
         )
 
-    return redirect("citas_detalle", pk=cita.id)
+    return redirect_next(request, 'citas_detalle', pk=cita.id)
 
 
 # ───────────────────────────────────────────
 # ELIMINAR (borrado real) – sólo admin
 # ───────────────────────────────────────────
-class CitaDeleteView(CitaPermisoMixin, DeleteView):
+class CitaDeleteView(NextRedirectMixin, CitaPermisoMixin, DeleteView):
     model            = Cita
     pk_url_kwarg     = 'cita_id'                  
     template_name    = "PAGES/citas/eliminar.html"
