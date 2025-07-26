@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Gestión de Citas Médicas{% endblock %}
 
@@ -187,7 +188,7 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h1 class="fw-bold text-primary mb-2">
-                <i class="bi bi-calendar-check me-2"></i>
+                {% icon 'calendar-check' css_class='me-2' %}
                 Gestión de Citas Médicas
             </h1>
             <p class="text-muted mb-0">
@@ -197,11 +198,11 @@
         <div class="col-md-4 text-md-end">
             <div class="btn-group" role="group">
                 <a href="{% url 'citas_crear' %}" class="btn btn-primary btn-action">
-                    <i class="bi bi-plus-circle me-1"></i>Nueva Cita
+                    {% icon 'plus-circle' css_class='me-1' %}Nueva Cita
                 </a>
                 {% if usuario.rol == 'medico' %}
                 <a href="{% url 'mis_citas_asignadas' %}" class="btn btn-info btn-action">
-                    <i class="bi bi-person-check me-1"></i>Mis Citas
+                    {% icon 'person-check' css_class='me-1' %}Mis Citas
                 </a>
                 {% endif %}
             </div>
@@ -219,7 +220,7 @@
                             <h2 class="mb-0">{{ stats.total|default:0 }}</h2>
                         </div>
                         <div class="align-self-center">
-                            <i class="bi bi-calendar-check fs-1 opacity-75"></i>
+                            {% icon 'calendar-check' css_class='fs-1 opacity-75' %}
                         </div>
                     </div>
                 </div>
@@ -234,7 +235,7 @@
                             <h2 class="mb-0">{{ stats.hoy|default:0 }}</h2>
                         </div>
                         <div class="align-self-center">
-                            <i class="bi bi-calendar-day fs-1 opacity-75"></i>
+                            {% icon 'calendar-day' css_class='fs-1 opacity-75' %}
                         </div>
                     </div>
                 </div>
@@ -249,7 +250,7 @@
                             <h2 class="mb-0">{{ stats.sin_asignar|default:0 }}</h2>
                         </div>
                         <div class="align-self-center">
-                            <i class="bi bi-clock fs-1 opacity-75"></i>
+                            {% icon 'clock' css_class='fs-1 opacity-75' %}
                         </div>
                     </div>
                 </div>
@@ -264,7 +265,7 @@
                             <h2 class="mb-0">{{ stats.asignadas|default:0 }}</h2>
                         </div>
                         <div class="align-self-center">
-                            <i class="bi bi-person-check fs-1 opacity-75"></i>
+                            {% icon 'person-check' css_class='fs-1 opacity-75' %}
                         </div>
                     </div>
                 </div>
@@ -336,10 +337,10 @@
                 </div>
                 <div class="col-md-9 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2 btn-action">
-                        <i class="bi bi-search me-1"></i>Filtrar
+                        {% icon 'search' css_class='me-1' %}Filtrar
                     </button>
                     <a href="{% url 'citas_lista' %}" class="btn btn-outline-secondary btn-action">
-                        <i class="bi bi-x-circle me-1"></i>Limpiar
+                        {% icon 'x-circle' css_class='me-1' %}Limpiar
                     </a>
                 </div>
             </div>
@@ -350,7 +351,7 @@
     {% if citas_urgentes %}
     <div class="alert alert-citas-urgentes mb-4">
         <h6 class="alert-heading fw-bold">
-            <i class="bi bi-exclamation-triangle me-2"></i>Citas Urgentes Sin Asignar
+            {% icon 'exclamation-triangle' css_class='me-2' %}Citas Urgentes Sin Asignar
         </h6>
         <div class="row">
             {% for cita in citas_urgentes %}
@@ -363,7 +364,7 @@
                     </div>
                     {% if usuario.rol == 'medico' %}
                     <a href="{% url 'tomar_cita' cita.id %}" class="btn btn-sm btn-warning">
-                        <i class="bi bi-hand-index"></i> Tomar
+                        {% icon 'hand-index' %} Tomar
                     </a>
                     {% endif %}
                 </div>
@@ -378,28 +379,28 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="sin-asignar-tab" data-bs-toggle="pill"
                     data-bs-target="#sin-asignar" type="button" role="tab">
-                <i class="bi bi-clock me-1"></i>
+                {% icon 'clock' css_class='me-1' %}
                 Sin Asignar <span class="badge bg-light text-dark ms-1">{{ grupos.sin_asignar.count }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="asignadas-tab" data-bs-toggle="pill"
                     data-bs-target="#asignadas" type="button" role="tab">
-                <i class="bi bi-person-check me-1"></i>
+                {% icon 'person-check' css_class='me-1' %}
                 Asignadas <span class="badge bg-light text-dark ms-1">{{ grupos.asignadas.count }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="completadas-tab" data-bs-toggle="pill"
                     data-bs-target="#completadas" type="button" role="tab">
-                <i class="bi bi-check-circle me-1"></i>
+                {% icon 'check-circle' css_class='me-1' %}
                 Completadas <span class="badge bg-light text-dark ms-1">{{ grupos.completadas.count }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="canceladas-tab" data-bs-toggle="pill"
                     data-bs-target="#canceladas" type="button" role="tab">
-                <i class="bi bi-x-circle me-1"></i>
+                {% icon 'x-circle' css_class='me-1' %}
                 Canceladas <span class="badge bg-light text-dark ms-1">{{ grupos.canceladas.count }}</span>
             </button>
         </li>
@@ -417,7 +418,7 @@
                             <div class="status-indicator {{ cita.estado }}"></div>
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0">
-                                    <i class="bi bi-person me-1"></i>
+                                    {% icon 'person' css_class='me-1' %}
                                     {{ cita.paciente.nombre_completo }}
                                 </h6>
                                 <span class="badge badge-estado
@@ -474,7 +475,7 @@
                                 
                                 <div class="d-flex align-items-center justify-content-between">
                                     <small class="text-muted">
-                                        <i class="bi bi-hash"></i>{{ cita.numero_cita }}
+                                        {% icon 'hash' %}{{ cita.numero_cita }}
                                     </small>
                                     <div class="badge
                                         {% if cita.prioridad == 'urgente' %}bg-danger
@@ -489,19 +490,19 @@
                                 <div class="cita-actions">
                                     <a href="{% url 'citas_detalle' cita.pk %}"
                                        class="btn btn-sm btn-outline-info btn-action">
-                                        <i class="bi bi-eye"></i> Ver
+                                        {% icon 'eye' %} Ver
                                     </a>
                                     {% if usuario.rol != 'asistente' %}
                                         {% if usuario.rol == 'medico' %}
                                         <a href="{% url 'tomar_cita' cita.id %}"
                                            class="btn btn-sm btn-success btn-action">
-                                            <i class="bi bi-hand-index"></i> Tomar
+                                            {% icon 'hand-index' %} Tomar
                                         </a>
                                         {% endif %}
                                         {% if permisos.puede_asignar %}
                                         <button type="button" class="btn btn-sm btn-primary btn-action"
                                                 onclick="asignarMedico('{{ cita.pk }}')">
-                                            <i class="bi bi-person-plus"></i> Asignar
+                                            {% icon 'person-plus' %} Asignar
                                         </button>
                                         {% endif %}
                                     {% endif %}
@@ -513,7 +514,7 @@
                 </div>
             {% else %}
                 <div class="empty-state">
-                    <i class="bi bi-calendar-check display-1"></i>
+                    {% icon 'calendar-check' css_class='display-1' %}
                     <h4>No hay citas sin asignar</h4>
                     <p>Todas las citas han sido asignadas a médicos.</p>
                 </div>
@@ -530,7 +531,7 @@
                             <div class="status-indicator {{ cita.estado }}"></div>
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0">
-                                    <i class="bi bi-person me-1"></i>
+                                    {% icon 'person' css_class='me-1' %}
                                     {{ cita.paciente.nombre_completo }}
                                 </h6>
                                 <span class="badge badge-estado
@@ -588,7 +589,7 @@
                                 
                                 <div class="d-flex align-items-center justify-content-between">
                                     <small class="text-muted">
-                                        <i class="bi bi-hash"></i>{{ cita.numero_cita }}
+                                        {% icon 'hash' %}{{ cita.numero_cita }}
                                     </small>
                                     <div class="badge
                                         {% if cita.prioridad == 'urgente' %}bg-danger
@@ -603,13 +604,13 @@
                                 <div class="cita-actions">
                                     <a href="{% url 'citas_detalle' cita.pk %}"
                                        class="btn btn-sm btn-outline-info btn-action">
-                                        <i class="bi bi-eye"></i> Ver
+                                        {% icon 'eye' %} Ver
                                     </a>
                                     {% if usuario.rol != 'asistente' %}
                                         {% if permisos.puede_liberar and cita.medico_asignado %}
                                         <a href="{% url 'liberar_cita' cita.id %}"
                                            class="btn btn-sm btn-warning btn-action">
-                                            <i class="bi bi-unlock"></i> Liberar
+                                            {% icon 'unlock' %} Liberar
                                         </a>
                                         {% endif %}
 
@@ -619,14 +620,14 @@
                                                 <!-- Si ya tiene consulta, mostrar botón para ir a la consulta -->
                                                 <a href="{% url 'consulta_detalle' cita.consulta.id %}"
                                                    class="btn btn-sm btn-info btn-action">
-                                                    <i class="bi bi-clipboard-pulse"></i> Ver Consulta
+                                                    {% icon 'clipboard-pulse' %} Ver Consulta
                                                 </a>
                                             {% else %}
                                                 <!-- Si no tiene consulta, mostrar botón Iniciar -->
                                                 <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-sm btn-success btn-action">
-                                                        <i class="bi bi-play"></i> Iniciar
+                                                        {% icon 'play' %} Iniciar
                                                     </button>
                                                 </form>
                                             {% endif %}
@@ -640,7 +641,7 @@
                 </div>
             {% else %}
                 <div class="empty-state">
-                    <i class="bi bi-person-check display-1"></i>
+                    {% icon 'person-check' css_class='display-1' %}
                     <h4>No hay citas asignadas</h4>
                     <p>Las citas asignadas aparecerán aquí.</p>
                 </div>
@@ -656,7 +657,7 @@
                         <div class="card cita-card estado-completada h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0">
-                                    <i class="bi bi-person me-1"></i>
+                                    {% icon 'person' css_class='me-1' %}
                                     {{ cita.paciente.nombre_completo }}
                                 </h6>
                                 <span class="badge bg-success">Completada</span>
@@ -680,10 +681,10 @@
                                 
                                 <div class="d-flex align-items-center justify-content-between">
                                     <small class="text-muted">
-                                        <i class="bi bi-hash"></i>{{ cita.numero_cita }}
+                                        {% icon 'hash' %}{{ cita.numero_cita }}
                                     </small>
                                     <div class="badge bg-success">
-                                        <i class="bi bi-check-circle"></i> Finalizada
+                                        {% icon 'check-circle' %} Finalizada
                                     </div>
                                 </div>
                             </div>
@@ -691,12 +692,12 @@
                                 <div class="cita-actions">
                                     <a href="{% url 'citas_detalle' cita.pk %}"
                                        class="btn btn-sm btn-outline-info btn-action">
-                                        <i class="bi bi-eye"></i> Ver Detalles
+                                        {% icon 'eye' %} Ver Detalles
                                     </a>
                                     {% if usuario.rol != 'asistente' and cita.consulta %}
                                     <a href="{% url 'consulta_detalle' cita.consulta.pk %}"
                                        class="btn btn-sm btn-outline-success btn-action">
-                                        <i class="bi bi-clipboard-pulse"></i> Ver Consulta
+                                        {% icon 'clipboard-pulse' %} Ver Consulta
                                     </a>
                                     {% endif %}
                                 </div>
@@ -707,7 +708,7 @@
                 </div>
             {% else %}
                 <div class="empty-state">
-                    <i class="bi bi-check-circle display-1"></i>
+                    {% icon 'check-circle' css_class='display-1' %}
                     <h4>No hay citas completadas</h4>
                     <p>Las citas completadas aparecerán aquí.</p>
                 </div>
@@ -723,7 +724,7 @@
                         <div class="card cita-card h-100" style="opacity: 0.8;">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0">
-                                    <i class="bi bi-person me-1"></i>
+                                    {% icon 'person' css_class='me-1' %}
                                     {{ cita.paciente.nombre_completo }}
                                 </h6>
                                 <span class="badge bg-danger">{{ cita.get_estado_display }}</span>
@@ -754,10 +755,10 @@
                                 
                                 <div class="d-flex align-items-center justify-content-between">
                                     <small class="text-muted">
-                                        <i class="bi bi-hash"></i>{{ cita.numero_cita }}
+                                        {% icon 'hash' %}{{ cita.numero_cita }}
                                     </small>
                                     <div class="badge bg-danger">
-                                        <i class="bi bi-x-circle"></i> {{ cita.get_estado_display }}
+                                        {% icon 'x-circle' %} {{ cita.get_estado_display }}
                                     </div>
                                 </div>
                             </div>
@@ -765,7 +766,7 @@
                                 <div class="cita-actions">
                                     <a href="{% url 'citas_detalle' cita.pk %}"
                                        class="btn btn-sm btn-outline-info btn-action">
-                                        <i class="bi bi-eye"></i> Ver Detalles
+                                        {% icon 'eye' %} Ver Detalles
                                     </a>
                                 </div>
                             </div>
@@ -775,7 +776,7 @@
                 </div>
             {% else %}
                 <div class="empty-state">
-                    <i class="bi bi-x-circle display-1"></i>
+                    {% icon 'x-circle' css_class='display-1' %}
                     <h4>No hay citas canceladas</h4>
                     <p>Las citas canceladas aparecerán aquí.</p>
                 </div>
@@ -863,7 +864,7 @@ function mostrarAlerta(mensaje, tipo = 'success') {
     
     const alertHTML = `
         <div id="${alertId}" class="alert alert-${tipo} alert-dismissible fade show alert-ajax" role="alert">
-            <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            {% icon '${tipo' css_class='=== 'success' ? 'check-circle' : 'exclamation-triangle'} me-2' %}
             ${mensaje}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>

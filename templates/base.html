@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
+{% load icons %}
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +10,6 @@
     <!-- Bootstrap CSS -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Custom CSS -->
     <link href="{% static 'css/custom.css' %}" rel="stylesheet">
     
@@ -405,10 +405,10 @@
         <div class="container-fluid px-3">
             <div class="d-flex align-items-center">
                 <button class="sidebar-toggle me-3" id="sidebarToggle" type="button">
-                    <i class="bi bi-list"></i>
+                    {% icon 'list' %}
                 </button>
                 <a class="navbar-brand" href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'citas_lista' %}{% endif %}">
-                    <i class="bi bi-hospital"></i>
+                    {% icon 'hospital' %}
                     Sistema Médico
                 </a>
             </div>
@@ -417,7 +417,7 @@
                 <!-- Notificaciones -->
                 {% if usuario.rol == "admin" or usuario.rol == "medico" %}
                 <a href="{% url 'notificaciones_lista' %}" class="notification-bell">
-                    <i class="bi bi-bell"></i>
+                    {% icon 'bell' %}
                     {% if num_notif_sin_leer %}
                         <span class="notification-count">{{ num_notif_sin_leer }}</span>
                     {% endif %}
@@ -437,32 +437,32 @@
                             <img src="{{ usuario.foto.url }}" alt="Avatar" class="user-avatar">
                         {% else %}
                             <div class="user-avatar bg-light d-flex align-items-center justify-content-center">
-                                <i class="bi bi-person text-primary"></i>
+                                {% icon 'person' css_class='text-primary' %}
                             </div>
                         {% endif %}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow">
                         <li>
                             <h6 class="dropdown-header">
-                                <i class="bi bi-person-circle me-2"></i>
+                                {% icon 'person-circle' css_class='me-2' %}
                                 {{ usuario.get_full_name|default:usuario.username }}
                             </h6>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="{% url 'ver_perfil' %}">
-                                <i class="bi bi-person me-2"></i>Mi Perfil
+                                {% icon 'person' css_class='me-2' %}Mi Perfil
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="{% url 'editar_perfil' %}">
-                                <i class="bi bi-person-gear me-2"></i>Editar Perfil
+                                {% icon 'person-gear' css_class='me-2' %}Editar Perfil
                             </a>
                         </li>
                         {% if usuario.rol == "admin" %}
                         <li>
                             <a class="dropdown-item" href="{% url 'auditoria_lista' %}">
-                                <i class="bi bi-shield-check me-2"></i>Auditoría
+                                {% icon 'shield-check' css_class='me-2' %}Auditoría
                             </a>
                         </li>
                         {% endif %}
@@ -471,7 +471,7 @@
                             <form method="post" action="{% url 'logout' %}" class="d-inline">
                                 {% csrf_token %}
                                 <button type="submit" class="dropdown-item text-danger">
-                                    <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                                    {% icon 'box-arrow-right' css_class='me-2' %}Cerrar Sesión
                                 </button>
                             </form>
                         </li>
@@ -484,7 +484,7 @@
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h6><i class="bi bi-grid-3x3-gap me-2"></i>Menú Principal</h6>
+            <h6>{% icon 'grid-3x3-gap' css_class='me-2' %}Menú Principal</h6>
         </div>
 
         <nav class="sidebar-menu">
@@ -493,18 +493,18 @@
                 <div class="menu-section-title">Panel de Control</div>
                 {% if usuario.rol == "admin" %}
                     <a href="{% url 'dashboard_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'dashboard_admin' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard">
-                        <i class="bi bi-speedometer2"></i>
+                        {% icon 'speedometer2' %}
                         <span class="menu-item-text">Dashboard</span>
                     </a>
                 {% elif usuario.rol == "medico" %}
                     <a href="{% url 'dashboard_medico' %}" class="menu-item {% if request.resolver_match.url_name == 'dashboard_medico' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard">
-                        <i class="bi bi-speedometer2"></i>
+                        {% icon 'speedometer2' %}
                         <span class="menu-item-text">Dashboard</span>
                     </a>
                 {% elif usuario.rol == "asistente" %}
                     <!-- Assistants start at the appointment list -->
                     <a href="{% url 'citas_lista' %}" class="menu-item {% if 'citas' in request.resolver_match.url_name and request.resolver_match.url_name != 'mis_citas_asignadas' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Citas">
-                        <i class="bi bi-calendar-event"></i>
+                        {% icon 'calendar-event' %}
                         <span class="menu-item-text">Citas Médicas</span>
                     </a>
                 {% endif %}
@@ -515,15 +515,15 @@
             <div class="menu-section">
                 <div class="menu-section-title">Administración</div>
                 <a href="{% url 'usuarios_lista' %}" class="menu-item {% if 'usuarios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Usuarios">
-                    <i class="bi bi-people"></i>
+                    {% icon 'people' %}
                     <span class="menu-item-text">Usuarios</span>
                 </a>
                 <a href="{% url 'horarios_lista' %}" class="menu-item {% if 'horarios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Horarios">
-                    <i class="bi bi-clock"></i>
+                    {% icon 'clock' %}
                     <span class="menu-item-text">Horarios Médicos</span>
                 </a>
                 <a href="{% url 'consultorios_lista' %}" class="menu-item {% if 'consultorios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultorios">
-                    <i class="bi bi-hospital"></i>
+                    {% icon 'hospital' %}
                     <span class="menu-item-text">Consultorios</span>
                 </a>
             </div>
@@ -535,13 +535,13 @@
                 
                 {% if usuario.rol == "admin" or usuario.rol == "medico" %}
                 <a href="{% url 'pacientes_lista' %}" class="menu-item {% if 'pacientes' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Pacientes">
-                    <i class="bi bi-person-hearts"></i>
+                    {% icon 'person-hearts' %}
                     <span class="menu-item-text">Pacientes</span>
                 </a>
                 {% endif %}
 
                 <a href="{% url 'citas_lista' %}" class="menu-item {% if 'citas' in request.resolver_match.url_name and request.resolver_match.url_name != 'mis_citas_asignadas' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Citas">
-                    <i class="bi bi-calendar-event"></i>
+                    {% icon 'calendar-event' %}
                     <span class="menu-item-text">Citas Médicas</span>
                     {% if stats.citas_pendientes %}
                         <span class="notification-badge">{{ stats.citas_pendientes }}</span>
@@ -549,7 +549,7 @@
                 </a>
 
                 <a href="{% url 'consultas_lista' %}" class="menu-item {% if 'consultas' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultas">
-                    <i class="bi bi-clipboard-pulse"></i>
+                    {% icon 'clipboard-pulse' %}
                     <span class="menu-item-text">Consultas</span>
                     {% if stats.consultas_pendientes %}
                         <span class="notification-badge">{{ stats.consultas_pendientes }}</span>
@@ -557,17 +557,17 @@
                 </a>
 
                 <a href="{% url 'cola_virtual' %}" class="menu-item {% if request.resolver_match.url_name == 'cola_virtual' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Cola Virtual">
-                    <i class="bi bi-clock-history"></i>
+                    {% icon 'clock-history' %}
                     <span class="menu-item-text">Cola Virtual</span>
                 </a>
 
                 {% if usuario.rol == "medico" %}
                 <a href="{% url 'mis_citas_asignadas' %}" class="menu-item {% if request.resolver_match.url_name == 'mis_citas_asignadas' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Mis Citas">
-                    <i class="bi bi-calendar-check"></i>
+                    {% icon 'calendar-check' %}
                     <span class="menu-item-text">Mis Citas</span>
                 </a>
                 <a href="{% url 'horarios_lista' %}" class="menu-item {% if 'horarios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Mi Horario">
-                    <i class="bi bi-calendar-week"></i>
+                    {% icon 'calendar-week' %}
                     <span class="menu-item-text">Mi Horario</span>
                 </a>
                 {% endif %}
@@ -578,7 +578,7 @@
             <div class="menu-section">
                 <div class="menu-section-title">Reportes</div>
                 <a href="{% url 'auditoria_lista' %}" class="menu-item {% if request.resolver_match.url_name == 'auditoria_lista' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Auditoría">
-                    <i class="bi bi-shield-check"></i>
+                    {% icon 'shield-check' %}
                     <span class="menu-item-text">Auditoría</span>
                 </a>
             </div>
@@ -589,7 +589,7 @@
             <div class="menu-section">
                 <div class="menu-section-title">Comunicación</div>
                 <a href="{% url 'notificaciones_lista' %}" class="menu-item {% if request.resolver_match.url_name == 'notificaciones_lista' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Notificaciones">
-                    <i class="bi bi-bell"></i>
+                    {% icon 'bell' %}
                     <span class="menu-item-text">Notificaciones</span>
                     {% if num_notif_sin_leer %}
                         <span class="notification-badge">{{ num_notif_sin_leer }}</span>
@@ -606,7 +606,13 @@
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                     <div class="d-flex align-items-center">
-                        <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                        {% if message.tags == 'success' %}
+                            {% icon 'check-circle' css_class='me-2' %}
+                        {% elif message.tags == 'error' or message.tags == 'warning' %}
+                            {% icon 'exclamation-triangle' css_class='me-2' %}
+                        {% else %}
+                            {% icon 'info-circle' css_class='me-2' %}
+                        {% endif %}
                         <div>{{ message }}</div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>

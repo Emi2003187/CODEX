@@ -1,3 +1,4 @@
+{% load icons %}
 <!-- PAGES/consultas/consulta_card.html -->
 <div class="col consultation-card" 
      data-patient="{{ consulta.paciente.nombre_completo|lower }}"
@@ -10,24 +11,24 @@
     <!-- HEADER DE LA TARJETA -->
     <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-3">
       <h5 class="card-title mb-0 text-truncate patient-name" title="{{ consulta.paciente.nombre_completo }}">
-        <i class="bi bi-person-circle me-2"></i>{{ consulta.paciente.nombre_completo }}
+        {% icon 'person-circle' css_class='me-2' %}{{ consulta.paciente.nombre_completo }}
       </h5>
       <div class="d-flex align-items-center gap-2">
         {% if consulta.estado == "espera" %}
           <span class="badge bg-warning">
-            <i class="bi bi-hourglass-split me-1"></i>En Espera
+            {% icon 'hourglass-split' css_class='me-1' %}En Espera
           </span>
         {% elif consulta.estado == "en_progreso" %}
           <span class="badge bg-primary">
-            <i class="bi bi-activity me-1"></i>En Progreso
+            {% icon 'activity' css_class='me-1' %}En Progreso
           </span>
         {% elif consulta.estado == "finalizada" %}
           <span class="badge bg-success">
-            <i class="bi bi-check-circle me-1"></i>Finalizada
+            {% icon 'check-circle' css_class='me-1' %}Finalizada
           </span>
         {% elif consulta.estado == "cancelada" %}
           <span class="badge bg-danger">
-            <i class="bi bi-x-circle me-1"></i>Cancelada
+            {% icon 'x-circle' css_class='me-1' %}Cancelada
           </span>
         {% endif %}
       </div>
@@ -38,14 +39,14 @@
       <!-- INFORMACIÓN TEMPORAL -->
       <div class="mb-3">
         <div class="d-flex align-items-center mb-2">
-          <i class="bi bi-calendar-event text-muted me-2"></i>
+          {% icon 'calendar-event' css_class='text-muted me-2' %}
           <small class="text-muted">
             <strong>Creada:</strong> {{ consulta.fecha_creacion|date:"d/m/Y H:i" }}
           </small>
         </div>
         {% if consulta.cita %}
           <div class="d-flex align-items-center">
-            <i class="bi bi-alarm text-info me-2"></i>
+            {% icon 'alarm' css_class='text-info me-2' %}
             <small class="text-muted">
               <strong>Cita:</strong> {{ consulta.cita.fecha_hora|date:"d/m/Y H:i" }}
             </small>
@@ -57,7 +58,7 @@
       <div class="row g-3 mb-3">
         <div class="col-12">
           <div class="d-flex align-items-center">
-            <i class="bi bi-tag-fill text-primary me-2"></i>
+            {% icon 'tag-fill' css_class='text-primary me-2' %}
             <strong class="me-2">Tipo:</strong>
             <span class="badge bg-light text-dark">{{ consulta.get_tipo_display }}</span>
           </div>
@@ -66,7 +67,7 @@
         {% if consulta.medico %}
         <div class="col-12">
           <div class="d-flex align-items-center">
-            <i class="bi bi-person-badge text-success me-2"></i>
+            {% icon 'person-badge' css_class='text-success me-2' %}
             <strong class="me-2">Médico:</strong>
             <span class="text-muted">{{ consulta.medico.get_full_name }}</span>
           </div>
@@ -75,15 +76,15 @@
 
         <div class="col-12">
           <div class="d-flex align-items-center">
-            <i class="bi bi-heart-pulse-fill text-danger me-2"></i>
+            {% icon 'heart-pulse-fill' css_class='text-danger me-2' %}
             <strong class="me-2">Signos vitales:</strong>
             {% if consulta.signos_vitales %}
               <span class="badge bg-success">
-                <i class="bi bi-check-circle me-1"></i>Registrados
+                {% icon 'check-circle' css_class='me-1' %}Registrados
               </span>
             {% else %}
               <span class="badge bg-secondary">
-                <i class="bi bi-dash-circle me-1"></i>Pendientes
+                {% icon 'dash-circle' css_class='me-1' %}Pendientes
               </span>
             {% endif %}
           </div>
@@ -98,12 +99,12 @@
           {% if consulta.signos_vitales %}
             <a href="{% url 'signos_editar' consulta.signos_vitales.pk %}"
                class="btn btn-info btn-sm">
-              <i class="bi bi-heart-pulse me-1"></i>Ver Signos
+              {% icon 'heart-pulse' css_class='me-1' %}Ver Signos
             </a>
           {% elif consulta.estado != "cancelada" %}
             <a href="{% url 'consultas_precheck' consulta.pk %}"
                class="btn btn-warning btn-sm">
-              <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
+              {% icon 'heart-pulse' css_class='me-1' %}Registrar Signos
             </a>
           {% endif %}
         </div>
@@ -112,25 +113,25 @@
           {% if consulta.estado != "finalizada" and consulta.estado != "cancelada" and not consulta.medico_en_otro_progreso %}
             <a href="{% url 'consultas_atencion' consulta.pk %}"
                class="btn btn-primary btn-sm">
-              <i class="bi bi-clipboard-plus me-1"></i>Atender
+              {% icon 'clipboard-plus' css_class='me-1' %}Atender
             </a>
           {% endif %}
 
           {% if consulta.signos_vitales %}
             <a href="{% url 'signos_editar' consulta.signos_vitales.pk %}"
                class="btn btn-info btn-sm">
-              <i class="bi bi-heart-pulse me-1"></i>Ver Signos
+              {% icon 'heart-pulse' css_class='me-1' %}Ver Signos
             </a>
           {% elif consulta.estado != "cancelada" %}
             <a href="{% url 'consultas_precheck' consulta.pk %}"
                class="btn btn-warning btn-sm">
-              <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
+              {% icon 'heart-pulse' css_class='me-1' %}Registrar Signos
             </a>
           {% endif %}
 
           <a href="{% url 'consulta_detalle' consulta.pk %}"
              class="btn btn-info btn-sm">
-            <i class="bi bi-eye me-1"></i>Detalle
+            {% icon 'eye' css_class='me-1' %}Detalle
           </a>
         </div>
         {% endif %}
@@ -139,14 +140,14 @@
         <div class="dropdown">
           <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100"
                   type="button" data-bs-toggle="dropdown">
-            <i class="bi bi-three-dots me-1"></i>Más acciones
+            {% icon 'three-dots' css_class='me-1' %}Más acciones
           </button>
           <ul class="dropdown-menu w-100">
             {% if usuario.rol != 'asistente' %}
               {% if consulta.estado != "cancelada" %}
                 <li>
                   <a class="dropdown-item" href="{% url 'consulta_editar' consulta.pk %}">
-                    <i class="bi bi-pencil me-2"></i>Editar
+                    {% icon 'pencil' css_class='me-2' %}Editar
                   </a>
                 </li>
               {% endif %}
@@ -155,13 +156,13 @@
             {% if consulta.signos_vitales %}
               <li>
                 <a class="dropdown-item" href="{% url 'signos_editar' consulta.signos_vitales.pk %}">
-                  <i class="bi bi-heart-pulse me-2"></i>Ver Signos
+                  {% icon 'heart-pulse' css_class='me-2' %}Ver Signos
                 </a>
               </li>
             {% else %}
               <li>
                 <a class="dropdown-item" href="{% url 'consultas_precheck' consulta.pk %}">
-                  <i class="bi bi-heart-pulse me-2"></i>Registrar Signos
+                  {% icon 'heart-pulse' css_class='me-2' %}Registrar Signos
                 </a>
               </li>
             {% endif %}
@@ -171,7 +172,7 @@
                 <li>
                   <a class="dropdown-item btn-preview-receta" href="#"
                      data-preview-url="{% url 'receta_a5' consulta.receta.pk %}">
-                    <i class="bi bi-eye me-2"></i>Ver Receta
+                    {% icon 'eye' css_class='me-2' %}Ver Receta
                   </a>
                 </li>
               {% else %}
@@ -186,7 +187,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                     <button class="dropdown-item text-warning">
-                      <i class="bi bi-x-circle me-2"></i>Cancelar
+                      {% icon 'x-circle' css_class='me-2' %}Cancelar
                     </button>
                   </form>
                 </li>
@@ -198,7 +199,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                     <button class="dropdown-item text-danger">
-                      <i class="bi bi-trash me-2"></i>Eliminar
+                      {% icon 'trash' css_class='me-2' %}Eliminar
                     </button>
                   </form>
                 </li>
@@ -214,9 +215,9 @@
       <div class="d-flex justify-content-between align-items-center">
         <small class="text-muted">
           {% if consulta.cita %}
-            <i class="bi bi-calendar-check me-1"></i>Con cita programada
+            {% icon 'calendar-check' css_class='me-1' %}Con cita programada
           {% else %}
-            <i class="bi bi-clipboard me-1"></i>Sin cita previa
+            {% icon 'clipboard' css_class='me-1' %}Sin cita previa
           {% endif %}
         </small>
         <small class="text-muted">

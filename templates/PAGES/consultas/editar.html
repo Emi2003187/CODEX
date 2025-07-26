@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Editar Consulta #{{ consulta.pk }}{% endblock %}
 
@@ -453,11 +454,11 @@ label[for*="DELETE"] {
         </nav>
         
         <h1 class="mb-2">
-          <i class="bi bi-pencil-square me-2"></i>
+          {% icon 'pencil-square' css_class='me-2' %}
           Editar Consulta #{{ consulta.pk }}
         </h1>
         <p class="mb-0 opacity-75">
-          <i class="bi bi-person me-1"></i>
+          {% icon 'person' css_class='me-1' %}
           {{ consulta.paciente.nombre_completo }}
         </p>
       </div>
@@ -475,7 +476,7 @@ label[for*="DELETE"] {
             <div class="form-card">
               <div class="form-card-header">
                 <h5>
-                  <i class="bi bi-clipboard-data"></i>
+                  {% icon 'clipboard-data' %}
                   Información de la Consulta
                 </h5>
               </div>
@@ -484,7 +485,7 @@ label[for*="DELETE"] {
                   <div class="col-md-6">
                     <div class="form-group">
                       <label class="form-label" for="{{ form.motivo_consulta.id_for_label }}">
-                        <i class="bi bi-chat-text"></i>
+                        {% icon 'chat-text' %}
                         Motivo de Consulta
                       </label>
                       {{ form.motivo_consulta }}
@@ -500,7 +501,7 @@ label[for*="DELETE"] {
                   <div class="col-md-6">
                     <div class="form-group">
                       <label class="form-label" for="{{ form.diagnostico.id_for_label }}">
-                        <i class="bi bi-search"></i>
+                        {% icon 'search' %}
                         Diagnóstico
                       </label>
                       {{ form.diagnostico }}
@@ -519,7 +520,7 @@ label[for*="DELETE"] {
                   <div class="col-md-6">
                     <div class="form-group">
                       <label class="form-label" for="{{ form.tratamiento.id_for_label }}">
-                        <i class="bi bi-bandaid"></i>
+                        {% icon 'bandaid' %}
                         Tratamiento
                       </label>
                       {{ form.tratamiento }}
@@ -535,7 +536,7 @@ label[for*="DELETE"] {
                   <div class="col-md-6">
                     <div class="form-group">
                       <label class="form-label" for="{{ form.observaciones.id_for_label }}">
-                        <i class="bi bi-journal-text"></i>
+                        {% icon 'journal-text' %}
                         Observaciones
                       </label>
                       {{ form.observaciones }}
@@ -556,7 +557,7 @@ label[for*="DELETE"] {
             <div class="form-card">
               <div class="form-card-header">
                 <h5>
-                  <i class="bi bi-heart-pulse"></i>
+                  {% icon 'heart-pulse' %}
                   Signos Vitales
                 </h5>
               </div>
@@ -565,7 +566,7 @@ label[for*="DELETE"] {
                   <div class="col-md-4">
                     <div class="form-group">
                       <label class="form-label" for="{{ signos_form.tension_arterial.id_for_label }}">
-                        <i class="bi bi-activity"></i>
+                        {% icon 'activity' %}
                         Tensión Arterial
                       </label>
                       {{ signos_form.tension_arterial }}
@@ -581,7 +582,7 @@ label[for*="DELETE"] {
                   <div class="col-md-4">
                     <div class="form-group">
                       <label class="form-label" for="{{ signos_form.frecuencia_cardiaca.id_for_label }}">
-                        <i class="bi bi-heart"></i>
+                        {% icon 'heart' %}
                         Frecuencia Cardíaca
                       </label>
                       {{ signos_form.frecuencia_cardiaca }}
@@ -597,7 +598,7 @@ label[for*="DELETE"] {
                   <div class="col-md-4">
                     <div class="form-group">
                       <label class="form-label" for="{{ signos_form.temperatura.id_for_label }}">
-                        <i class="bi bi-thermometer"></i>
+                        {% icon 'thermometer' %}
                         Temperatura
                       </label>
                       {{ signos_form.temperatura }}
@@ -616,7 +617,7 @@ label[for*="DELETE"] {
                   <div class="col-md-4">
                     <div class="form-group">
                       <label class="form-label" for="{{ signos_form.peso.id_for_label }}">
-                        <i class="bi bi-speedometer2"></i>
+                        {% icon 'speedometer2' %}
                         Peso (kg)
                       </label>
                       {{ signos_form.peso }}
@@ -632,7 +633,7 @@ label[for*="DELETE"] {
                   <div class="col-md-4">
                     <div class="form-group">
                       <label class="form-label" for="{{ signos_form.talla.id_for_label }}">
-                        <i class="bi bi-rulers"></i>
+                        {% icon 'rulers' %}
                         Talla (m)
                       </label>
                       {{ signos_form.talla }}
@@ -648,7 +649,7 @@ label[for*="DELETE"] {
                   <div class="col-md-4">
                     <div class="form-group">
                       <label class="form-label" for="{{ signos_form.frecuencia_respiratoria.id_for_label }}">
-                        <i class="bi bi-lungs"></i>
+                        {% icon 'lungs' %}
                         Frecuencia Respiratoria
                       </label>
                       {{ signos_form.frecuencia_respiratoria }}
@@ -669,7 +670,7 @@ label[for*="DELETE"] {
                   <div class="col-md-4">
                     <div class="form-group">
                       <label class="form-label" for="{{ signos_form.circunferencia_abdominal.id_for_label }}">
-                        <i class="bi bi-circle"></i>
+                        {% icon 'circle' %}
                         Circunferencia Abdominal (cm)
                       </label>
                       {{ signos_form.circunferencia_abdominal }}
@@ -686,7 +687,7 @@ label[for*="DELETE"] {
                   <div class="col-md-4">
                     <div class="form-group">
                       <label class="form-label" for="{{ signos_form.alergias.id_for_label }}">
-                        <i class="bi bi-exclamation-triangle"></i>
+                        {% icon 'exclamation-triangle' %}
                         Alergias
                       </label>
                       {{ signos_form.alergias }}
@@ -704,7 +705,7 @@ label[for*="DELETE"] {
                   <div class="col-md-4">
                     <div class="form-group">
                       <label class="form-label" for="{{ signos_form.sintomas.id_for_label }}">
-                        <i class="bi bi-clipboard-pulse"></i>
+                        {% icon 'clipboard-pulse' %}
                         Síntomas
                       </label>
                       {{ signos_form.sintomas }}
@@ -727,14 +728,14 @@ label[for*="DELETE"] {
             <div class="form-card">
               <div class="form-card-header">
                 <h5>
-                  <i class="bi bi-file-earmark-medical"></i>
+                  {% icon 'file-earmark-medical' %}
                   Receta Médica
                 </h5>
               </div>
               <div class="form-card-body">
                 <div class="form-group">
                   <label class="form-label" for="{{ receta_form.indicaciones_generales.id_for_label }}">
-                    <i class="bi bi-list-ul"></i>
+                    {% icon 'list-ul' %}
                     Indicaciones Generales
                   </label>
                   {{ receta_form.indicaciones_generales }}
@@ -751,7 +752,7 @@ label[for*="DELETE"] {
                   <div class="col-md-6">
                     <div class="form-group">
                       <label class="form-label" for="{{ receta_form.valido_hasta.id_for_label }}">
-                        <i class="bi bi-calendar-check"></i>
+                        {% icon 'calendar-check' %}
                         Válido Hasta
                       </label>
                       {{ receta_form.valido_hasta }}
@@ -767,7 +768,7 @@ label[for*="DELETE"] {
                   <div class="col-md-6">
                     <div class="form-group">
                       <label class="form-label" for="{{ receta_form.notas.id_for_label }}">
-                        <i class="bi bi-sticky"></i>
+                        {% icon 'sticky' %}
                         Notas Adicionales
                       </label>
                       {{ receta_form.notas }}
@@ -784,7 +785,7 @@ label[for*="DELETE"] {
 
                 <!-- Medicamentos -->
                 <h6 class="mt-4 mb-3 text-primary">
-                  <i class="bi bi-capsule me-2"></i>
+                  {% icon 'capsule' css_class='me-2' %}
                   Medicamentos Recetados
                 </h6>
                 {{ med_formset.management_form }}
@@ -803,7 +804,7 @@ label[for*="DELETE"] {
                       <div class="medication-header">
                         <div class="medication-number">{{ forloop.counter }}</div>
                         <button type="button" class="btn-remove-med">
-                          <i class="bi bi-trash me-1"></i>Eliminar
+                          {% icon 'trash' css_class='me-1' %}Eliminar
                         </button>
                       </div>
                       
@@ -811,7 +812,7 @@ label[for*="DELETE"] {
                         <div class="col-md-6">
                           <div class="form-group">
                             <label class="form-label" for="{{ form.nombre.id_for_label }}">
-                              <i class="bi bi-capsule"></i>
+                              {% icon 'capsule' %}
                               Nombre del Medicamento
                             </label>
                             {{ form.nombre }}
@@ -827,7 +828,7 @@ label[for*="DELETE"] {
                         <div class="col-md-6">
                           <div class="form-group">
                             <label class="form-label" for="{{ form.principio_activo.id_for_label }}">
-                              <i class="bi bi-molecule"></i>
+                              {% icon 'molecule' %}
                               Principio Activo
                             </label>
                             {{ form.principio_activo }}
@@ -846,7 +847,7 @@ label[for*="DELETE"] {
                         <div class="col-md-3">
                           <div class="form-group">
                             <label class="form-label" for="{{ form.dosis.id_for_label }}">
-                              <i class="bi bi-speedometer2"></i>
+                              {% icon 'speedometer2' %}
                               Dosis
                             </label>
                             {{ form.dosis }}
@@ -862,7 +863,7 @@ label[for*="DELETE"] {
                         <div class="col-md-3">
                           <div class="form-group">
                             <label class="form-label" for="{{ form.frecuencia.id_for_label }}">
-                              <i class="bi bi-clock"></i>
+                              {% icon 'clock' %}
                               Frecuencia
                             </label>
                             {{ form.frecuencia }}
@@ -878,7 +879,7 @@ label[for*="DELETE"] {
                         <div class="col-md-3">
                           <div class="form-group">
                             <label class="form-label" for="{{ form.via_administracion.id_for_label }}">
-                              <i class="bi bi-arrow-right"></i>
+                              {% icon 'arrow-right' %}
                               Vía
                             </label>
                             {{ form.via_administracion }}
@@ -894,7 +895,7 @@ label[for*="DELETE"] {
                         <div class="col-md-3">
                           <div class="form-group">
                             <label class="form-label" for="{{ form.duracion.id_for_label }}">
-                              <i class="bi bi-hourglass"></i>
+                              {% icon 'hourglass' %}
                               Duración
                             </label>
                             {{ form.duracion }}
@@ -913,7 +914,7 @@ label[for*="DELETE"] {
                         <div class="col-md-6">
                           <div class="form-group">
                             <label class="form-label" for="{{ form.cantidad.id_for_label }}">
-                              <i class="bi bi-123"></i>
+                              {% icon '123' %}
                               Cantidad
                             </label>
                             {{ form.cantidad }}
@@ -929,7 +930,7 @@ label[for*="DELETE"] {
                         <div class="col-md-6">
                           <div class="form-group">
                             <label class="form-label" for="{{ form.indicaciones_especificas.id_for_label }}">
-                              <i class="bi bi-info-circle"></i>
+                              {% icon 'info-circle' %}
                               Indicaciones Específicas
                             </label>
                             {{ form.indicaciones_especificas }}
@@ -950,7 +951,7 @@ label[for*="DELETE"] {
                   {% endfor %}
                 </div>
                 <button type="button" class="btn-add-medication" id="add-med-btn">
-                  <i class="bi bi-plus-circle"></i>
+                  {% icon 'plus-circle' %}
                   Añadir Medicamento
                 </button>
               </div>
@@ -963,7 +964,7 @@ label[for*="DELETE"] {
             <div class="sidebar-card">
               <div class="sidebar-card-header">
                 <h5>
-                  <i class="bi bi-person"></i>
+                  {% icon 'person' %}
                   Información del Paciente
                 </h5>
               </div>
@@ -991,7 +992,7 @@ label[for*="DELETE"] {
             <div class="sidebar-card">
               <div class="sidebar-card-header">
                 <h5>
-                  <i class="bi bi-clipboard-data"></i>
+                  {% icon 'clipboard-data' %}
                   Detalles de la Consulta
                 </h5>
               </div>
@@ -1031,11 +1032,11 @@ label[for*="DELETE"] {
       <!-- Action Buttons -->
       <div class="action-buttons">
         <a href="{{ return_to }}" class="btn-custom btn-secondary-custom">
-          <i class="bi bi-x-circle"></i>
+          {% icon 'x-circle' %}
           Cancelar
         </a>
         <button type="submit" class="btn-custom btn-success-custom">
-          <i class="bi bi-check-circle"></i>
+          {% icon 'check-circle' %}
           Guardar Cambios
         </button>
       </div>

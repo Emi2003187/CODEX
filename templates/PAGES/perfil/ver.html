@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Mi Perfil{% endblock %}
 
@@ -11,13 +12,13 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="text-primary fw-bold mb-1">
-                        <i class="bi bi-person-circle me-2"></i>Mi Perfil
+                        {% icon 'person-circle' css_class='me-2' %}Mi Perfil
                     </h2>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
                                 <a href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'citas_lista' %}{% endif %}" class="text-decoration-none">
-                                    <i class="bi bi-house-door me-1"></i>Dashboard
+                                    {% icon 'house-door' css_class='me-1' %}Dashboard
                                 </a>
                             </li>
                             <li class="breadcrumb-item active">Mi Perfil</li>
@@ -25,7 +26,7 @@
                     </nav>
                 </div>
                 <a href="{% url 'editar_perfil' %}" class="btn btn-primary btn-lg shadow-sm">
-                    <i class="bi bi-pencil-square me-2"></i>Editar Perfil
+                    {% icon 'pencil-square' css_class='me-2' %}Editar Perfil
                 </a>
             </div>
 
@@ -42,14 +43,20 @@
                             {% else %}
                                 <div class="rounded-circle border border-4 border-white shadow-lg bg-white d-flex align-items-center justify-content-center" 
                                      style="width: 120px; height: 120px;">
-                                    <i class="bi bi-person-fill text-primary" style="font-size: 3rem;"></i>
+                                    {% icon 'person-fill' css_class='text-primary' %}
                                 </div>
                             {% endif %}
                             <!-- Badge de rol -->
                             <span class="position-absolute bottom-0 end-0 badge rounded-pill 
                                 {% if usuario.rol == 'admin' %}bg-danger{% elif usuario.rol == 'medico' %}bg-success{% else %}bg-info{% endif %} 
                                 border border-2 border-white shadow">
-                                <i class="bi bi-{% if usuario.rol == 'admin' %}shield-fill-check{% elif usuario.rol == 'medico' %}heart-pulse-fill{% else %}person-gear{% endif %} me-1"></i>
+                                {% if usuario.rol == "admin" %}
+                                    {% icon 'shield-fill-check' css_class='me-1' %}
+                                {% elif usuario.rol == "medico" %}
+                                    {% icon 'heart-pulse-fill' css_class='me-1' %}
+                                {% else %}
+                                    {% icon 'person-gear' css_class='me-1' %}
+                                {% endif %}
                                 {{ usuario.get_rol_display }}
                             </span>
                         </div>
@@ -66,7 +73,7 @@
                         <p class="text-muted fs-5 mb-0">@{{ usuario.username }}</p>
                         {% if usuario.consultorio %}
                             <p class="text-primary fw-semibold mt-2">
-                                <i class="bi bi-building me-1"></i>{{ usuario.consultorio.nombre }}
+                                {% icon 'building' css_class='me-1' %}{{ usuario.consultorio.nombre }}
                             </p>
                         {% endif %}
                     </div>
@@ -78,12 +85,12 @@
                             <div class="card h-100 border-0 bg-light rounded-3">
                                 <div class="card-body p-4">
                                     <h5 class="card-title text-primary mb-4">
-                                        <i class="bi bi-person-lines-fill me-2"></i>Información Personal
+                                        {% icon 'person-lines-fill' css_class='me-2' %}Información Personal
                                     </h5>
                                     <div class="space-y-3">
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i class="bi bi-envelope-fill text-primary"></i>
+                                                {% icon 'envelope-fill' css_class='text-primary' %}
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Email</small>
@@ -94,7 +101,7 @@
                                         {% if usuario.telefono %}
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i class="bi bi-telephone-fill text-success"></i>
+                                                {% icon 'telephone-fill' css_class='text-success' %}
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Teléfono</small>
@@ -105,7 +112,7 @@
 
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="bg-info bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i class="bi bi-calendar-check-fill text-info"></i>
+                                                {% icon 'calendar-check-fill' css_class='text-info' %}
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Miembro desde</small>
@@ -116,7 +123,7 @@
                                         {% if usuario.last_login %}
                                         <div class="d-flex align-items-center">
                                             <div class="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i class="bi bi-clock-fill text-warning"></i>
+                                                {% icon 'clock-fill' css_class='text-warning' %}
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Último acceso</small>
@@ -134,12 +141,12 @@
                             <div class="card h-100 border-0 bg-light rounded-3">
                                 <div class="card-body p-4">
                                     <h5 class="card-title text-success mb-4">
-                                        <i class="bi bi-briefcase-fill me-2"></i>Información Profesional
+                                        {% icon 'briefcase-fill' css_class='me-2' %}Información Profesional
                                     </h5>
                                     <div class="space-y-3">
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i class="bi bi-person-badge-fill text-primary"></i>
+                                                {% icon 'person-badge-fill' css_class='text-primary' %}
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Rol en el sistema</small>
@@ -153,7 +160,7 @@
                                         {% if usuario.cedula_profesional %}
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i class="bi bi-card-text text-success"></i>
+                                                {% icon 'card-text' css_class='text-success' %}
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Cédula Profesional</small>
@@ -165,7 +172,7 @@
                                         {% if usuario.institucion_cedula %}
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="bg-info bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i class="bi bi-bank text-info"></i>
+                                                {% icon 'bank' css_class='text-info' %}
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Institución</small>
@@ -176,7 +183,7 @@
 
                                         {% if not usuario.cedula_profesional and not usuario.institucion_cedula %}
                                         <div class="text-center py-4">
-                                            <i class="bi bi-info-circle text-muted" style="font-size: 2rem;"></i>
+                                            {% icon 'info-circle' css_class='text-muted' %}
                                             <p class="text-muted mt-2 mb-0">No hay información profesional adicional</p>
                                         </div>
                                         {% endif %}
@@ -190,11 +197,11 @@
                     <div class="text-center mt-5">
                         <div class="d-flex flex-wrap justify-content-center gap-3">
                             <a href="{% url 'editar_perfil' %}" class="btn btn-primary btn-lg px-4 shadow-sm">
-                                <i class="bi bi-pencil-square me-2"></i>Editar Perfil
+                                {% icon 'pencil-square' css_class='me-2' %}Editar Perfil
                             </a>
                             <a href="{% if usuario.rol == 'admin' %}{% url 'dashboard_admin' %}{% elif usuario.rol == 'medico' %}{% url 'dashboard_medico' %}{% else %}{% url 'citas_lista' %}{% endif %}"
                                class="btn btn-outline-secondary btn-lg px-4">
-                                <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
+                                {% icon 'arrow-left' css_class='me-2' %}Volver al Dashboard
                             </a>
                         </div>
                     </div>

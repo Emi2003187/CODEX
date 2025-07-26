@@ -1,3 +1,4 @@
+{% load icons %}
 {% extends "base.html" %}
 {% load widget_tweaks %}
 {% block title %}Crear Horario{% endblock %}
@@ -54,10 +55,10 @@
     <!-- Botones -->
     <div class="mt-4 d-flex justify-content-between">
       <a href="{% url 'horarios_lista' %}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Cancelar
+        {% icon 'arrow-left' %} Cancelar
       </a>
       <button type="submit" class="btn btn-primary">
-        <i class="bi bi-check-circle"></i> Guardar
+        {% icon 'check-circle' %} Guardar
       </button>
     </div>
   </form>

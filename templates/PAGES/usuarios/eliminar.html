@@ -1,3 +1,4 @@
+{% load icons %}
 {% extends 'base.html' %}
 {% block title %}Eliminar usuario{% endblock %}
 {% block content %}
@@ -6,7 +7,7 @@
     <div class="col-md-6">
       <div class="card border-danger shadow-sm">
         <div class="card-header bg-danger text-white">
-          <h4 class="mb-0"><i class="bi bi-trash"></i> Confirmar eliminación</h4>
+          <h4 class="mb-0">{% icon 'trash' %} Confirmar eliminación</h4>
         </div>
         <div class="card-body">
           <p class="fw-bold">Vas a eliminar definitivamente a:</p>

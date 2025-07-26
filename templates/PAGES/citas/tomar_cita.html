@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Tomar Cita - {{ cita.paciente.nombre_completo }}{% endblock %}
 
@@ -155,7 +156,7 @@
             <!-- Header -->
             <div class="d-flex align-items-center mb-4">
                 <a href="{% url 'citas_lista' %}" class="btn btn-outline-secondary me-3">
-                    <i class="bi bi-arrow-left"></i> Volver
+                    {% icon 'arrow-left' %} Volver
                 </a>
                 <div>
                     <h2 class="fw-bold text-primary mb-1">Tomar Cita Médica</h2>
@@ -167,7 +168,7 @@
             {% if conflicto %}
             <div class="alert conflicto-warning">
                 <h5 class="alert-heading">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {% icon 'exclamation-triangle' css_class='me-2' %}
                     Conflicto de Horario Detectado
                 </h5>
                 <p class="mb-3">
@@ -175,7 +176,7 @@
                 </p>
                 <div class="d-flex align-items-center p-3 bg-white rounded">
                     <div class="me-3">
-                        <i class="bi bi-calendar-event fs-4 text-warning"></i>
+                        {% icon 'calendar-event' css_class='fs-4 text-warning' %}
                     </div>
                     <div>
                         <strong>{{ conflicto.paciente.nombre_completo }}</strong><br>
@@ -201,10 +202,10 @@
                             </div>
                             <h4 class="fw-bold">{{ cita.paciente.nombre_completo }}</h4>
                             <p class="text-muted mb-2">
-                                <i class="bi bi-hash"></i> Cita {{ cita.numero_cita }}
+                                {% icon 'hash' %} Cita {{ cita.numero_cita }}
                             </p>
                             <div class="prioridad-badge prioridad-{{ cita.prioridad }}">
-                                <i class="bi bi-flag"></i> {{ cita.get_prioridad_display }}
+                                {% icon 'flag' %} {{ cita.get_prioridad_display }}
                             </div>
                         </div>
 
@@ -215,7 +216,7 @@
                                     <div class="info-item">
                                         <div class="info-label">Fecha</div>
                                         <div class="info-value">
-                                            <i class="bi bi-calendar me-2"></i>
+                                            {% icon 'calendar' css_class='me-2' %}
                                             {{ cita.fecha_hora|date:"l, d \d\e F \d\e Y" }}
                                         </div>
                                     </div>
@@ -224,7 +225,7 @@
                                     <div class="info-item">
                                         <div class="info-label">Hora</div>
                                         <div class="info-value">
-                                            <i class="bi bi-clock me-2"></i>
+                                            {% icon 'clock' css_class='me-2' %}
                                             {{ cita.fecha_hora|time:"H:i" }}
                                         </div>
                                     </div>
@@ -233,7 +234,7 @@
                                     <div class="info-item">
                                         <div class="info-label">Tipo de Cita</div>
                                         <div class="info-value">
-                                            <i class="bi bi-clipboard-pulse me-2"></i>
+                                            {% icon 'clipboard-pulse' css_class='me-2' %}
                                             {{ cita.get_tipo_cita_display }}
                                         </div>
                                     </div>
@@ -242,7 +243,7 @@
                                     <div class="info-item">
                                         <div class="info-label">Duración</div>
                                         <div class="info-value">
-                                            <i class="bi bi-stopwatch me-2"></i>
+                                            {% icon 'stopwatch' css_class='me-2' %}
                                             {{ cita.duracion }} minutos
                                         </div>
                                     </div>
@@ -251,7 +252,7 @@
                                     <div class="info-item">
                                         <div class="info-label">Consultorio</div>
                                         <div class="info-value">
-                                            <i class="bi bi-building me-2"></i>
+                                            {% icon 'building' css_class='me-2' %}
                                             {{ cita.consultorio.nombre }}
                                         </div>
                                     </div>
@@ -261,7 +262,7 @@
                                     <div class="info-item">
                                         <div class="info-label">Motivo de la Consulta</div>
                                         <div class="info-value">
-                                            <i class="bi bi-chat-text me-2"></i>
+                                            {% icon 'chat-text' css_class='me-2' %}
                                             {{ cita.motivo }}
                                         </div>
                                     </div>
@@ -277,7 +278,7 @@
             {% if cita.medico_preferido %}
             <div class="alert alert-info mt-4">
                 <h6 class="alert-heading">
-                    <i class="bi bi-info-circle me-2"></i>Médico Preferido
+                    {% icon 'info-circle' css_class='me-2' %}Médico Preferido
                 </h6>
                 <p class="mb-0">
                     El paciente ha solicitado ser atendido por: 
@@ -290,7 +291,7 @@
             <div class="card mt-4">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="bi bi-clock-history me-2"></i>Historial de la Cita
+                        {% icon 'clock-history' css_class='me-2' %}Historial de la Cita
                     </h5>
                 </div>
                 <div class="card-body">
@@ -317,12 +318,12 @@
                         <input type="hidden" name="confirmar" value="si">
                         {% endif %}
                         <button type="submit" class="btn btn-tomar me-3">
-                            <i class="bi bi-hand-index me-2"></i>
+                            {% icon 'hand-index' css_class='me-2' %}
                             Sí, Tomar Cita
                         </button>
                     </form>
                     <a href="{% url 'citas_lista' %}" class="btn btn-cancelar">
-                        <i class="bi bi-x-circle me-2"></i>
+                        {% icon 'x-circle' css_class='me-2' %}
                         Cancelar
                     </a>
                 </div>
@@ -332,7 +333,7 @@
             <div class="card mt-4">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="bi bi-person-badge me-2"></i>Tu Información
+                        {% icon 'person-badge' css_class='me-2' %}Tu Información
                     </h5>
                 </div>
                 <div class="card-body">

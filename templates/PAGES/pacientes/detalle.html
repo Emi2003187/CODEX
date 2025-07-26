@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Historial Médico - {{ paciente.nombre_completo }}{% endblock %}
 
@@ -37,7 +38,7 @@
                 {% else %}
                   <div class="rounded-circle border border-3 border-white shadow d-flex align-items-center justify-content-center bg-white" 
                        style="width: 120px; height: 120px;">
-                    <i class="bi bi-person-fill text-primary" style="font-size: 3rem;"></i>
+                    {% icon 'person-fill' size=48 css_class='text-primary' %}
                   </div>
                 {% endif %}
                 <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" 
@@ -49,32 +50,32 @@
               <div class="row g-3">
                 <div class="col-auto">
                   <div class="d-flex align-items-center">
-                    <i class="bi bi-calendar3 me-2"></i>
+                    {% icon 'calendar3' css_class='me-2' %}
                     <span>{{ paciente.edad }} años</span>
                   </div>
                 </div>
                 <div class="col-auto">
                   <div class="d-flex align-items-center">
-                    <i class="bi bi-gender-{{ paciente.sexo|lower }} me-2"></i>
+                    {% icon 'gender-{{' css_class='paciente.sexo|lower }} me-2' %}
                     <span>{{ paciente.get_sexo_display }}</span>
                   </div>
                 </div>
                 <div class="col-auto">
                   <div class="d-flex align-items-center">
-                    <i class="bi bi-telephone me-2"></i>
+                    {% icon 'telephone' css_class='me-2' %}
                     <span>{{ paciente.telefono|default:"No registrado" }}</span>
                   </div>
                 </div>
                 <div class="col-auto">
                   <div class="d-flex align-items-center">
-                    <i class="bi bi-envelope me-2"></i>
+                    {% icon 'envelope' css_class='me-2' %}
                     <span>{{ paciente.correo|default:"No registrado" }}</span>
                   </div>
                 </div>
               </div>
               {% if paciente.direccion %}
               <div class="mt-2">
-                <i class="bi bi-geo-alt me-2"></i>
+                {% icon 'geo-alt' css_class='me-2' %}
                 <span>{{ paciente.direccion }}</span>
               </div>
               {% endif %}
@@ -82,33 +83,33 @@
             <div class="col-auto">
               <div class="dropdown">
                 <button class="btn btn-light btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                  <i class="bi bi-three-dots-vertical"></i>
+                  {% icon 'three-dots-vertical' %}
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow">
                   <li>
                     <a class="dropdown-item" href="{% url 'antecedente_nuevo' paciente.pk %}?next={{ request.path }}">
-                      <i class="bi bi-journal-plus me-2 text-primary"></i>Nuevo Antecedente
+                      {% icon 'journal-plus' css_class='me-2 text-primary' %}Nuevo Antecedente
                     </a>
                   </li>
                   <li>
                     <a class="dropdown-item" href="{% url 'medicamento_nuevo' paciente.pk %}?next={{ request.path }}">
-                      <i class="bi bi-capsule me-2 text-success"></i>Nuevo Medicamento
+                      {% icon 'capsule' css_class='me-2 text-success' %}Nuevo Medicamento
                     </a>
                   </li>
                   <li>
                     <a class="dropdown-item" href="{% url 'consultas_crear_desde_paciente' paciente.pk %}">
-                      <i class="bi bi-plus-circle me-2 text-info"></i>Nueva Consulta
+                      {% icon 'plus-circle' css_class='me-2 text-info' %}Nueva Consulta
                     </a>
                   </li>
                   <li><hr class="dropdown-divider"></li>
                   <li>
                     <a class="dropdown-item" href="{% url 'paciente_pdf' paciente.pk %}">
-                      <i class="bi bi-download me-2 text-dark"></i>Descargar PDF
+                      {% icon 'download' css_class='me-2 text-dark' %}Descargar PDF
                     </a>
                   </li>
                   <li>
                     <a class="dropdown-item" href="{% url 'pacientes_editar' paciente.pk %}">
-                      <i class="bi bi-pencil-square me-2 text-warning"></i>Editar Paciente
+                      {% icon 'pencil-square' css_class='me-2 text-warning' %}Editar Paciente
                     </a>
                   </li>
                 </ul>
@@ -126,9 +127,9 @@
       <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
           <a href="{% url 'crear_cita_paciente' paciente.id %}" class="btn btn-primary mb-3 shadow">
-            <i class="bi bi-calendar-plus"></i> Crear Cita para este paciente
+            {% icon 'calendar-plus' %} Crear Cita para este paciente
           </a>
-          <h5 class="mb-3"><i class="bi bi-calendar-event me-2"></i>📅 Historial de Citas</h5>
+          <h5 class="mb-3">{% icon 'calendar-event' css_class='me-2' %}📅 Historial de Citas</h5>
           {% if citas %}
           <div class="table-responsive">
             <table class="table table-striped table-hover table-bordered shadow-sm table-sm rounded">
@@ -154,7 +155,7 @@
                   </td>
                   <td class="text-center">
                     <a href="{% url 'citas_detalle' cita.id %}" class="btn btn-outline-primary btn-sm">
-                      <i class="bi bi-eye"></i> Ver Detalle
+                      {% icon 'eye' %} Ver Detalle
                     </a>
                   </td>
                 </tr>
@@ -176,7 +177,7 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body text-center">
           <div class="text-primary mb-2">
-            <i class="bi bi-calendar-check" style="font-size: 2rem;"></i>
+            {% icon 'calendar-check' size=32 %}
           </div>
           <h3 class="mb-1 fw-bold">{{ consultas.count }}</h3>
           <p class="text-muted mb-0">Consultas Totales</p>
@@ -187,7 +188,7 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body text-center">
           <div class="text-success mb-2">
-            <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+            {% icon 'check-circle' size=32 %}
           </div>
           <h3 class="mb-1 fw-bold">{{ consultas_finalizadas.count }}</h3>
           <p class="text-muted mb-0">Finalizadas</p>
@@ -198,7 +199,7 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body text-center">
           <div class="text-warning mb-2">
-            <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+            {% icon 'exclamation-triangle' size=32 %}
           </div>
           <h3 class="mb-1 fw-bold">{{ alergias.count }}</h3>
           <p class="text-muted mb-0">Alergias</p>
@@ -209,7 +210,7 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body text-center">
           <div class="text-info mb-2">
-            <i class="bi bi-capsule" style="font-size: 2rem;"></i>
+            {% icon 'capsule' size=32 %}
           </div>
           <h3 class="mb-1 fw-bold">{{ medicamentos.count }}</h3>
           <p class="text-muted mb-0">Medicamentos</p>
@@ -226,11 +227,11 @@
         <div class="card-header bg-primary text-white border-0">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
-              <i class="bi bi-journal-text me-2"></i>Antecedentes Médicos
+              {% icon 'journal-text' css_class='me-2' %}Antecedentes Médicos
             </h5>
             <a href="{% url 'antecedente_nuevo' paciente.pk %}?next={{ request.path }}" 
                class="btn btn-light btn-sm">
-              <i class="bi bi-plus"></i>
+              {% icon 'plus' %}
             </a>
           </div>
         </div>
@@ -245,7 +246,7 @@
                       <p class="mb-1 fw-medium">{{ ant.descripcion }}</p>
                       {% if ant.fecha_diagnostico %}
                         <small class="text-muted">
-                          <i class="bi bi-calendar3 me-1"></i>
+                          {% icon 'calendar3' css_class='me-1' %}
                           {{ ant.fecha_diagnostico|date:"d/m/Y" }}
                         </small>
                       {% endif %}
@@ -253,12 +254,12 @@
                     <div class="ms-2">
                       <div class="btn-group" role="group">
                         <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                          <i class="bi bi-three-dots"></i>
+                          {% icon 'three-dots' %}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                           <li>
                             <a class="dropdown-item" href="{% url 'antecedente_editar' ant.pk %}?next={{ request.path }}">
-                              <i class="bi bi-pencil-square me-2 text-warning"></i>Editar
+                              {% icon 'pencil-square' css_class='me-2 text-warning' %}Editar
                             </a>
                           </li>
                           <li>
@@ -266,7 +267,7 @@
                               {% csrf_token %}
                               <input type="hidden" name="next" value="{{ request.path }}">
                               <button class="dropdown-item text-danger" type="submit">
-                                <i class="bi bi-trash3 me-2"></i>Eliminar
+                                {% icon 'trash3' css_class='me-2' %}Eliminar
                               </button>
                             </form>
                           </li>
@@ -279,11 +280,11 @@
             </div>
           {% else %}
             <div class="text-center py-4">
-              <i class="bi bi-journal text-muted" style="font-size: 3rem;"></i>
+              {% icon 'journal' size=48 css_class='text-muted' %}
               <p class="text-muted mt-2 mb-0">Sin antecedentes registrados</p>
               <a href="{% url 'antecedente_nuevo' paciente.pk %}?next={{ request.path }}" 
                  class="btn btn-primary btn-sm mt-2">
-                <i class="bi bi-plus me-1"></i>Agregar Antecedente
+                {% icon 'plus' css_class='me-1' %}Agregar Antecedente
               </a>
             </div>
           {% endif %}
@@ -297,10 +298,10 @@
         <div class="card-header bg-warning text-dark border-0">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
-              <i class="bi bi-exclamation-octagon me-2"></i>Alergias
+              {% icon 'exclamation-octagon' css_class='me-2' %}Alergias
             </h5>
             <a href="{% url 'antecedente_nuevo' paciente.pk %}?tipo=alergico&next={{ request.path }}" class="btn btn-dark btn-sm">
-              <i class="bi bi-plus"></i>
+              {% icon 'plus' %}
             </a>
           </div>
         </div>
@@ -322,12 +323,12 @@
                     <div class="ms-2">
                       <div class="btn-group" role="group">
                         <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                          <i class="bi bi-three-dots"></i>
+                          {% icon 'three-dots' %}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                           <li>
                             <a class="dropdown-item" href="{% url 'antecedente_editar' al.pk %}?next={{ request.path }}">
-                              <i class="bi bi-pencil-square me-2 text-warning"></i>Editar
+                              {% icon 'pencil-square' css_class='me-2 text-warning' %}Editar
                             </a>
                           </li>
                           <li>
@@ -335,7 +336,7 @@
                               {% csrf_token %}
                               <input type="hidden" name="next" value="{{ request.path }}">
                               <button class="dropdown-item text-danger" type="submit">
-                                <i class="bi bi-trash3 me-2"></i>Eliminar
+                                {% icon 'trash3' css_class='me-2' %}Eliminar
                               </button>
                             </form>
                           </li>
@@ -348,10 +349,10 @@
             </div>
           {% else %}
             <div class="text-center py-4">
-              <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
+              {% icon 'shield-check' size=48 css_class='text-success' %}
               <p class="text-muted mt-2 mb-0">Sin alergias conocidas</p>
               <a href="{% url 'antecedente_nuevo' paciente.pk %}?tipo=alergico&next={{ request.path }}" class="btn btn-dark btn-sm mt-2">
-                <i class="bi bi-plus me-1"></i>Agregar Alergia
+                {% icon 'plus' css_class='me-1' %}Agregar Alergia
               </a>
             </div>
           {% endif %}
@@ -365,11 +366,11 @@
         <div class="card-header bg-success text-white border-0">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
-              <i class="bi bi-capsule me-2"></i>Medicamentos Actuales
+              {% icon 'capsule' css_class='me-2' %}Medicamentos Actuales
             </h5>
             <a href="{% url 'medicamento_nuevo' paciente.pk %}?next={{ request.path }}" 
                class="btn btn-light btn-sm">
-              <i class="bi bi-plus"></i>
+              {% icon 'plus' %}
             </a>
           </div>
         </div>
@@ -383,7 +384,7 @@
                       <p class="mb-1 fw-bold">{{ med.nombre }}</p>
                       <p class="mb-1 text-muted">{{ med.dosis }}</p>
                       <small class="text-muted">
-                        <i class="bi bi-clock me-1"></i>{{ med.frecuencia }}
+                        {% icon 'clock' css_class='me-1' %}{{ med.frecuencia }}
                         {% if med.inicio %}
                           • Desde {{ med.inicio|date:"d/m/Y" }}
                         {% endif %}
@@ -392,12 +393,12 @@
                     <div class="ms-2">
                       <div class="btn-group" role="group">
                         <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                          <i class="bi bi-three-dots"></i>
+                          {% icon 'three-dots' %}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                           <li>
                             <a class="dropdown-item" href="{% url 'medicamento_editar' med.pk %}?next={{ request.path }}">
-                              <i class="bi bi-pencil-square me-2 text-warning"></i>Editar
+                              {% icon 'pencil-square' css_class='me-2 text-warning' %}Editar
                             </a>
                           </li>
                           <li>
@@ -405,7 +406,7 @@
                               {% csrf_token %}
                               <input type="hidden" name="next" value="{{ request.path }}">
                               <button class="dropdown-item text-danger" type="submit">
-                                <i class="bi bi-trash3 me-2"></i>Eliminar
+                                {% icon 'trash3' css_class='me-2' %}Eliminar
                               </button>
                             </form>
                           </li>
@@ -418,11 +419,11 @@
             </div>
           {% else %}
             <div class="text-center py-4">
-              <i class="bi bi-capsule text-muted" style="font-size: 3rem;"></i>
+              {% icon 'capsule' size=48 css_class='text-muted' %}
               <p class="text-muted mt-2 mb-0">Sin medicamentos actuales</p>
               <a href="{% url 'medicamento_nuevo' paciente.pk %}?next={{ request.path }}" 
                  class="btn btn-success btn-sm mt-2">
-                <i class="bi bi-plus me-1"></i>Agregar Medicamento
+                {% icon 'plus' css_class='me-1' %}Agregar Medicamento
               </a>
             </div>
           {% endif %}
@@ -438,11 +439,11 @@
         <div class="card-header bg-light border-0">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
-              <i class="bi bi-calendar-check me-2"></i>Historial de Consultas
+              {% icon 'calendar-check' css_class='me-2' %}Historial de Consultas
             </h5>
             <a href="{% url 'consultas_crear_desde_paciente' paciente.pk %}" 
                class="btn btn-primary">
-              <i class="bi bi-plus-circle me-2"></i>Nueva Consulta
+              {% icon 'plus-circle' css_class='me-2' %}Nueva Consulta
             </a>
           </div>
         </div>
@@ -481,7 +482,7 @@
                           <div class="d-flex align-items-center">
                             <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" 
                                  style="width: 32px; height: 32px;">
-                              <i class="bi bi-person-fill text-white"></i>
+                              {% icon 'person-fill' css_class='text-white' %}
                             </div>
                             <div>
                               <div class="fw-medium">{{ c.medico.get_full_name }}</div>
@@ -495,22 +496,22 @@
                       <td>
                         {% if c.signos_vitales %}
                           <span class="badge bg-success">
-                            <i class="bi bi-thermometer-half me-1"></i>Registrados
+                            {% icon 'thermometer-half' css_class='me-1' %}Registrados
                           </span>
                         {% else %}
                           <span class="badge bg-secondary">
-                            <i class="bi bi-dash-circle me-1"></i>Pendientes
+                            {% icon 'dash-circle' css_class='me-1' %}Pendientes
                           </span>
                         {% endif %}
                       </td>
                       <td>
                         {% if c.receta %}
                           <span class="badge bg-success">
-                            <i class="bi bi-file-earmark-medical me-1"></i>Emitida
+                            {% icon 'file-earmark-medical' css_class='me-1' %}Emitida
                           </span>
                         {% else %}
                           <span class="badge bg-secondary">
-                            <i class="bi bi-dash-circle me-1"></i>Sin receta
+                            {% icon 'dash-circle' css_class='me-1' %}Sin receta
                           </span>
                         {% endif %}
                       </td>
@@ -555,12 +556,12 @@
             </div>
           {% else %}
             <div class="text-center py-5">
-              <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+              {% icon 'calendar-x' size=64 css_class='text-muted' %}
               <h5 class="text-muted mt-3">Sin consultas registradas</h5>
               <p class="text-muted">Este paciente aún no tiene consultas en el sistema.</p>
               <a href="{% url 'consultas_crear_desde_paciente' paciente.pk %}" 
                  class="btn btn-primary">
-                <i class="bi bi-plus-circle me-2"></i>Crear Primera Consulta
+                {% icon 'plus-circle' css_class='me-2' %}Crear Primera Consulta
               </a>
             </div>
           {% endif %}

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load icons %}
 
 {% block body_class %}home-page{% endblock %}
 
@@ -82,7 +83,7 @@
   <div class="text-center mt-5">
     <h4 class="mb-3">¿Eres parte del staff?</h4>
     <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">
-      <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+      {% icon 'box-arrow-in-right' css_class='me-1' %} Iniciar Sesión
     </a>
   </div>
 </div>

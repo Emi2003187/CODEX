@@ -1,10 +1,11 @@
 {% load static %}
+{% load icons %}
 
 <!-- Cola de Citas Próximas -->
 <div class="cola-section">
     <div class="cola-header">
         <h3 class="cola-title">
-            <i class="bi bi-calendar-event"></i>
+            {% icon 'calendar-event' %}
             Próximas Citas
         </h3>
         <span class="cola-count">{{ citas_proximas.count }} cita{{ citas_proximas.count|pluralize:"s" }}</span>
@@ -28,7 +29,7 @@
                 
                 <!-- Información del paciente -->
                 <div class="cita-paciente">
-                    <i class="bi bi-person-circle me-2"></i>
+                    {% icon 'person-circle' css_class='me-2' %}
                     {{ cita.paciente.nombre_completo }}
                 </div>
 
@@ -36,36 +37,36 @@
                 <div class="cita-info">
                     {% if cita.medico_asignado %}
                     <div class="cita-info-item">
-                        <i class="bi bi-person-badge"></i>
+                        {% icon 'person-badge' %}
                         <span>Dr. {{ cita.medico_asignado.get_full_name }}</span>
                     </div>
                     {% else %}
                     <div class="cita-info-item">
-                        <i class="bi bi-person-x"></i>
+                        {% icon 'person-x' %}
                         <span>Sin médico asignado</span>
                     </div>
                     {% endif %}
                     
                     <div class="cita-info-item">
-                        <i class="bi bi-building"></i>
+                        {% icon 'building' %}
                         <span>{{ cita.consultorio.nombre }}</span>
                     </div>
                     
                     <div class="cita-info-item">
-                        <i class="bi bi-calendar-date"></i>
+                        {% icon 'calendar-date' %}
                         <span>{{ cita.fecha_hora|date:"d/m/Y" }}</span>
                     </div>
                     
                     {% if cita.tipo_cita %}
                     <div class="cita-info-item">
-                        <i class="bi bi-tag"></i>
+                        {% icon 'tag' %}
                         <span>{{ cita.get_tipo_cita_display }}</span>
                     </div>
                     {% endif %}
                     
                     {% if cita.prioridad %}
                     <div class="cita-info-item">
-                        <i class="bi bi-exclamation-triangle"></i>
+                        {% icon 'exclamation-triangle' %}
                         <span>Prioridad: {{ cita.get_prioridad_display }}</span>
                     </div>
                     {% endif %}
@@ -73,14 +74,14 @@
 
                 <!-- Estado de la cita -->
                 <div class="cita-estado estado-{{ cita.estado }}">
-                    <i class="bi bi-circle-fill"></i>
+                    {% icon 'circle-fill' %}
                     {{ cita.get_estado_display }}
                 </div>
 
                 <!-- Tiempo de espera si aplica -->
                 {% if cita.estado == 'en_espera' %}
                 <div class="tiempo-espera">
-                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    {% icon 'exclamation-triangle' css_class='me-1' %}
                     Esperando desde {{ cita.fecha_hora|timesince }}
                 </div>
                 {% endif %}
@@ -100,7 +101,7 @@
                              onclick="verDetalleCita('{{ cita.id }}')"
                             data-bs-toggle="tooltip"
                              title="Ver detalles completos">
-                        <i class="bi bi-eye"></i>
+                        {% icon 'eye' %}
                         Ver Detalles
                     </button>
 
@@ -112,7 +113,7 @@
                                  onclick="tomarCita('{{ cita.id }}')"
                                 data-bs-toggle="tooltip"
                                  title="Tomar esta cita">
-                            <i class="bi bi-hand-index"></i>
+                            {% icon 'hand-index' %}
                             Tomar Cita
                         </button>
                         {% endif %}
@@ -124,7 +125,7 @@
                                      onclick="cambiarEstadoCita('{{ cita.id }}', 'en_espera')"
                                     data-bs-toggle="tooltip"
                                      title="Marcar como en espera">
-                                <i class="bi bi-clock"></i>
+                                {% icon 'clock' %}
                                 En Espera
                             </button>
                             {% elif cita.estado == 'en_espera' %}
@@ -132,7 +133,7 @@
                                      onclick="cambiarEstadoCita('{{ cita.id }}', 'en_atencion')"
                                     data-bs-toggle="tooltip"
                                      title="Iniciar atención">
-                                <i class="bi bi-person-gear"></i>
+                                {% icon 'person-gear' %}
                                 Atender
                             </button>
                             {% elif cita.estado == 'en_atencion' %}
@@ -140,7 +141,7 @@
                                      onclick="cambiarEstadoCita('{{ cita.id }}', 'completada')"
                                     data-bs-toggle="tooltip"
                                      title="Completar consulta">
-                                <i class="bi bi-check-circle"></i>
+                                {% icon 'check-circle' %}
                                 Completar
                             </button>
                             {% endif %}
@@ -151,7 +152,7 @@
                                 class="btn-action btn-secondary-action"
                                data-bs-toggle="tooltip"
                                 title="Liberar cita">
-                                <i class="bi bi-arrow-return-left"></i>
+                                {% icon 'arrow-return-left' %}
                                 Liberar
                             </a>
                             {% endif %}
@@ -169,7 +170,7 @@
                                  onclick="cambiarEstadoCita('{{ cita.id }}', 'confirmada')"
                                 data-bs-toggle="tooltip"
                                  title="Confirmar cita">
-                            <i class="bi bi-check-circle"></i>
+                            {% icon 'check-circle' %}
                             Confirmar
                         </button>
                         {% elif cita.estado == 'confirmada' %}
@@ -177,7 +178,7 @@
                                  onclick="cambiarEstadoCita('{{ cita.id }}', 'en_espera')"
                                 data-bs-toggle="tooltip"
                                  title="Paciente en sala de espera">
-                            <i class="bi bi-clock"></i>
+                            {% icon 'clock' %}
                             En Espera
                         </button>
                         {% endif %}
@@ -190,7 +191,7 @@
                             class="btn-action btn-secondary-action"
                            data-bs-toggle="tooltip"
                             title="Editar cita">
-                            <i class="bi bi-pencil"></i>
+                            {% icon 'pencil' %}
                             Editar
                         </a>
 
@@ -200,7 +201,7 @@
                             class="btn-action btn-primary-action"
                            data-bs-toggle="tooltip"
                             title="Asignar médico">
-                            <i class="bi bi-person-plus"></i>
+                            {% icon 'person-plus' %}
                             Asignar
                         </a>
                         {% endif %}
@@ -212,7 +213,7 @@
                         class="btn-action btn-success-action"
                        data-bs-toggle="tooltip"
                         title="Crear consulta médica">
-                        <i class="bi bi-clipboard-plus"></i>
+                        {% icon 'clipboard-plus' %}
                         Consulta
                     </a>
                     {% endif %}
@@ -223,7 +224,7 @@
                         class="btn-action btn-success-action"
                        data-bs-toggle="tooltip"
                         title="Ver consulta médica">
-                        <i class="bi bi-clipboard-check"></i>
+                        {% icon 'clipboard-check' %}
                         Ver Consulta
                     </a>
                     {% endif %}
@@ -234,14 +235,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <small class="text-muted">
-                                <i class="bi bi-calendar-plus me-1"></i>
+                                {% icon 'calendar-plus' css_class='me-1' %}
                                 Creada: {{ cita.fecha_creacion|date:"d/m/Y H:i" }}
                             </small>
                         </div>
                         <div class="col-md-6">
                             {% if cita.medico_preferido and cita.medico_preferido != cita.medico_asignado %}
                             <small class="text-muted">
-                                <i class="bi bi-heart me-1"></i>
+                                {% icon 'heart' css_class='me-1' %}
                                 Prefiere: Dr. {{ cita.medico_preferido.get_full_name }}
                             </small>
                             {% endif %}
@@ -251,7 +252,7 @@
                     {% if cita.notas %}
                     <div class="mt-2">
                         <small class="text-muted">
-                            <i class="bi bi-sticky me-1"></i>
+                            {% icon 'sticky' css_class='me-1' %}
                             <strong>Notas:</strong> {{ cita.notas|truncatewords:20 }}
                         </small>
                     </div>
@@ -264,11 +265,11 @@
     {% else %}
     <!-- Estado vacío -->
     <div class="empty-state">
-        <i class="bi bi-calendar-check text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+        {% icon 'calendar-check' size=48 css_class='text-muted' %}
         <h4>No hay citas próximas</h4>
         <p class="text-muted">No se encontraron citas programadas próximas en este consultorio.</p>
         <a href="{% url 'citas_crear' %}" class="btn btn-primary mt-3">
-            <i class="bi bi-plus-circle me-2"></i>
+            {% icon 'plus-circle' css_class='me-2' %}
             Programar Nueva Cita
         </a>
     </div>
@@ -279,7 +280,7 @@
 <div class="cola-section mt-4">
     <div class="cola-header">
         <h3 class="cola-title">
-            <i class="bi bi-clipboard-plus"></i>
+            {% icon 'clipboard-plus' %}
             Consultas en Espera
         </h3>
     </div>
@@ -299,7 +300,7 @@
                 </div>
 
                 <div class="cita-paciente">
-                    <i class="bi bi-person-circle me-2"></i>
+                    {% icon 'person-circle' css_class='me-2' %}
                     {{ consulta.paciente.nombre_completo }}
                 </div>
 
@@ -314,7 +315,7 @@
         </div>
         {% empty %}
         <div class="empty-state">
-            <i class="bi bi-clipboard text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+            {% icon 'clipboard' size=48 css_class='text-muted' %}
             <h4>No hay consultas en espera</h4>
         </div>
         {% endfor %}
@@ -373,7 +374,7 @@ if (typeof showNotification !== 'function') {
         notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
         notification.innerHTML = `
             <div class="d-flex align-items-center">
-                <i class="bi bi-${icon} me-2"></i>
+                {% icon '${icon}' css_class='me-2' %}
                 <div>${message}</div>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Auditoría{% endblock %}
 
@@ -7,7 +8,7 @@
 <div class="container py-4">
 
   <h2 class="text-primary mb-3">
-    <i class="bi bi-shield-lock me-2"></i>Histórico de Auditoría
+    {% icon 'shield-lock' css_class='me-2' %}Histórico de Auditoría
   </h2>
 
   <div class="table-responsive card shadow-sm">

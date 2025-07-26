@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Detalle de Consulta - {{ consulta.paciente.nombre_completo }}{% endblock %}
 
@@ -19,7 +20,7 @@
   <div class="row mb-4">
     <div class="col-md-8">
       <h1 class="fw-bold text-primary">
-        <i class="bi bi-clipboard-data me-2"></i>
+        {% icon 'clipboard-data' css_class='me-2' %}
         Consulta #{{ consulta.pk }}
       </h1>
       <p class="text-muted mb-0">{{ consulta.paciente.nombre_completo }}</p>
@@ -27,11 +28,11 @@
     <div class="col-md-4 text-md-end">
       {% if consulta.estado == 'espera' and puede_editar %}
         <a href="{% url 'consultas_atencion' consulta.pk %}" class="btn btn-primary me-1">
-          <i class="bi bi-play me-1"></i>Atender
+          {% icon 'play' css_class='me-1' %}Atender
         </a>
       {% elif puede_editar %}
         <a href="{% url 'consulta_editar' consulta.pk %}" class="btn btn-warning me-1">
-          <i class="bi bi-pencil me-1"></i>Editar
+          {% icon 'pencil' css_class='me-1' %}Editar
         </a>
       {% endif %}
       {% if receta and receta.medicamentos.exists %}
@@ -45,7 +46,7 @@
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.get_full_path }}">
         <button class="btn btn-warning me-1" type="submit">
-          <i class="bi bi-x-circle me-1"></i>Cancelar
+          {% icon 'x-circle' css_class='me-1' %}Cancelar
         </button>
       </form>
       {% endif %}
@@ -55,12 +56,12 @@
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.get_full_path }}">
         <button class="btn btn-danger me-1" type="submit">
-          <i class="bi bi-trash me-1"></i>Eliminar
+          {% icon 'trash' css_class='me-1' %}Eliminar
         </button>
       </form>
       {% endif %}
       <a href="{% url 'consultas_lista' %}" class="btn btn-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Volver
+        {% icon 'arrow-left' css_class='me-1' %}Volver
       </a>
     </div>
   </div>
@@ -73,7 +74,7 @@
       <div class="card mb-4">
         <div class="card-header">
           <h5 class="mb-0">
-            <i class="bi bi-info-circle me-2"></i>Información General
+            {% icon 'info-circle' css_class='me-2' %}Información General
           </h5>
         </div>
         <div class="card-body">
@@ -107,7 +108,7 @@
       <div class="card mb-4">
         <div class="card-header">
           <h5 class="mb-0">
-            <i class="bi bi-clipboard-pulse me-2"></i>Información Médica
+            {% icon 'clipboard-pulse' css_class='me-2' %}Información Médica
           </h5>
         </div>
         <div class="card-body">
@@ -143,7 +144,7 @@
       <div class="card mb-4">
         <div class="card-header">
           <h5 class="mb-0">
-            <i class="bi bi-heart-pulse me-2"></i>Signos Vitales
+            {% icon 'heart-pulse' css_class='me-2' %}Signos Vitales
           </h5>
         </div>
         <div class="card-body">
@@ -190,24 +191,24 @@
             </p>
             <div class="mt-3 d-grid gap-2">
               <a href="{% url 'signos_detalle' signos_vitales.pk %}" class="btn btn-sm btn-outline-info">
-                <i class="bi bi-eye me-1"></i>Ver Detalles
+                {% icon 'eye' css_class='me-1' %}Ver Detalles
               </a>
               {% if puede_editar %}
                 <a href="{% url 'signos_editar' signos_vitales.pk %}?next={{ request.get_full_path }}" class="btn btn-sm btn-outline-warning">
-                  <i class="bi bi-pencil me-1"></i>Editar Signos
+                  {% icon 'pencil' css_class='me-1' %}Editar Signos
                 </a>
               {% endif %}
             </div>
           {% else %}
             <p class="text-muted text-center">
-              <i class="bi bi-dash-circle me-1"></i>
+              {% icon 'dash-circle' css_class='me-1' %}
               No hay signos vitales registrados
             </p>
 
             {% if puede_editar %}
 
               <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-sm btn-outline-primary w-100">
-                <i class="bi bi-plus me-1"></i>Registrar Signos
+                {% icon 'plus' css_class='me-1' %}Registrar Signos
               </a>
             {% endif %}
           {% endif %}
@@ -219,19 +220,19 @@
       <div class="card mb-4">
         <div class="card-header">
           <h5 class="mb-0">
-            <i class="bi bi-file-earmark-medical me-2"></i>Receta Médica
+            {% icon 'file-earmark-medical' css_class='me-2' %}Receta Médica
           </h5>
         </div>
         <div class="card-body">
           {% if receta %}
             <p class="text-success">
-              <i class="bi bi-check-circle me-1"></i>
+              {% icon 'check-circle' css_class='me-1' %}
               Receta emitida el {{ receta.fecha_emision|date:"d/m/Y" }}
             </p>
             {% if receta.medicamentos.exists %}
               <a href="#" class="btn btn-sm btn-outline-primary btn-preview-receta w-100 mb-3"
                  data-preview-url="{% url 'receta_a5' receta.pk %}">
-                <i class="bi bi-eye me-1"></i>Ver Receta
+                {% icon 'eye' css_class='me-1' %}Ver Receta
               </a>
             {% endif %}
 
@@ -256,12 +257,12 @@
             </ul>
           {% else %}
             <p class="text-muted text-center">
-              <i class="bi bi-dash-circle me-1"></i>
+              {% icon 'dash-circle' css_class='me-1' %}
               No hay receta emitida
             </p>
             {% if consulta.estado == 'en_progreso' or consulta.estado == 'finalizada' %}
               <a href="{% url 'receta_nueva' consulta.pk %}" class="btn btn-sm btn-outline-primary w-100">
-                <i class="bi bi-plus me-1"></i>Emitir Receta
+                {% icon 'plus' css_class='me-1' %}Emitir Receta
               </a>
             {% endif %}
           {% endif %}
@@ -272,21 +273,21 @@
       <div class="card">
         <div class="card-header">
           <h5 class="mb-0">
-            <i class="bi bi-lightning me-2"></i>Acciones Rápidas
+            {% icon 'lightning' css_class='me-2' %}Acciones Rápidas
           </h5>
         </div>
         <div class="card-body">
           <div class="d-grid gap-2">
             {% if consulta.estado == 'espera' %}
               <a href="{% url 'consultas_atencion' consulta.pk %}" class="btn btn-primary btn-sm">
-                <i class="bi bi-play me-1"></i>Iniciar Atención
+                {% icon 'play' css_class='me-1' %}Iniciar Atención
               </a>
             {% endif %}
             
 
             {% if not signos_vitales and puede_editar %}
               <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-warning btn-sm">
-                <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
+                {% icon 'heart-pulse' css_class='me-1' %}Registrar Signos
               </a>
 
             {% endif %}
@@ -294,11 +295,11 @@
             {% if puede_editar %}
               {% if consulta.estado == 'cancelada' %}
                 <button class="btn btn-outline-secondary btn-sm" disabled>
-                  <i class="bi bi-pencil me-1"></i>Editar Consulta
+                  {% icon 'pencil' css_class='me-1' %}Editar Consulta
                 </button>
               {% else %}
                 <a href="{% url 'consulta_editar' consulta.pk %}" class="btn btn-outline-secondary btn-sm">
-                  <i class="bi bi-pencil me-1"></i>Editar Consulta
+                  {% icon 'pencil' css_class='me-1' %}Editar Consulta
                 </a>
               {% endif %}
             {% endif %}

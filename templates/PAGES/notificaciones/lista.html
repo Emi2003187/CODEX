@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load icons %}
 
 {% block title %}Notificaciones - Sistema Médico{% endblock %}
 
@@ -127,11 +128,11 @@
         </div>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-primary" onclick="marcarTodasLeidas()">
-            <i class="bi bi-check-all me-1"></i>
+            {% icon 'check-all' css_class='me-1' %}
             Marcar todas como leídas
           </button>
           <button class="btn btn-primary" onclick="location.reload()">
-            <i class="bi bi-arrow-clockwise me-1"></i>
+            {% icon 'arrow-clockwise' css_class='me-1' %}
             Actualizar
           </button>
         </div>
@@ -151,7 +152,7 @@
               <h3 class="mb-0">{{ notificaciones.count }}</h3>
               <small>Total de notificaciones</small>
             </div>
-            <i class="bi bi-bell-fill" style="font-size: 2rem; opacity: 0.7;"></i>
+            {% icon 'bell-fill' size=32 %}
           </div>
         </div>
         
@@ -214,7 +215,7 @@
           </div>
           
           <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="limpiarFiltros()">
-            <i class="bi bi-x-circle me-1"></i>
+            {% icon 'x-circle' css_class='me-1' %}
             Limpiar filtros
           </button>
         </form>
@@ -233,19 +234,19 @@
                   <!-- Icono de notificación -->
                   <div class="notification-icon {{ notificacion.tipo }}">
                     {% if notificacion.categoria == 'auditoria' %}
-                      <i class="bi bi-shield-check"></i>
+                      {% icon 'shield-check' %}
                     {% elif notificacion.categoria == 'cita_proxima' %}
-                      <i class="bi bi-clock"></i>
+                      {% icon 'clock' %}
                     {% elif notificacion.categoria == 'cita_creada' %}
-                      <i class="bi bi-calendar-plus"></i>
+                      {% icon 'calendar-plus' %}
                     {% elif notificacion.categoria == 'consulta_creada' %}
-                      <i class="bi bi-clipboard-pulse"></i>
+                      {% icon 'clipboard-pulse' %}
                     {% elif notificacion.categoria == 'signos_registrados' %}
-                      <i class="bi bi-activity"></i>
+                      {% icon 'activity' %}
                     {% elif notificacion.categoria == 'recordatorio' %}
-                      <i class="bi bi-bell"></i>
+                      {% icon 'bell' %}
                     {% else %}
-                      <i class="bi bi-info-circle"></i>
+                      {% icon 'info-circle' %}
                     {% endif %}
                   </div>
                   
@@ -267,26 +268,26 @@
                     
                     <div class="d-flex justify-content-between align-items-center">
                       <small class="notification-time">
-                        <i class="bi bi-clock me-1"></i>
+                        {% icon 'clock' css_class='me-1' %}
                         {{ notificacion.fecha|timesince }} atrás
                       </small>
                       
                       <div class="notification-actions d-flex gap-2">
                         {% if notificacion.url_accion %}
                           <a href="{{ notificacion.url_accion }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-arrow-right me-1"></i>
+                            {% icon 'arrow-right' css_class='me-1' %}
                             {{ notificacion.texto_accion|default:"Ver" }}
                           </a>
                         {% endif %}
                         
                         {% if not notificacion.leido %}
                           <button class="btn btn-sm btn-outline-success" onclick="marcarLeida({{ notificacion.id }})">
-                            <i class="bi bi-check"></i>
+                            {% icon 'check' %}
                           </button>
                         {% endif %}
                         
                         <button class="btn btn-sm btn-outline-danger" onclick="eliminarNotificacion({{ notificacion.id }})">
-                          <i class="bi bi-trash"></i>
+                          {% icon 'trash' %}
                         </button>
                       </div>
                     </div>
@@ -315,12 +316,12 @@
               {% if page_obj.has_previous %}
                 <li class="page-item">
                   <a class="page-link" href="?page=1{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.leido %}&leido={{ request.GET.leido }}{% endif %}">
-                    <i class="bi bi-chevron-double-left"></i>
+                    {% icon 'chevron-double-left' %}
                   </a>
                 </li>
                 <li class="page-item">
                   <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.leido %}&leido={{ request.GET.leido }}{% endif %}">
-                    <i class="bi bi-chevron-left"></i>
+                    {% icon 'chevron-left' %}
                   </a>
                 </li>
               {% endif %}
@@ -334,12 +335,12 @@
               {% if page_obj.has_next %}
                 <li class="page-item">
                   <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.leido %}&leido={{ request.GET.leido }}{% endif %}">
-                    <i class="bi bi-chevron-right"></i>
+                    {% icon 'chevron-right' %}
                   </a>
                 </li>
                 <li class="page-item">
                   <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.leido %}&leido={{ request.GET.leido }}{% endif %}">
-                    <i class="bi bi-chevron-double-right"></i>
+                    {% icon 'chevron-double-right' %}
                   </a>
                 </li>
               {% endif %}
@@ -352,7 +353,7 @@
         <div class="card border-0 shadow-sm">
           <div class="card-body">
             <div class="empty-state">
-              <i class="bi bi-bell-slash"></i>
+              {% icon 'bell-slash' %}
               <h4>No hay notificaciones</h4>
               <p class="mb-0">No tienes notificaciones en este momento.</p>
             </div>
