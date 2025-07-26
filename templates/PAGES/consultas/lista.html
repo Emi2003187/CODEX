@@ -333,11 +333,22 @@
   .consultation-card {
     transition: all 0.3s ease;
   }
-  
-  .consultation-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  }
+
+/* Improved hover effect that doesn't interfere with dropdowns */
+.consultation-card:hover:not(.dropdown-active) {
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  /* Removed transform to prevent jumping */
+}
+
+/* Alternative subtle effect when dropdown is active */
+.consultation-card.dropdown-active {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Ensure dropdown menus stay properly positioned */
+.consultation-card .dropdown-menu {
+  z-index: 1050;
+}
   
   .search-highlight {
     background-color: #fff3cd;
@@ -570,5 +581,25 @@ function eliminarConsulta(consultaId) {
 function verSignosVitales(consultaId) {
     window.location.href = `/signos/${consultaId}`;
 }
+
+// Fix dropdown hover conflict
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle dropdown state to prevent hover conflicts
+    const dropdownToggles = document.querySelectorAll('.consultation-card .dropdown-toggle');
+    
+    dropdownToggles.forEach(toggle => {
+        const card = toggle.closest('.consultation-card');
+        
+        // Add class when dropdown is shown
+        toggle.addEventListener('show.bs.dropdown', function() {
+            card.classList.add('dropdown-active');
+        });
+        
+        // Remove class when dropdown is hidden
+        toggle.addEventListener('hide.bs.dropdown', function() {
+            card.classList.remove('dropdown-active');
+        });
+    });
+});
 </script>
 {% endblock %}
