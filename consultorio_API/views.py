@@ -624,6 +624,8 @@ class PacienteDetailView(LoginRequiredMixin, DetailView):
             ctx["consultas"].first(), "signos_vitales", None
         ) if ctx["consultas"] else None
 
+        ctx["citas"] = Cita.objects.filter(paciente=paciente).select_related("medico_asignado").order_by("-fecha_hora")
+
         return ctx
 
 
@@ -1102,6 +1104,57 @@ def crear_cita(request):
     
     context = {
         'form': form,
+        'titulo': 'Nueva Cita',
+        'accion': 'Crear',
+        'usuario': request.user,
+    }
+    return render(request, 'PAGES/citas/crear.html', context)
+
+
+@login_required
+def crear_cita_para_paciente(request, paciente_id):
+    """Crear cita preseleccionando un paciente"""
+    if request.user.rol not in ['medico', 'asistente', 'admin']:
+        messages.error(request, 'No tienes permisos para crear citas.')
+        return redirect_next(request, 'paciente_detalle', pk=paciente_id)
+
+    paciente = get_object_or_404(Paciente, id=paciente_id)
+
+    if request.method == 'POST':
+        form = CitaForm(request.POST, user=request.user, paciente_fijo=paciente)
+        if form.is_valid():
+            try:
+                cita = form.save(commit=False)
+                cita.paciente = paciente
+                cita.creado_por = request.user
+
+                if request.user.rol == 'asistente' and request.user.consultorio:
+                    cita.consultorio = request.user.consultorio
+                elif request.user.rol == 'medico' and request.user.consultorio:
+                    cita.consultorio = request.user.consultorio
+
+                conflictos = validar_conflictos_horario(
+                    cita.consultorio,
+                    cita.fecha_hora,
+                    cita.duracion,
+                    excluir_cita_id=None
+                )
+
+                if conflictos:
+                    form.add_error(None, f"Conflicto de horario detectado: {conflictos}")
+                else:
+                    cita.save()
+                    messages.success(request, f'Cita {cita.numero_cita} creada exitosamente.')
+                    crear_notificacion_nueva_cita(cita)
+                    return redirect_next(request, 'paciente_detalle', pk=paciente.id)
+            except Exception as e:
+                messages.error(request, f'Error al crear la cita: {str(e)}')
+    else:
+        form = CitaForm(user=request.user, paciente_fijo=paciente)
+
+    context = {
+        'form': form,
+        'paciente': paciente,
         'titulo': 'Nueva Cita',
         'accion': 'Crear',
         'usuario': request.user,
