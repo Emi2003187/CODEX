@@ -57,6 +57,7 @@
     <div class="card-body">
       <form id="citaForm" method="post" novalidate>
         {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
     <div class="row g-3">
 
       {# Paciente #}

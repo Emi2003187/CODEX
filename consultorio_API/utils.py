@@ -61,11 +61,14 @@ def obtener_horarios_disponibles(
 
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 
 
 def redirect_next(request, default_url_name, *args, **kwargs):
     """Redirect honoring optional ?next= parameter."""
     next_url = request.POST.get("next") or request.GET.get("next")
-    if next_url:
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}
+    ):
         return redirect(next_url)
     return redirect(reverse(default_url_name, args=args, kwargs=kwargs))

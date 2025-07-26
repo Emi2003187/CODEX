@@ -107,6 +107,7 @@
                     <!-- Formulario de liberación -->
                     <form method="post">
                         {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.GET.next }}">
                         
                         <div class="mb-4">
                             <label for="motivo" class="form-label fw-bold">
@@ -141,7 +142,7 @@
                         
                         <!-- Botones de acción -->
                         <div class="d-flex justify-content-end gap-3">
-                            <a href="{% url 'citas_detalle' cita.id %}" class="btn btn-cancelar">
+                            <a href="{% url 'citas_detalle' cita.id %}?next={{ request.GET.next|urlencode }}" class="btn btn-cancelar">
                                 <i class="fas fa-times me-2"></i>Cancelar
                             </a>
                             <button type="submit" class="btn btn-liberar" onclick="return confirm('¿Confirmas que deseas liberar esta cita?');">

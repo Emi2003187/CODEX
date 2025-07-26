@@ -1664,12 +1664,12 @@ def cambiar_estado_cita(request, pk):
 
 def puede_ver_cita(user, cita):
     """Verifica si el usuario puede ver la cita"""
-    if user.rol == 'admin':
+    if user.rol == "admin":
         return True
-    elif user.rol == 'medico':
-        return (cita.consultorio == user.consultorio or 
-                cita.medico_asignado == user)
-    elif user.rol == 'asistente':
+    if user.rol == "medico":
+        # Los médicos pueden acceder al detalle de cualquier cita
+        return True
+    if user.rol == "asistente":
         return cita.consultorio == user.consultorio
     return False
 
@@ -2286,15 +2286,26 @@ class ConsultaDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         consulta = self.get_object()
-        
-        context.update({
-            'usuario': self.request.user,
-            'signos_vitales': getattr(consulta, 'signos_vitales', None),
-            'receta': getattr(consulta, 'receta', None),
-            'cita': consulta.cita,
-            'puede_editar': self.request.user == consulta.medico or self.request.user.rol == 'admin',
-        })
-        
+
+        context.update(
+            {
+                "usuario": self.request.user,
+                "signos_vitales": getattr(consulta, "signos_vitales", None),
+                "receta": getattr(consulta, "receta", None),
+                "cita": consulta.cita,
+                "puede_editar": self.request.user == consulta.medico
+                or self.request.user.rol == "admin",
+            }
+        )
+
+        next_url = self.request.GET.get("next")
+        if next_url and url_has_allowed_host_and_scheme(
+            next_url, allowed_hosts={self.request.get_host()}
+        ):
+            context["volver_a"] = next_url
+        else:
+            context["volver_a"] = reverse("consultas_lista")
+
         return context
 
 
@@ -2816,7 +2827,7 @@ def consulta_cancelar(request, pk):
             consulta.cita.estado = "cancelada"
             consulta.cita.save()
 
-    return redirect("consultas_lista")
+    return redirect_next(request, "consultas_lista")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -4510,6 +4521,7 @@ class CitaUpdateView(NextRedirectMixin, CitaPermisoMixin, UpdateView):
             'titulo': f'Editar Cita {self.object.numero_cita}',
             'accion': 'Actualizar',
             'usuario': self.request.user,
+            'next': self.get_next_url() or reverse('citas_detalle', args=[self.object.pk]),
         })
         return context
 
@@ -4546,21 +4558,22 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
     context_object_name = 'cita'
 
     def test_func(self):
+        """Permisos de visualización para el detalle de la cita."""
         if not super().test_func():
             return False
-        
-        cita = self.get_object()
+
         user = self.request.user
-        
-        # Verificar permisos de visualización
-        if user.rol == 'admin':
+        cita = self.get_object()
+
+        if user.rol == "admin":
             return True
-        elif user.rol == 'medico':
-            return (cita.consultorio == user.consultorio or 
-                   cita.medico_asignado == user)
-        elif user.rol == 'asistente':
+        if user.rol == "medico":
+            # Los médicos autenticados pueden ver cualquier cita
+            return True
+        if user.rol == "asistente":
+            # Los asistentes mantienen la restricción por consultorio
             return cita.consultorio == user.consultorio
-        
+
         return False
 
     def get_context_data(self, **kwargs):
@@ -4588,7 +4601,13 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
             'usuario': user,
             'now': timezone.now(),
         })
-        
+
+        next_url = self.request.GET.get('next')
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={self.request.get_host()}):
+            context['volver_a'] = next_url
+        else:
+            context['volver_a'] = reverse('citas_lista')
+
         return context
 
     def _puede_tomar_cita(self, user, cita):
