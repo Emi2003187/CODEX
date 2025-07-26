@@ -450,19 +450,6 @@
     color: #111827;
   }
 
-  .alert-info-custom {
-    background: #dbeafe;
-    border: none;
-    border-left: 4px solid #3b82f6;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .alert-info-custom .alert-heading {
-    color: #1e40af;
-    font-weight: 700;
-  }
 
   @media (max-width: 768px) {
     .page-container {
@@ -897,10 +884,12 @@
             <form method="post" action="{% url 'cita_marcar_no_asistio' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
               <input type="hidden" name="next" value="{{ volver_a }}">
-              <button type="submit" class="btn btn-action btn-no-asistio" onclick="return confirm('¿Marcar esta cita como NO ASISTIÓ?');">
+              {% with ahora < cita.fecha_hora as deshabilitar %}
+              <button type="submit" id="btnNoAsistio" class="btn btn-action btn-no-asistio" onclick="return confirm('¿Marcar esta cita como NO ASISTIÓ?');" {% if deshabilitar %}disabled{% endif %}>
                 <i class="bi bi-person-x"></i>
                 No Asistió
               </button>
+              {% endwith %}
             </form>
             {% endif %}
 
@@ -947,8 +936,8 @@
 
         <!-- Información Adicional -->
         {% if cita.cita_anterior %}
-        <div class="alert alert-info-custom mt-4">
-          <h6 class="alert-heading">
+        <div class="alert alert-info mt-4">
+          <h6 class="alert-heading fw-bold">
             <i class="bi bi-info-circle me-2"></i>
             Cita Anterior
           </h6>
@@ -1004,6 +993,19 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.transform = 'translateY(0)';
         });
     });
+
+    // Habilitar "No Asistió" al llegar la hora
+    const btnNoAsistio = document.getElementById('btnNoAsistio');
+    if (btnNoAsistio && btnNoAsistio.disabled) {
+        const objetivo = new Date('{{ cita.fecha_hora|date:"Y-m-d\TH:i:s" }}');
+        function revisar(){
+            if(Date.now() >= objetivo.getTime()){
+                btnNoAsistio.disabled = false;
+            }
+        }
+        revisar();
+        setInterval(revisar, 60000);
+    }
 });
 </script>
 {% endblock %}

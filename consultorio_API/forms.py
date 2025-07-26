@@ -411,8 +411,12 @@ DUR_CHOICES = [(str(m), f"{m} min") for m in range(PASO_MIN, 121, PASO_MIN)]
 
 
 def _fecha_hora_from_fields(fecha, hh_mm: str) -> datetime:
+    """Construye un ``datetime`` con zona horaria local."""
     h, m = map(int, hh_mm.split(":"))
-    return datetime.combine(fecha, datetime.min.time()).replace(hour=h, minute=m)
+    dt = datetime.combine(fecha, time(hour=h, minute=m))
+    if timezone.is_naive(dt):
+        dt = timezone.make_aware(dt)
+    return dt
 
 
 # ─────────────────────────────────── CitaForm ───────────────────────
@@ -490,14 +494,22 @@ class CitaForm(forms.ModelForm):
 
         # preparar opciones de cita anterior según el paciente
         paciente_id = (
-            paciente_fijo.pk if paciente_fijo else self.data.get("paciente") or self.initial.get("paciente")
+            (paciente_fijo.pk if paciente_fijo else None)
+            or self.data.get("paciente")
+            or self.initial.get("paciente")
+            or getattr(self.instance, "paciente_id", None)
         )
         if paciente_id:
-            qs_prev = (
-                Cita.objects.filter(paciente_id=paciente_id)
-                .exclude(pk=self.instance.pk)
-                .order_by("-fecha_hora")
-            )
+            try:
+                pid = int(paciente_id)
+            except (TypeError, ValueError):
+                qs_prev = Cita.objects.none()
+            else:
+                qs_prev = (
+                    Cita.objects.filter(paciente_id=pid)
+                    .exclude(pk=self.instance.pk)
+                    .order_by("-fecha_hora")
+                )
             self.fields["cita_anterior"].queryset = qs_prev
         else:
             self.fields["cita_anterior"].queryset = Cita.objects.none()

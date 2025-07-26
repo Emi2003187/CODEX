@@ -339,6 +339,7 @@ def detalle_cita(request, cita_id):
         'puede_tomar_cita': puede_tomar_cita(request.user, cita),
         'puede_editar': puede_editar_cita(request.user, cita),
         'usuario': request.user,
+        'ahora': timezone.localtime(),
     }
     return render(request, 'PAGES/citas/detalle.html', context)
 
