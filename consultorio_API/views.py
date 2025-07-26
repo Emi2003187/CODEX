@@ -1040,7 +1040,7 @@ def lista_citas(request):
         ),
         'asignadas': citas.filter(
             medico_asignado__isnull=False,
-            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
         ),
         'completadas': citas.filter(estado='completada'),
         'canceladas': citas.filter(estado__in=['cancelada', 'no_asistio']),
@@ -1377,7 +1377,7 @@ def tomar_cita(request, cita_id):
             (cita.fecha_hora - timedelta(minutes=15)).time(),
             (cita.fecha_hora + timedelta(minutes=cita.duracion + 15)).time()
         ],
-        estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+        estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
     ).exclude(id=cita.id)
     
     if conflictos.exists() and not request.POST.get('confirmar'):
@@ -1745,7 +1745,7 @@ def validar_conflictos_horario(consultorio, fecha_hora, duracion, excluir_cita_i
         citas_existentes = Cita.objects.filter(
             consultorio=consultorio,
             fecha_hora__date=fecha_hora.date(),
-            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
         )
         
         if excluir_cita_id:
@@ -2171,7 +2171,7 @@ def cola_virtual(request):
     citas_proximas = citas.filter(
         consultorio=consultorio,
         fecha_hora__gte=ahora,  # Solo citas futuras
-        estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']  # Solo estados activos
+        estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']  # Solo estados activos
     )
     
     # ✅ Filtro por estado ANTES del slice
@@ -2186,7 +2186,7 @@ def cola_virtual(request):
     citas_stats = citas.filter(
         consultorio=consultorio,
         fecha_hora__gte=ahora,
-        estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+        estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
     )
     
     if estado_filtro:
@@ -2251,7 +2251,7 @@ def cola_virtual_data(request):
         citas_proximas = citas.filter(
             consultorio=consultorio,
             fecha_hora__gte=ahora,  # Solo citas futuras
-            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']  # Solo estados activos
+            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']  # Solo estados activos
         )
         
         # ✅ Filtro por estado ANTES del slice
@@ -2266,7 +2266,7 @@ def cola_virtual_data(request):
         citas_stats = citas.filter(
             consultorio=consultorio,
             fecha_hora__gte=ahora,
-            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
         )
         
         if estado_filtro:
@@ -4148,7 +4148,7 @@ class CitaListView(CitaPermisoMixin, ListView):
             ),
             'asignadas': queryset.filter(
                 medico_asignado__isnull=False,
-                estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+                estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
             ),
             'completadas': queryset.filter(estado='completada'),
             'canceladas': queryset.filter(estado__in=['cancelada', 'no_asistio']),
@@ -4421,7 +4421,7 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
             consultorio=cita.consultorio,
             fecha_hora__date=cita.fecha_hora.date(),
             fecha_hora__time=cita.fecha_hora.time(),
-            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
         ).exclude(pk=cita.pk if cita.pk else None)
         
         if conflictos.exists():

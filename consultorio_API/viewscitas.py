@@ -133,7 +133,7 @@ def lista_citas(request):
         ),
         'asignadas': citas.filter(
             medico_asignado__isnull=False,
-            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
         ),
         'completadas': citas.filter(estado='completada'),
         'canceladas': citas.filter(estado__in=['cancelada', 'no_asistio']),
@@ -517,7 +517,7 @@ def tomar_cita(request, cita_id):
             (cita.fecha_hora - timedelta(minutes=15)).time(),
             (cita.fecha_hora + timedelta(minutes=cita.duracion + 15)).time()
         ],
-        estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+        estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
     ).exclude(id=cita.id)
     
     if conflictos.exists() and not request.POST.get('confirmar'):
@@ -1306,7 +1306,7 @@ def validar_conflictos_horario(consultorio, fecha_hora, duracion, excluir_cita_i
         citas_existentes = Cita.objects.filter(
             consultorio=consultorio,
             fecha_hora__date=fecha_hora.date(),
-            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion']
+            estado__in=['programada', 'confirmada', 'en_espera', 'en_atencion', 'reprogramada']
         )
         
         if excluir_cita_id:
