@@ -438,7 +438,11 @@ class CitaForm(forms.ModelForm):
     # ---------- fecha / hora / duración ----------
     fecha = forms.DateField(
         label=_("Fecha"),
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+        widget=forms.DateInput(
+            attrs={"type": "date", "class": "form-control"},
+            format="%Y-%m-%d",
+        ),
+        input_formats=["%Y-%m-%d"],
     )
     hora = forms.ChoiceField(
         label=_("Hora"),

@@ -4285,12 +4285,21 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
 
     def get_initial(self):
         initial = super().get_initial()
-        fecha_str = self.request.GET.get('fecha')
-        if fecha_str:
-            try:
-                initial['fecha'] = datetime.strptime(fecha_str, '%Y-%m-%d').date()
-            except ValueError:
-                pass
+        fecha_raw = self.request.GET.get("fecha")
+
+        if fecha_raw:
+            # Pasar la fecha tal como viene en la URL
+            initial["fecha"] = fecha_raw
+
+            # Si la URL incluye hora (YYYY-MM-DDTHH:mm)
+            if "T" in fecha_raw:
+                from django.utils.dateparse import parse_datetime
+
+                dt = parse_datetime(fecha_raw)
+                if dt:
+                    initial["fecha"] = dt.strftime("%Y-%m-%d")
+                    initial["hora"] = dt.strftime("%H:%M")
+
         return initial
 
     def get_form_kwargs(self):
