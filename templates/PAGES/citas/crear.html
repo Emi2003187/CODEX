@@ -510,6 +510,27 @@
     $('#id_tipo_cita').on('change', toggleCitaAnterior);
     toggleCitaAnterior();
 
+    function cargarCitasPrevias(){
+      const pid = $('#id_paciente').val();
+      if(!pid){
+        $('#id_cita_anterior').html('<option value="">No hay citas anteriores</option>');
+        return;
+      }
+      $.getJSON('{% url "ajax_citas_previas" %}', {paciente_id: pid})
+        .done(function(r){
+          const $sel = $('#id_cita_anterior');
+          $sel.empty();
+          if(r.citas && r.citas.length){
+            $sel.append('<option value="">---------</option>');
+            r.citas.forEach(c=>{$sel.append(`<option value="${c.id}">${c.text}</option>`);});
+          }else{
+            $sel.append('<option value="">No hay citas anteriores</option>');
+          }
+        });
+    }
+    $('#id_paciente').on('change', cargarCitasPrevias);
+    cargarCitasPrevias();
+
     /* Validación simple al enviar */
     $('#citaForm').on('submit', function (e) {
       if (!$selHora.val()) {

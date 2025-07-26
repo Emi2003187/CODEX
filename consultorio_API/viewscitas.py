@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.db.models import Q, Count
 from django.utils import timezone
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -355,7 +356,7 @@ def reprogramar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
 
     # Asegurar que la fecha sea "aware" para evitar errores de localtime
-    if timezone.is_naive(cita.fecha_hora):
+    if settings.USE_TZ and timezone.is_naive(cita.fecha_hora):
         cita.fecha_hora = timezone.make_aware(cita.fecha_hora)
 
     if not puede_editar_cita(request.user, cita):
@@ -1027,6 +1028,29 @@ def ajax_horarios_disponibles(request):
 
     except Exception as exc:
         return JsonResponse({"error": str(exc)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def ajax_citas_previas(request):
+    pid = request.GET.get("paciente_id")
+    excluir = request.GET.get("excluir_id")
+    try:
+        paciente = Paciente.objects.get(pk=int(pid))
+    except (TypeError, ValueError, Paciente.DoesNotExist):
+        return JsonResponse({"citas": []})
+
+    qs = Cita.objects.filter(paciente=paciente).order_by("-fecha_hora")
+    if excluir:
+        qs = qs.exclude(pk=excluir)
+    citas = [
+        {
+            "id": c.id,
+            "text": f"{c.numero_cita} ({c.fecha_hora.strftime('%d/%m/%Y %H:%M')})",
+        }
+        for c in qs
+    ]
+    return JsonResponse({"citas": citas})
 
 
 @login_required

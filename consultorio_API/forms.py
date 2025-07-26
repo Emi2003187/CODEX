@@ -5,6 +5,7 @@ from .models import *
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.utils import timezone
+from django.conf import settings
 
 
 # ───── Python / typing ──────────────────────────────────────────────────
@@ -411,10 +412,10 @@ DUR_CHOICES = [(str(m), f"{m} min") for m in range(PASO_MIN, 121, PASO_MIN)]
 
 
 def _fecha_hora_from_fields(fecha, hh_mm: str) -> datetime:
-    """Construye un ``datetime`` con zona horaria local."""
+    """Construye un ``datetime`` y lo hace aware solo si ``USE_TZ``."""
     h, m = map(int, hh_mm.split(":"))
     dt = datetime.combine(fecha, time(hour=h, minute=m))
-    if timezone.is_naive(dt):
+    if settings.USE_TZ and timezone.is_naive(dt):
         dt = timezone.make_aware(dt)
     return dt
 
@@ -825,9 +826,11 @@ class ConsultaSinCitaForm(forms.ModelForm):
             if not fecha_programada or not hora_programada:
                 raise ValidationError("Debe especificar fecha y hora para horario personalizado.")
             
-            fecha_hora_programada = timezone.make_aware(
-                datetime.combine(fecha_programada, hora_programada)
+            fecha_hora_programada = datetime.combine(
+                fecha_programada, hora_programada
             )
+            if settings.USE_TZ and timezone.is_naive(fecha_hora_programada):
+                fecha_hora_programada = timezone.make_aware(fecha_hora_programada)
             
             if fecha_hora_programada < timezone.now():
                 raise ValidationError("No se puede programar en el pasado.")

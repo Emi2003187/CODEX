@@ -149,8 +149,11 @@ urlpatterns = [
     
     
           path('ajax/horarios-disponibles/',
-         viewscitas.ajax_horarios_disponibles,
-         name='ajax_horarios_disponibles'),
+        viewscitas.ajax_horarios_disponibles,
+        name='ajax_horarios_disponibles'),
+        path('ajax/citas-previas/',
+         viewscitas.ajax_citas_previas,
+         name='ajax_citas_previas'),
     
         path("citas/<uuid:cita_id>/crear-consulta/", viewscitas.crear_consulta_desde_cita_view, name="citas_crear_desde_cita"),
 
