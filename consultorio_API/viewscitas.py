@@ -343,6 +343,7 @@ def detalle_cita(request, cita_id):
         ),
         'puede_tomar_cita': puede_tomar_cita(request.user, cita),
         'puede_editar': puede_editar_cita(request.user, cita),
+        'puede_reprogramar': puede_reprogramar_cita(request.user, cita),
         'usuario': request.user,
         # Evitar ValueError si USE_TZ=False
         'ahora': timezone.now(),
@@ -359,7 +360,7 @@ def reprogramar_cita(request, cita_id):
     if settings.USE_TZ and timezone.is_naive(cita.fecha_hora):
         cita.fecha_hora = timezone.make_aware(cita.fecha_hora)
 
-    if not puede_editar_cita(request.user, cita):
+    if not puede_reprogramar_cita(request.user, cita):
         messages.error(request, "No tienes permisos para reprogramar esta cita.")
         return redirect_next(request, 'citas_detalle', pk=cita.id)
 
@@ -1295,7 +1296,8 @@ def puede_ver_cita(user, cita):
         # Los médicos pueden acceder al detalle de cualquier cita
         return True
     if user.rol == "asistente":
-        return cita.consultorio == user.consultorio
+        # Los asistentes pueden ver todas las citas
+        return True
     return False
 
 
@@ -1313,6 +1315,17 @@ def puede_editar_cita(user, cita):
             cita.consultorio == user.consultorio
             and cita.estado in ['programada', 'confirmada', 'reprogramada']
         )
+    return False
+
+
+def puede_reprogramar_cita(user, cita):
+    """Verifica si el usuario puede reprogramar la cita"""
+    if puede_editar_cita(user, cita):
+        return True
+    if cita.estado == 'cancelada' and user.rol in ['admin', 'medico', 'asistente']:
+        if user.rol == 'admin':
+            return True
+        return cita.consultorio == user.consultorio
     return False
 
 
