@@ -61,7 +61,10 @@ def obtener_horarios_disponibles_para_select(
 
     # 4) construir respuesta
     resp: list[Dict] = []
-    ahora = timezone.localtime()
+    # timezone.localtime() falla con fechas naive; aseguramos valor valido
+    ahora = timezone.now()
+    if timezone.is_aware(ahora):
+        ahora = timezone.localtime(ahora)
     hoy = ahora.date()
 
     for m_ini in range(ap_min, ci_min, PASO):

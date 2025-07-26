@@ -242,7 +242,11 @@ def editar_cita(request, cita_id):
 
     # ───────── helper para construir los initial ──────────
     def _build_initial(cita_obj):
-        fh_local = timezone.localtime(cita_obj.fecha_hora)
+        fh = cita_obj.fecha_hora
+        if timezone.is_aware(fh):
+            fh_local = timezone.localtime(fh)
+        else:
+            fh_local = fh
         return {
             "fecha":    fh_local.date().isoformat(),
             "hora":     fh_local.strftime("%H:%M"),
@@ -339,8 +343,9 @@ def detalle_cita(request, cita_id):
         'puede_tomar_cita': puede_tomar_cita(request.user, cita),
         'puede_editar': puede_editar_cita(request.user, cita),
         'usuario': request.user,
-        'ahora': timezone.localtime(),
-        'now': timezone.localtime(),
+        # Evitar ValueError si USE_TZ=False
+        'ahora': timezone.now(),
+        'now': timezone.now(),
     }
     return render(request, 'PAGES/citas/detalle.html', context)
 
