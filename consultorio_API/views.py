@@ -759,7 +759,7 @@ def cola_virtual(request):
     # Verificar permisos
     if user.rol not in ['medico', 'asistente', 'admin']:
         messages.error(request, 'No tienes permisos para acceder a la cola virtual.')
-        return redirect_next(request, 'dashboard')
+        return redirect_next(request, 'home')
     
     # Obtener fecha (por defecto hoy)
     fecha_str = request.GET.get('fecha', timezone.now().date().strftime('%Y-%m-%d'))
@@ -782,7 +782,7 @@ def cola_virtual(request):
     
     if not consultorio:
         messages.error(request, 'No tienes consultorio asignado.')
-        return redirect_next(request, 'dashboard')
+        return redirect_next(request, 'home')
     
     # ✅ USAR LA MISMA LÓGICA QUE LISTA_CITAS
     citas = get_citas_queryset(user)
@@ -1497,7 +1497,7 @@ def citas_disponibles(request):
     # Solo médicos pueden acceder, admin puede ver todas
     if user.rol not in ['medico', 'admin']:
         messages.error(request, 'Solo los médicos pueden ver citas disponibles.')
-        return redirect_next(request, 'dashboard')
+        return redirect_next(request, 'home')
     
     # Filtrar citas según rol
     if user.rol == 'admin':
@@ -1506,7 +1506,7 @@ def citas_disponibles(request):
         citas_base = Cita.objects.filter(consultorio=user.consultorio)
     else:
         messages.error(request, 'No tienes consultorio asignado.')
-        return redirect_next(request, 'dashboard')
+        return redirect_next(request, 'home')
     
     # Filtrar citas sin médico asignado
     citas_disponibles = citas_base.filter(
@@ -1591,7 +1591,7 @@ def mis_citas_asignadas(request):
     """Citas asignadas al médico actual"""
     if request.user.rol != 'medico':
         messages.error(request, 'Solo los médicos pueden ver sus citas asignadas.')
-        return redirect_next(request, 'dashboard')
+        return redirect_next(request, 'home')
     
     citas = Cita.objects.filter(
         medico_asignado=request.user
@@ -2157,7 +2157,7 @@ def cola_virtual(request):
     # Verificar permisos
     if user.rol not in ['medico', 'asistente', 'admin']:
         messages.error(request, 'No tienes permisos para acceder a la cola virtual.')
-        return redirect_next(request, 'dashboard')
+        return redirect_next(request, 'home')
     
     # Obtener fecha (por defecto hoy)
     fecha_str = request.GET.get('fecha', timezone.now().date().strftime('%Y-%m-%d'))
@@ -2180,7 +2180,7 @@ def cola_virtual(request):
     
     if not consultorio:
         messages.error(request, 'No tienes consultorio asignado.')
-        return redirect_next(request, 'dashboard')
+        return redirect_next(request, 'home')
     
     # Consultas en espera (con y sin cita)
     consultas = (
