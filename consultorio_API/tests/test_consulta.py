@@ -259,6 +259,42 @@ def test_asistente_ve_botones_detalle(client):
 
 
 @pytest.mark.django_db
+def test_reprogramar_cita_cancelada_medico_y_asistente(client):
+    consultorio = Consultorio.objects.create(nombre="CC")
+    medico = Usuario.objects.create(username="medc", rol="medico", consultorio=consultorio)
+    asistente = Usuario.objects.create(username="asisc", rol="asistente", consultorio=consultorio)
+    paciente = Paciente.objects.create(
+        nombre_completo="PC",
+        fecha_nacimiento="1990-01-01",
+        sexo="M",
+        telefono="1",
+        correo="pc@example.com",
+        direccion="X",
+        consultorio=consultorio,
+    )
+    cita = Cita.objects.create(
+        numero_cita="99",
+        paciente=paciente,
+        consultorio=consultorio,
+        fecha_hora=timezone.now(),
+        duracion=30,
+        estado="cancelada",
+    )
+
+    # Médico ve botón de reprogramar
+    client.force_login(medico)
+    resp = client.get(reverse("citas_detalle", args=[cita.id]))
+    assert resp.status_code == 200
+    assert "Reprogramar" in resp.content.decode()
+
+    # Asistente también ve botón de reprogramar
+    client.force_login(asistente)
+    resp = client.get(reverse("citas_detalle", args=[cita.id]))
+    assert resp.status_code == 200
+    assert "Reprogramar" in resp.content.decode()
+
+
+@pytest.mark.django_db
 def test_bloqueo_registrar_signos_cancelada(client):
     consultorio = Consultorio.objects.create(nombre="BC")
     medico = Usuario.objects.create(username="medb", rol="medico", first_name="Med", consultorio=consultorio)
