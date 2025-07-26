@@ -31,7 +31,8 @@ from .models import (
 from .forms import (
     CitaForm, CitaFiltroForm, AsignarMedicoForm,
     ConsultaSinCitaForm, SignosVitalesForm, RecetaForm,
-    PacienteForm, ExpedienteForm, AntecedenteForm, MedicamentoActualForm
+    PacienteForm, ExpedienteForm, AntecedenteForm, MedicamentoActualForm,
+    ReprogramarCitaForm,
 )
 
 # ═══════════════════════════════════════════════════════════════
@@ -338,8 +339,33 @@ def detalle_cita(request, cita_id):
         'puede_tomar_cita': puede_tomar_cita(request.user, cita),
         'puede_editar': puede_editar_cita(request.user, cita),
         'usuario': request.user,
+        'ahora': timezone.localtime(),
     }
     return render(request, 'PAGES/citas/detalle.html', context)
+
+
+@login_required
+def reprogramar_cita(request, cita_id):
+    cita = get_object_or_404(Cita, id=cita_id)
+
+    if not puede_editar_cita(request.user, cita):
+        messages.error(request, "No tienes permisos para reprogramar esta cita.")
+        return redirect_next(request, 'citas_detalle', pk=cita.id)
+
+    if request.method == 'POST':
+        form = ReprogramarCitaForm(request.POST, cita=cita)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cita reprogramada correctamente.')
+            return redirect_next(request, 'citas_detalle', pk=cita.id)
+    else:
+        form = ReprogramarCitaForm(cita=cita)
+
+    return render(request, 'PAGES/citas/reprogramar.html', {
+        'form': form,
+        'cita': cita,
+        'usuario': request.user,
+    })
 
 @login_required
 def asignar_medico_cita(request, cita_id):

@@ -259,6 +259,17 @@
                                         {% endif %}
                                     </div>
                                 </div>
+                                <div class="col-md-6" id="citaAnteriorGroup" style="display:none;">
+                                    <div class="mb-3">
+                                        <label for="{{ form.cita_anterior.id_for_label }}" class="form-label">Cita Anterior</label>
+                                        {{ form.cita_anterior }}
+                                        {% if form.cita_anterior.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.cita_anterior.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="{{ form.prioridad.id_for_label }}" class="form-label">
@@ -419,7 +430,7 @@
         if (lista[i].estado === 'libre') libres++;
         else break;
       }
-      const minDisponibles = libres * 15;        // minutos totales que caben
+      const minDisponibles = libres;        // minutos totales que caben
 
       /* reconstruye el <select id="id_duracion"> */
       $dur.empty();
@@ -510,6 +521,14 @@
       .on('change', () => !cargando && setTimeout(cargarHorarios, 200));
 
     $selHora.on('change', actualizarDuraciones);
+
+    function toggleCitaAnterior(){
+      const val = $('#id_tipo_cita').val();
+      if(val === 'cita_normal') $('#citaAnteriorGroup').show();
+      else $('#citaAnteriorGroup').hide();
+    }
+    $('#id_tipo_cita').on('change', toggleCitaAnterior);
+    toggleCitaAnterior();
 
     /* Validación simple al enviar */
     $('#citaForm').on('submit', function (e) {
