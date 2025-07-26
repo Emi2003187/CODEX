@@ -95,6 +95,10 @@
         {{ form.tipo_cita.label_tag }}{{ form.tipo_cita|add_class:"form-select" }}
         {% for err in form.tipo_cita.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
       </div>
+      <div class="col-md-4" id="citaAnteriorGroup" style="display:none;">
+        {{ form.cita_anterior.label_tag }}{{ form.cita_anterior|add_class:"form-select select2" }}
+        {% for err in form.cita_anterior.errors %}<div class="field-error">{{ err }}</div>{% endfor %}
+      </div>
 
       {# Prioridad #}
       <div class="col-md-4">
@@ -187,7 +191,7 @@ $(function(){
     const idx = lst.findIndex(h=>h.value===sel); if(idx==-1) return;
     let libres=0;
     for(let i=idx;i<lst.length;i++){if(lst[i].estado==='libre') libres++; else break;}
-    const maxMin=libres*15;
+    const maxMin=libres;
     $d.empty();
     for(let m=15;m<=120&&m<=maxMin;m+=15){$d.append(`<option value="${m}">${m} min</option>`);}
     if(parseInt($d.val()||0)>maxMin){$d.val(Math.max(15,maxMin).toString());}
@@ -217,6 +221,34 @@ $(function(){
 
   $('#id_consultorio,#id_fecha,#id_duracion').on('change',()=>setTimeout(cargar,120));
   $h.on('change',fitDuraciones);
+  function toggleCitaAnterior(){
+    const val=$('#id_tipo_cita').val();
+    if(val==='cita_normal') $('#citaAnteriorGroup').show();
+    else $('#citaAnteriorGroup').hide();
+  }
+  $('#id_tipo_cita').on('change',toggleCitaAnterior);
+  toggleCitaAnterior();
+
+  function cargarCitasPrevias(){
+    const pid=$('#id_paciente').val();
+    if(!pid){
+      $('#id_cita_anterior').html('<option value="">No hay citas anteriores</option>');
+      return;
+    }
+    $.getJSON('{% url "ajax_citas_previas" %}',{paciente_id:pid})
+      .done(r=>{
+        const $sel=$('#id_cita_anterior');
+        $sel.empty();
+        if(r.citas&&r.citas.length){
+          $sel.append('<option value="">---------</option>');
+          r.citas.forEach(c=>$sel.append(`<option value="${c.id}">${c.text}</option>`));
+        }else{
+          $sel.append('<option value="">No hay citas anteriores</option>');
+        }
+      });
+  }
+  $('#id_paciente').on('change',cargarCitasPrevias);
+  cargarCitasPrevias();
   $('#citaForm').on('submit',e=>{if(!$h.val()){e.preventDefault();alert('Seleccione una hora disponible.');}});
 
   /* carga inicial */
