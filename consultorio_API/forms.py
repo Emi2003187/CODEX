@@ -434,6 +434,12 @@ class CitaForm(forms.ModelForm):
         label=_("Médico preferido"),
         widget=forms.Select(attrs={"class": "form-select select2"}),
     )
+    cita_anterior = forms.ModelChoiceField(
+        required=False,
+        queryset=Cita.objects.none(),
+        label="Cita anterior",
+        widget=forms.Select(attrs={"class": "form-select select2"}),
+    )
 
     # ---------- fecha / hora / duración ----------
     fecha = forms.DateField(
@@ -481,6 +487,20 @@ class CitaForm(forms.ModelForm):
             self.fields["paciente"].queryset = Paciente.objects.filter(pk=paciente_fijo.pk)
             self.fields["paciente"].widget = forms.HiddenInput()
             self.paciente_nombre = paciente_fijo.nombre_completo
+
+        # preparar opciones de cita anterior según el paciente
+        paciente_id = (
+            paciente_fijo.pk if paciente_fijo else self.data.get("paciente") or self.initial.get("paciente")
+        )
+        if paciente_id:
+            qs_prev = (
+                Cita.objects.filter(paciente_id=paciente_id)
+                .exclude(pk=self.instance.pk)
+                .order_by("-fecha_hora")
+            )
+            self.fields["cita_anterior"].queryset = qs_prev
+        else:
+            self.fields["cita_anterior"].queryset = Cita.objects.none()
 
         # edición
         if self.instance.pk and self.instance.consultorio_id and self.instance.fecha_hora:
@@ -589,6 +609,44 @@ class CitaForm(forms.ModelForm):
             instance.save()
             self.save_m2m()
         return instance
+
+
+class ReprogramarCitaForm(forms.Form):
+    fecha = CitaForm.base_fields['fecha']
+    hora = CitaForm.base_fields['hora']
+
+    def __init__(self, *args, cita: Cita, **kwargs):
+        self.cita = cita
+        super().__init__(*args, **kwargs)
+        self.fields['fecha'].initial = cita.fecha_hora.date()
+        self.fields['hora'].initial = cita.fecha_hora.strftime('%H:%M')
+        self._set_hora_choices()
+
+    def _set_hora_choices(self):
+        opciones = obtener_horarios_disponibles_para_select(
+            self.cita.consultorio,
+            self.fields['fecha'].initial,
+            self.cita.duracion,
+            self.cita.id,
+        )
+        self.fields['hora'].choices = [('', '— Seleccione una hora —')] + [
+            (o['value'], o['text']) for o in opciones
+        ]
+
+    def clean(self):
+        cd = super().clean()
+        if 'fecha' in cd and 'hora' in cd:
+            dt = _fecha_hora_from_fields(cd['fecha'], cd['hora'])
+            if dt <= timezone.now():
+                raise ValidationError('La hora debe estar en el futuro')
+            cd['fecha_hora'] = dt
+        return cd
+
+    def save(self):
+        self.cita.fecha_hora = self.cleaned_data['fecha_hora']
+        self.cita.estado = 'reprogramada'
+        self.cita.save()
+        return self.cita
 
 
 
