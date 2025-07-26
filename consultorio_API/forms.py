@@ -469,10 +469,18 @@ class CitaForm(forms.ModelForm):
         )
 
     # ───────────────────────── constructor ──────────────────────────
-    def __init__(self, *args: Any, user: Usuario | None = None, **kwargs: Any):
+    def __init__(self, *args: Any, user: Usuario | None = None, paciente_fijo: Paciente | None = None, **kwargs: Any):
         self._user = user
+        self.paciente_fijo = paciente_fijo
         kwargs.pop("user", None)
+        kwargs.pop("paciente_fijo", None)
         super().__init__(*args, **kwargs)
+
+        if paciente_fijo:
+            self.fields["paciente"].initial = paciente_fijo
+            self.fields["paciente"].queryset = Paciente.objects.filter(pk=paciente_fijo.pk)
+            self.fields["paciente"].widget = forms.HiddenInput()
+            self.paciente_nombre = paciente_fijo.nombre_completo
 
         # edición
         if self.instance.pk and self.instance.consultorio_id and self.instance.fecha_hora:

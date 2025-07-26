@@ -132,7 +132,12 @@
                                         <label for="{{ form.paciente.id_for_label }}" class="form-label">
                                             {{ form.paciente.label }} <span class="required-field">*</span>
                                         </label>
-                                        {{ form.paciente }}
+                                        {% if form.paciente.field.widget.input_type == 'hidden' %}
+                                            <input type="text" class="form-control" value="{{ form.paciente_nombre }}" readonly>
+                                            {{ form.paciente }}
+                                        {% else %}
+                                            {{ form.paciente }}
+                                        {% endif %}
                                         {% if form.paciente.errors %}
                                             <div class="invalid-feedback d-block">
                                                 {{ form.paciente.errors.0 }}

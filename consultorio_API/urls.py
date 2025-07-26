@@ -119,9 +119,10 @@ urlpatterns = [
     
     
     
-    path("citas/", CitaListView.as_view(), name="citas_lista"), 
-    path('ajax/horarios/', obtener_horarios_disponibles, name='ajax_horarios_disponibles'), 
-    path("citas/crear/", CitaCreateView.as_view(), name="citas_crear"), 
+    path("citas/", CitaListView.as_view(), name="citas_lista"),
+    path('ajax/horarios/', obtener_horarios_disponibles, name='ajax_horarios_disponibles'),
+    path("citas/crear/", CitaCreateView.as_view(), name="citas_crear"),
+    path('citas/crear/paciente/<int:paciente_id>/', views.crear_cita_para_paciente, name='crear_cita_paciente'),
   
    
    

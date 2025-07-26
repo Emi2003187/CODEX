@@ -117,6 +117,56 @@
           </div>
         </div>
       </div>
+  </div>
+</div>
+
+  <!-- HISTORIAL DE Citas -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <a href="{% url 'crear_cita_paciente' paciente.id %}" class="btn btn-primary mb-3 shadow">
+            <i class="bi bi-calendar-plus"></i> Crear Cita para este paciente
+          </a>
+          <h5 class="mb-3"><i class="bi bi-calendar-event me-2"></i>📅 Historial de Citas</h5>
+          {% if citas %}
+          <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered shadow-sm table-sm rounded">
+              <thead class="table-light">
+                <tr>
+                  <th>Número de cita</th>
+                  <th>Fecha y hora</th>
+                  <th>Médico asignado</th>
+                  <th>Estado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for cita in citas %}
+                <tr>
+                  <td>{{ cita.numero_cita }}</td>
+                  <td>{{ cita.fecha_hora|date:"d/m/Y H:i" }}</td>
+                  <td>{{ cita.medico_asignado.get_full_name|default:"-" }}</td>
+                  <td>
+                    <span class="badge {% if cita.estado == 'programada' %}bg-secondary{% elif cita.estado == 'confirmada' %}bg-success{% elif cita.estado == 'cancelada' %}bg-danger{% elif cita.estado == 'no_asistio' %}bg-dark{% elif cita.estado == 'en_espera' %}bg-warning{% elif cita.estado == 'completada' %}bg-info{% else %}bg-secondary{% endif %}">
+                      {{ cita.get_estado_display }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <a href="{% url 'citas_detalle' cita.id %}" class="btn btn-outline-primary btn-sm">
+                      <i class="bi bi-eye"></i> Ver Detalle
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+            <div class="alert alert-info">Este paciente no tiene citas registradas.</div>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 
