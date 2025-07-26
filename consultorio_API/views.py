@@ -962,8 +962,9 @@ def cola_virtual_data(request):
 def marcar_citas_vencidas():
     """Marca como no asistió las citas vencidas y cancela su consulta."""
     ahora = timezone.now()
+    limite = ahora - timedelta(minutes=10)
     citas = Cita.objects.filter(
-        fecha_hora__lt=ahora,
+        fecha_hora__lt=limite,
         estado__in=["programada", "confirmada"],
     ).select_related("consulta")
 
