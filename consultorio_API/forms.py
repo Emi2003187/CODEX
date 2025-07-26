@@ -1318,6 +1318,7 @@ class HorarioMedicoForm(forms.ModelForm):
                 if user.consultorio:
                     self.fields['consultorio'].queryset = Consultorio.objects.filter(id=user.consultorio.id)
                     self.fields['consultorio'].initial = user.consultorio
+                    self.fields['consultorio'].widget.attrs['disabled'] = True
 
     def clean(self):
         cleaned_data = super().clean()

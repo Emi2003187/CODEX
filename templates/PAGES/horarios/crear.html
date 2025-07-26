@@ -76,7 +76,10 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(data => {
           consultorioSelect.value = data.consultorio_id;
-          if (!data.consultorio_id) {
+          if (data.consultorio_id) {
+            consultorioSelect.disabled = true;
+          } else {
+            consultorioSelect.disabled = false;
             alert('El médico seleccionado no tiene consultorio asignado.');
           }
         });
@@ -87,6 +90,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (medicoSelect.value) {
     medicoSelect.dispatchEvent(new Event("change"));
+  } else if (consultorioSelect.value) {
+    consultorioSelect.disabled = true;
   }
 });
 </script>
