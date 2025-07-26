@@ -20,7 +20,7 @@ body {
    CONTENEDOR PRINCIPAL
    ======================================== */
 .receta {
-  width: 210mm;
+  width: 148mm;
   max-width: 100%;
   margin: 0 auto;
   padding: 4mm;
@@ -28,7 +28,7 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 287mm;
+  min-height: 210mm;
 }
 
 /* ========================================
@@ -243,7 +243,7 @@ body {
    NOTAS
    ======================================== */
 .obs {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .obs-box {
@@ -251,7 +251,7 @@ body {
   border: 1px solid #2c5aa0;
   border-radius: 4px;
   position: relative;
-  padding: 10px 6px 4px 6px;
+  padding: 6px 6px 4px 6px;
 }
 
 .obs-title-inner {
@@ -348,7 +348,7 @@ body {
     padding: 2mm;
     box-shadow: none;
     min-height: auto;
-    max-height: 293mm;
+    max-height: 210mm;
     overflow: hidden;
   }
 
