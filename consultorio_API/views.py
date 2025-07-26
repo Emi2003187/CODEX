@@ -2945,6 +2945,10 @@ class HorarioMedicoCreateView(NextRedirectMixin, LoginRequiredMixin, HorarioPerm
         hora_fin = form.cleaned_data["hora_fin"]
         medico = form.cleaned_data["medico"]
         consultorio = medico.consultorio
+        if not consultorio:
+            form.add_error('medico', 'El médico seleccionado no tiene consultorio asignado.')
+            messages.error(self.request, 'El médico seleccionado no tiene consultorio asignado.')
+            return self.form_invalid(form)
 
         for dia in dias:
             HorarioMedico.objects.create(

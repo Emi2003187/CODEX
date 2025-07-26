@@ -76,6 +76,9 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(data => {
           consultorioSelect.value = data.consultorio_id;
+          if (!data.consultorio_id) {
+            alert('El médico seleccionado no tiene consultorio asignado.');
+          }
         });
     } else {
       consultorioSelect.value = "";
