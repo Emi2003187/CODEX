@@ -2421,6 +2421,10 @@ class ConsultaPrecheckView(NextRedirectMixin, LoginRequiredMixin, UserPassesTest
     def dispatch(self, request, *args, **kwargs):
         self.consulta = get_object_or_404(Consulta, pk=kwargs["pk"])
 
+        if self.consulta.estado == "cancelada":
+            messages.error(request, "No se pueden registrar signos vitales en una consulta cancelada.")
+            return redirect("consulta_detalle", pk=self.consulta.pk)
+
         if request.user.rol == "medico" and self.consulta.medico != request.user:
             messages.error(request, "No puedes editar esta consulta, no est\u00e1s asignado.")
             return redirect("consulta_detalle", pk=self.consulta.pk)
@@ -4288,7 +4292,14 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
         fecha_str = self.request.GET.get('fecha')
         if fecha_str:
             try:
-                initial['fecha'] = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+                if 'T' in fecha_str:
+                    dt = datetime.fromisoformat(fecha_str)
+                    initial['fecha'] = dt.date()
+                    initial['hora'] = dt.strftime('%H:%M')
+                else:
+                    dt = datetime.strptime(fecha_str, '%Y-%m-%d')
+                    initial['fecha'] = dt.date()
+                    initial['hora'] = '09:00'
             except ValueError:
                 pass
         return initial

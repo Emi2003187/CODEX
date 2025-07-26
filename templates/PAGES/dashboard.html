@@ -604,8 +604,13 @@ document.addEventListener('DOMContentLoaded', function () {
       info.el.title = info.event.title + ' - ' + (info.event.extendedProps.motivo || 'Consulta general');
     },
     dateClick: function(info) {
-      // Redirigir a crear cita en esa fecha
-      window.location.href = `{% url 'citas_crear' %}?fecha=${info.dateStr}&next={{ request.path }}`;
+      const clicked = new Date(info.dateStr);
+      if (clicked < new Date()) {
+        alert('No puedes agendar citas en fechas pasadas');
+        return;
+      }
+      const url = `{% url 'citas_crear' %}?fecha=${encodeURIComponent(info.dateStr)}&next={{ request.path }}`;
+      window.location.href = url;
     }
   });
   calendar.render();

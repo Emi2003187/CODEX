@@ -564,6 +564,9 @@ class CitaForm(forms.ModelForm):
         if solapa:
             raise ValidationError(_("La hora seleccionada se solapa con otra cita."))
 
+        if inicio < timezone.now():
+            raise ValidationError(_("No puedes crear citas en el pasado."))
+
         cleaned["fecha_hora"] = inicio
         cleaned["duracion"] = dur_int  # guarda como int
         return cleaned
