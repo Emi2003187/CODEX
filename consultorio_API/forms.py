@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from .models import *
 from django.forms import inlineformset_factory
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.utils import timezone
 
 
@@ -411,8 +411,12 @@ DUR_CHOICES = [(str(m), f"{m} min") for m in range(PASO_MIN, 121, PASO_MIN)]
 
 
 def _fecha_hora_from_fields(fecha, hh_mm: str) -> datetime:
+    """Construye un ``datetime`` con zona horaria local."""
     h, m = map(int, hh_mm.split(":"))
-    return datetime.combine(fecha, datetime.min.time()).replace(hour=h, minute=m)
+    dt = datetime.combine(fecha, time(hour=h, minute=m))
+    if timezone.is_naive(dt):
+        dt = timezone.make_aware(dt)
+    return dt
 
 
 # ─────────────────────────────────── CitaForm ───────────────────────
@@ -432,6 +436,12 @@ class CitaForm(forms.ModelForm):
         required=False,
         queryset=Usuario.objects.filter(rol="medico", is_active=True),
         label=_("Médico preferido"),
+        widget=forms.Select(attrs={"class": "form-select select2"}),
+    )
+    cita_anterior = forms.ModelChoiceField(
+        required=False,
+        queryset=Cita.objects.none(),
+        label="Cita anterior",
         widget=forms.Select(attrs={"class": "form-select select2"}),
     )
 
@@ -481,6 +491,34 @@ class CitaForm(forms.ModelForm):
             self.fields["paciente"].queryset = Paciente.objects.filter(pk=paciente_fijo.pk)
             self.fields["paciente"].widget = forms.HiddenInput()
             self.paciente_nombre = paciente_fijo.nombre_completo
+
+        # preparar opciones de cita anterior según el paciente
+        try:
+            paciente = self.instance.paciente
+        except ObjectDoesNotExist:
+            paciente = None
+        if not paciente:
+            paciente = paciente_fijo
+        if not paciente:
+            pid = self.data.get("paciente") or self.initial.get("paciente")
+            try:
+                paciente = Paciente.objects.get(pk=int(pid))
+            except (TypeError, ValueError, Paciente.DoesNotExist):
+                paciente = None
+
+        if paciente:
+            qs_prev = (
+                Cita.objects.filter(paciente=paciente)
+                .exclude(id=self.instance.id)
+                .order_by("-fecha_hora")
+            )
+            self.fields["cita_anterior"].queryset = qs_prev
+            self.fields["cita_anterior"].empty_label = (
+                "No hay citas anteriores" if not qs_prev.exists() else "---------"
+            )
+        else:
+            self.fields["cita_anterior"].queryset = Cita.objects.none()
+            self.fields["cita_anterior"].empty_label = "No hay citas anteriores"
 
         # edición
         if self.instance.pk and self.instance.consultorio_id and self.instance.fecha_hora:
@@ -589,6 +627,44 @@ class CitaForm(forms.ModelForm):
             instance.save()
             self.save_m2m()
         return instance
+
+
+class ReprogramarCitaForm(forms.Form):
+    fecha = CitaForm.base_fields['fecha']
+    hora = CitaForm.base_fields['hora']
+
+    def __init__(self, *args, cita: Cita, **kwargs):
+        self.cita = cita
+        super().__init__(*args, **kwargs)
+        self.fields['fecha'].initial = cita.fecha_hora.date()
+        self.fields['hora'].initial = cita.fecha_hora.strftime('%H:%M')
+        self._set_hora_choices()
+
+    def _set_hora_choices(self):
+        opciones = obtener_horarios_disponibles_para_select(
+            self.cita.consultorio,
+            self.fields['fecha'].initial,
+            self.cita.duracion,
+            self.cita.id,
+        )
+        self.fields['hora'].choices = [('', '— Seleccione una hora —')] + [
+            (o['value'], o['text']) for o in opciones
+        ]
+
+    def clean(self):
+        cd = super().clean()
+        if 'fecha' in cd and 'hora' in cd:
+            dt = _fecha_hora_from_fields(cd['fecha'], cd['hora'])
+            if dt <= timezone.now():
+                raise ValidationError('La hora debe estar en el futuro')
+            cd['fecha_hora'] = dt
+        return cd
+
+    def save(self):
+        self.cita.fecha_hora = self.cleaned_data['fecha_hora']
+        self.cita.estado = 'reprogramada'
+        self.cita.save()
+        return self.cita
 
 
 
