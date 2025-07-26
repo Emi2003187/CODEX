@@ -831,6 +831,12 @@
               Reprogramar
             </a>
             {% endif %}
+            {% if not puede_editar and puede_reprogramar %}
+            <a href="{% url 'reprogramar_cita' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-warning">
+              <i class="bi bi-clock-history"></i>
+              Reprogramar
+            </a>
+            {% endif %}
 
             <!-- Liberar Cita -->
             {% if user.rol == 'admin' or cita.medico_asignado == user %}
@@ -922,6 +928,12 @@
               <i class="bi bi-pencil-square"></i>
               Editar Cita
             </a>
+            <a href="{% url 'reprogramar_cita' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-warning">
+              <i class="bi bi-clock-history"></i>
+              Reprogramar
+            </a>
+            {% endif %}
+            {% if not puede_editar and puede_reprogramar %}
             <a href="{% url 'reprogramar_cita' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-warning">
               <i class="bi bi-clock-history"></i>
               Reprogramar

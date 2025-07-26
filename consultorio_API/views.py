@@ -1691,7 +1691,8 @@ def puede_ver_cita(user, cita):
         # Los médicos pueden acceder al detalle de cualquier cita
         return True
     if user.rol == "asistente":
-        return cita.consultorio == user.consultorio
+        # Los asistentes ahora pueden ver todas las citas
+        return True
     return False
 
 
@@ -1709,6 +1710,18 @@ def puede_editar_cita(user, cita):
             cita.consultorio == user.consultorio
             and cita.estado in ['programada', 'confirmada']
         )
+    return False
+
+
+def puede_reprogramar_cita(user, cita):
+    """Verifica si el usuario puede reprogramar la cita"""
+    if puede_editar_cita(user, cita):
+        return True
+    if cita.estado == 'cancelada' and user.rol in ['admin', 'medico', 'asistente']:
+        if user.rol == 'admin':
+            return True
+        # Para médicos y asistentes solo verificamos pertenencia al consultorio
+        return cita.consultorio == user.consultorio
     return False
 
 
@@ -4566,8 +4579,8 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
             # Los médicos autenticados pueden ver cualquier cita
             return True
         if user.rol == "asistente":
-            # Los asistentes mantienen la restricción por consultorio
-            return cita.consultorio == user.consultorio
+            # Los asistentes pueden ver todas las citas
+            return True
 
         return False
 
@@ -4593,6 +4606,7 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
                                    user.rol in ['admin', 'asistente']),
             'puede_tomar_cita': self._puede_tomar_cita(user, cita),
             'puede_editar': self._puede_editar_cita(user, cita),
+            'puede_reprogramar': self._puede_reprogramar_cita(user, cita),
             'usuario': user,
             'now': timezone.now(),
         })
@@ -4626,6 +4640,16 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
                 cita.consultorio == user.consultorio
                 and cita.estado in ['programada', 'confirmada', 'reprogramada']
             )
+        return False
+
+    def _puede_reprogramar_cita(self, user, cita):
+        """Verifica si el usuario puede reprogramar la cita"""
+        if self._puede_editar_cita(user, cita):
+            return True
+        if cita.estado == 'cancelada' and user.rol in ['admin', 'medico', 'asistente']:
+            if user.rol == 'admin':
+                return True
+            return cita.consultorio == user.consultorio
         return False
 
 
