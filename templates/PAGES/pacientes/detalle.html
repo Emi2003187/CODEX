@@ -478,11 +478,13 @@
                         <small class="text-muted">{{ c.fecha_atencion|date:"H:i" }}</small>
                       </td>
                       <td>
-                        <span class="badge consultation-type-badge bg-info">{{ c.get_tipo_display }}</span>
+                        <span class="badge consultation-type-badge bg-info rounded-pill">{{ c.get_tipo_display }}</span>
                       </td>
                       <td>
-                        <a href="{% url 'consulta_detalle' c.pk %}?next={{ request.get_full_path|urlencode }}" class="consultation-status-link">
-                          {{ c.get_estado_display }}
+                        <a href="{% url 'consulta_detalle' c.pk %}?next={{ request.get_full_path|urlencode }}" class="text-decoration-none">
+                          <span class="badge status-badge rounded-pill {% if c.estado == 'finalizada' %}bg-success{% elif c.estado == 'cancelada' %}bg-danger{% elif c.estado == 'en_progreso' %}bg-info{% elif c.estado == 'espera' %}bg-warning{% else %}bg-secondary{% endif %}">
+                            {{ c.get_estado_display }}
+                          </span>
                         </a>
                       </td>
                       <td>
@@ -500,24 +502,24 @@
                           <span class="text-muted">Sin asignar</span>
                         {% endif %}
                       </td>
-                      <td>
+                      <td class="text-center">
                         {% if c.signos_vitales %}
-                          <span class="badge status-badge bg-success">
+                          <span class="badge status-badge bg-success rounded-pill">
                             <i class="bi bi-thermometer-half me-1"></i>Registrados
                           </span>
                         {% else %}
-                          <span class="badge status-badge bg-secondary">
+                          <span class="badge status-badge bg-secondary rounded-pill">
                             <i class="bi bi-dash-circle me-1"></i>Pendientes
                           </span>
                         {% endif %}
                       </td>
-                      <td>
+                      <td class="text-center">
                         {% if c.receta %}
-                          <span class="badge status-badge bg-success">
+                          <span class="badge status-badge bg-success rounded-pill">
                             <i class="bi bi-file-earmark-medical me-1"></i>Emitida
                           </span>
                         {% else %}
-                          <span class="badge status-badge bg-secondary">
+                          <span class="badge status-badge bg-secondary rounded-pill">
                             <i class="bi bi-dash-circle me-1"></i>Sin receta
                           </span>
                         {% endif %}
@@ -827,10 +829,10 @@
   }
 
   /* TABLAS */
-  .appointments-table,
-  .consultations-table {
+.appointments-table,
+.consultations-table {
     border-radius: 0 0 16px 16px;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .appointments-table thead th,
@@ -923,6 +925,7 @@
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     padding: 0.5rem 0;
+    z-index: 1050;
   }
 
   /* TÍTULOS DE SECCIÓN */
