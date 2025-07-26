@@ -204,7 +204,7 @@
               No hay signos vitales registrados
             </p>
 
-            {% if puede_editar %}
+            {% if puede_editar or usuario.rol == 'asistente' %}
 
               <a href="{% url 'consultas_precheck' consulta.pk %}" class="btn btn-sm btn-outline-primary w-100">
                 <i class="bi bi-plus me-1"></i>Registrar Signos
@@ -284,11 +284,12 @@
             {% endif %}
             
 
-            {% if not signos_vitales and puede_editar %}
+            {% if not signos_vitales %}
+              {% if puede_editar or usuario.rol == 'asistente' %}
               <a href="{% url 'consultas_precheck' consulta.pk %}?next={{ volver_a|urlencode }}" class="btn btn-warning btn-sm">
                 <i class="bi bi-heart-pulse me-1"></i>Registrar Signos
               </a>
-
+              {% endif %}
             {% endif %}
 
             {% if puede_editar %}

@@ -43,3 +43,24 @@ def test_admin_crea_paciente_selecciona_consultorio(client):
     client.post(url, data)
     paciente = Paciente.objects.get(nombre_completo='Ana')
     assert paciente.consultorio == c2
+
+
+@pytest.mark.django_db
+def test_asistente_crea_paciente_auto_consultorio(client):
+    consultorio = Consultorio.objects.create(nombre="CA")
+    asistente = Usuario.objects.create(username="asis", rol="asistente", first_name="As", consultorio=consultorio)
+    client.force_login(asistente)
+    url = reverse('pacientes_crear')
+    resp = client.get(url)
+    assert 'name="consultorio"' not in resp.content.decode()
+    data = {
+        'nombre_completo': 'Mario',
+        'fecha_nacimiento': '1980-01-01',
+        'sexo': 'M',
+        'telefono': '111',
+        'correo': 'm@example.com',
+        'direccion': 'Z',
+    }
+    client.post(url, data)
+    paciente = Paciente.objects.get(nombre_completo='Mario')
+    assert paciente.consultorio == consultorio

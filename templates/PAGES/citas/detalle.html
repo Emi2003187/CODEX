@@ -850,21 +850,14 @@
                   Ver Consulta
                 </a>
               {% else %}
-                {% if cita.fecha_hora <= now %}
-                  <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline w-100">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ volver_a }}">
-                    <button type="submit" class="btn btn-action btn-iniciar-consulta">
-                      <i class="bi bi-play-circle"></i>
-                      Iniciar Consulta
-                    </button>
-                  </form>
-                {% else %}
-                  <button class="btn btn-secondary w-100" disabled>
+                <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline w-100">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ volver_a }}">
+                  <button type="submit" class="btn btn-action btn-iniciar-consulta">
                     <i class="bi bi-play-circle"></i>
                     Iniciar Consulta
                   </button>
-                {% endif %}
+                </form>
               {% endif %}
             {% endif %}
 

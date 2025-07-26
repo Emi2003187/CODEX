@@ -533,7 +533,7 @@ class UsuarioDeleteView(NextRedirectMixin, AdminRequiredMixin, DeleteView):
 
 class PacientePermisoMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.rol in ("medico", "admin")
+        return self.request.user.is_authenticated and self.request.user.rol in ("medico", "admin", "asistente")
 
 
 class PacienteListView(PacientePermisoMixin, ListView):
@@ -648,6 +648,8 @@ class PacienteCreateView(NextRedirectMixin, PacientePermisoMixin, CreateView):
                 messages.error(self.request, "No tienes consultorio asignado.")
                 return HttpResponseRedirect(self.success_url)
             paciente.consultorio = user.consultorio
+        elif user.rol == "asistente":
+            paciente.consultorio = user.consultorio
         else:
             paciente.consultorio = form.cleaned_data.get("consultorio")
         paciente.save()
@@ -677,6 +679,8 @@ class PacienteUpdateView(NextRedirectMixin, PacientePermisoMixin, UpdateView):
             if not user.consultorio:
                 messages.error(self.request, "No tienes consultorio asignado.")
                 return HttpResponseRedirect(self.success_url)
+            paciente.consultorio = user.consultorio
+        elif user.rol == "asistente":
             paciente.consultorio = user.consultorio
         else:
             paciente.consultorio = form.cleaned_data.get("consultorio")
@@ -1683,6 +1687,11 @@ def puede_editar_cita(user, cita):
             cita.medico_asignado == user
             and cita.estado in ['programada', 'confirmada']
         )
+    elif user.rol == 'asistente':
+        return (
+            cita.consultorio == user.consultorio
+            and cita.estado in ['programada', 'confirmada']
+        )
     return False
 
 
@@ -2341,9 +2350,6 @@ class ConsultaSinCitaCreateView(NextRedirectMixin, LoginRequiredMixin, CreateVie
     success_url = reverse_lazy('consultas_lista')
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.rol == 'asistente':
-            messages.warning(request, 'No tienes permiso para crear consultas.')
-            return redirect('consultas_lista')
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
@@ -2489,6 +2495,8 @@ class ConsultaPrecheckView(NextRedirectMixin, LoginRequiredMixin, UserPassesTest
             if consulta_id:
                 consulta = get_object_or_404(Consulta, pk=consulta_id)
                 return consulta.medico == user
+        if user.rol == "asistente":
+            return True
         return False
 
     def dispatch(self, request, *args, **kwargs):
@@ -2502,9 +2510,9 @@ class ConsultaPrecheckView(NextRedirectMixin, LoginRequiredMixin, UserPassesTest
             return redirect("consulta_detalle", pk=self.consulta.pk)
 
         if request.user.rol == "medico" and self.consulta.medico != request.user:
-            messages.error(request, "No puedes editar esta consulta, no est\u00e1s asignado.")
+            messages.error(request, "No puedes editar esta consulta, no estás asignado.")
             return redirect("consulta_detalle", pk=self.consulta.pk)
-        if request.user.rol not in ("medico", "admin"):
+        if request.user.rol not in ("medico", "admin", "asistente"):
             return redirect("consultas_lista")
 
 
@@ -4313,6 +4321,11 @@ def puede_editar_cita(user, cita):
     elif user.rol == 'medico':
         return (
             cita.medico_asignado == user
+            and cita.estado in ['programada', 'confirmada']
+        )
+    elif user.rol == 'asistente':
+        return (
+            cita.consultorio == user.consultorio
             and cita.estado in ['programada', 'confirmada']
         )
     return False

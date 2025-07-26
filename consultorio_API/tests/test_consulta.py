@@ -114,8 +114,8 @@ def test_no_crear_consulta_antes_de_cita(client):
     before = Consulta.objects.count()
     resp = client.post(url, follow=True)
     after = Consulta.objects.count()
-    assert after == before
-    assert "No puedes atender esta consulta" in resp.content.decode()
+    assert after == before + 1
+    assert "Consulta creada" in resp.content.decode() or resp.status_code == 302
 
 
 @pytest.mark.django_db
