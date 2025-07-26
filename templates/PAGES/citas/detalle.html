@@ -798,8 +798,8 @@
 
       <!-- Panel de Acciones -->
       {% if user.rol != 'asistente' %}
-      <div class="col-lg-4">
-        <div class="actions-card">
+        <div class="col-lg-4">
+          <div class="actions-card">
           <div class="actions-header">
             <h5 class="mb-0">
               <i class="bi bi-gear me-2"></i>
@@ -850,21 +850,14 @@
                   Ver Consulta
                 </a>
               {% else %}
-                {% if cita.fecha_hora <= now %}
-                  <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline w-100">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ volver_a }}">
-                    <button type="submit" class="btn btn-action btn-iniciar-consulta">
-                      <i class="bi bi-play-circle"></i>
-                      Iniciar Consulta
-                    </button>
-                  </form>
-                {% else %}
-                  <button class="btn btn-secondary w-100" disabled>
+                <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline w-100">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ volver_a }}">
+                  <button type="submit" class="btn btn-action btn-iniciar-consulta">
                     <i class="bi bi-play-circle"></i>
                     Iniciar Consulta
                   </button>
-                {% endif %}
+                </form>
               {% endif %}
             {% endif %}
 
@@ -902,10 +895,43 @@
             {% endif %}
           </div>
         </div>
+      {% else %}
+      <div class="col-lg-4">
+        <div class="actions-card">
+          <div class="actions-header">
+            <h5 class="mb-0">
+              <i class="bi bi-gear me-2"></i>
+              Acciones Disponibles
+            </h5>
+          </div>
+          <div class="actions-body">
+            {% if puede_editar %}
+            <a href="{% url 'citas_editar' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-editar">
+              <i class="bi bi-pencil-square"></i>
+              Editar Cita
+            </a>
+            <a href="{% url 'reprogramar_cita' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-warning">
+              <i class="bi bi-clock-history"></i>
+              Reprogramar
+            </a>
+            {% endif %}
+            {% if cita.medico_asignado and not consulta %}
+            <form method="post" action="{% url 'citas_crear_desde_cita' cita.id %}" class="d-inline w-100">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ volver_a }}">
+              <button type="submit" class="btn btn-action btn-iniciar-consulta">
+                <i class="bi bi-play-circle"></i>
+                Iniciar Consulta
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
       {% endif %}
 
       <!-- Médicos Disponibles -->
-{% if user.rol != 'asistente' and puede_asignar_medico and medicos_disponibles and not cita.medico_asignado and cita.estado != 'cancelada' and cita.estado != 'completada' %}
+{% if puede_asignar_medico and medicos_disponibles and not cita.medico_asignado and cita.estado != 'cancelada' and cita.estado != 'completada' %}
       <div class="card medicos-card mt-4">
         <div class="medicos-header">
           <h6 class="mb-0">
