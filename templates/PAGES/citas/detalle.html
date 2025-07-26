@@ -885,7 +885,7 @@
             </form>
             {% endif %}
 
-            {% if cita.estado == 'programada' and not consulta or cita.estado == 'confirmada' and not consulta %}
+            {% if not consulta and cita.estado in 'programada confirmada reprogramada' %}
             <form method="post" action="{% url 'cita_marcar_no_asistio' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
               <input type="hidden" name="next" value="{{ volver_a }}">
@@ -1029,6 +1029,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         revisar();
         setInterval(revisar, 60000);
+    }
 
     {% if user.rol == 'asistente' %}
     const forbiddenForms = document.querySelectorAll("form[action*=cancelar], form[action*=eliminar], form[action*=no-asistio]");

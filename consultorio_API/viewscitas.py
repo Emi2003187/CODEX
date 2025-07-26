@@ -1318,10 +1318,12 @@ def puede_editar_cita(user, cita):
 
 def puede_tomar_cita(user, cita):
     """Verifica si el médico puede tomar la cita"""
-    return (user.rol == 'medico' and 
-            user.consultorio == cita.consultorio and
-            not cita.medico_asignado and
-            cita.estado in ['programada', 'confirmada'])
+    return (
+        user.rol == 'medico'
+        and user.consultorio == cita.consultorio
+        and not cita.medico_asignado
+        and cita.estado in ['programada', 'confirmada', 'reprogramada']
+    )
 
 
 def get_color_by_estado(estado):

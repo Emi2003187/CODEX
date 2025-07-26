@@ -4607,10 +4607,12 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
 
     def _puede_tomar_cita(self, user, cita):
         """Verifica si el médico puede tomar la cita"""
-        return (user.rol == 'medico' and 
-                user.consultorio == cita.consultorio and
-                not cita.medico_asignado and
-                cita.estado in ['programada', 'confirmada'])
+        return (
+            user.rol == 'medico'
+            and user.consultorio == cita.consultorio
+            and not cita.medico_asignado
+            and cita.estado in ['programada', 'confirmada', 'reprogramada']
+        )
 
     def _puede_editar_cita(self, user, cita):
         """Verifica si el usuario puede editar la cita"""
