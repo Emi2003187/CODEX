@@ -182,7 +182,7 @@
             {% if usuario.rol != 'asistente' %}
               {% if consulta.estado == "espera" or consulta.estado == "en_progreso" %}
                 <li>
-                  <form method="post" action="{% url 'consulta_cancelar' consulta.pk %}" onsubmit="return confirm('¿Estás seguro de eliminar?');">
+                  <form method="post" action="{% url 'consulta_cancelar' consulta.pk %}" class="js-consulta-cancelar" data-confirm="¿Estás seguro de eliminar?">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                     <button class="dropdown-item text-warning">
@@ -194,7 +194,7 @@
 
               {% if consulta.estado != "en_progreso" %}
                 <li>
-                  <form method="post" action="{% url 'consulta_eliminar' consulta.pk %}" onsubmit="return confirm('¿Estás seguro de eliminar?');">
+                  <form method="post" action="{% url 'consulta_eliminar' consulta.pk %}" class="js-consulta-eliminar" data-confirm="¿Estás seguro de eliminar?">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                     <button class="dropdown-item text-danger">

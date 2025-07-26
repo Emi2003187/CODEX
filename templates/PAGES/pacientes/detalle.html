@@ -539,7 +539,7 @@
                             {% if c.estado in 'espera,en_progreso' %}
                               <li>
                                 <form action="{% url 'consulta_cancelar' c.pk %}" method="post"
-                                      onsubmit="return confirm('¿Cancelar consulta?');">
+                                      class="js-consulta-cancelar" data-confirm="¿Cancelar consulta?">
                                   {% csrf_token %}
                                   <button class="dropdown-item text-warning">
                                     <i class="bi bi-x-circle me-2"></i>Cancelar
@@ -551,7 +551,7 @@
                             {% if c.estado != 'cancelada' %}
                               <li>
                                 <form action="{% url 'consulta_eliminar' c.pk %}" method="post"
-                                      onsubmit="return confirm('Esta acción es irreversible. ¿Eliminar?');">
+                                      class="js-consulta-eliminar" data-confirm="Esta acción es irreversible. ¿Eliminar?">
                                   {% csrf_token %}
                                   <button class="dropdown-item text-danger">
                                     <i class="bi bi-trash3 me-2"></i>Eliminar

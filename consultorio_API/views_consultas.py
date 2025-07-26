@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django.views.generic.edit import CreateView
-from django.urls import reverse_lazy
-from django.http import HttpResponseForbidden
+from django.urls import reverse_lazy, reverse
+from django.http import HttpResponseForbidden, JsonResponse
 from django import forms
 from django.db.models import Q
 
@@ -20,10 +20,24 @@ def puede_modificar(user, consulta):
 @login_required
 @require_POST
 def cancelar_consulta(request, pk):
+    """Cancelar una consulta si el usuario tiene permisos."""
+    ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
+
     if request.user.rol == "asistente":
+        if ajax:
+            return JsonResponse(
+                {"error": "No tienes permiso para cancelar consultas."},
+                status=403,
+            )
         return HttpResponseForbidden("No tienes permiso para cancelar consultas.")
+
     consulta = get_object_or_404(Consulta, pk=pk)
     if not puede_modificar(request.user, consulta):
+        if ajax:
+            return JsonResponse(
+                {"error": "Acción no autorizada."},
+                status=403,
+            )
         messages.error(request, "Acción no autorizada.")
         return redirect("consultas_lista")
 
@@ -34,6 +48,10 @@ def cancelar_consulta(request, pk):
         consulta.cita.estado = "cancelada"
         consulta.cita.save(update_fields=["estado"])
 
+    if ajax:
+        next_url = request.POST.get("next") or reverse("consultas_lista")
+        return JsonResponse({"success": True, "redirect_url": next_url})
+
     messages.success(request, "Consulta cancelada.")
     return redirect(request.POST.get("next") or "consultas_lista")
 
@@ -41,17 +59,35 @@ def cancelar_consulta(request, pk):
 @login_required
 @require_POST
 def eliminar_consulta(request, pk):
+    """Eliminar una consulta si el usuario tiene permisos."""
+    ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
+
     if request.user.rol == "asistente":
+        if ajax:
+            return JsonResponse(
+                {"error": "No tienes permiso para cancelar consultas."},
+                status=403,
+            )
         messages.error(request, "No puedes eliminar consultas.")
         return redirect("consultas_lista")
+
     consulta = get_object_or_404(Consulta, pk=pk)
     if not puede_modificar(request.user, consulta):
+        if ajax:
+            return JsonResponse(
+                {"error": "Acción no autorizada."},
+                status=403,
+            )
         messages.error(request, "Acción no autorizada.")
         return redirect("consultas_lista")
 
     if consulta.cita:
         consulta.cita.delete()
     consulta.delete()
+
+    if ajax:
+        next_url = request.POST.get("next") or reverse("consultas_lista")
+        return JsonResponse({"success": True, "redirect_url": next_url})
 
     messages.success(request, "Consulta eliminada.")
     return redirect(request.POST.get("next") or "consultas_lista")
