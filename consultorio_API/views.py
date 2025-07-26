@@ -13,6 +13,7 @@ from django.views import View
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from xhtml2pdf import pisa
 from datetime import datetime, timedelta, time, date
+from django.utils.dateparse import parse_datetime, parse_date
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -4289,18 +4290,16 @@ class CitaCreateView(NextRedirectMixin, CitaPermisoMixin, CreateView):
 
     def get_initial(self):
         initial = super().get_initial()
-        fecha_str = self.request.GET.get('fecha')
-        if fecha_str:
+        fecha_raw = self.request.GET.get('fecha')
+        if fecha_raw:
             try:
-                if 'T' in fecha_str:
-                    dt = datetime.fromisoformat(fecha_str)
+                dt = parse_datetime(fecha_raw)
+                if dt:
                     initial['fecha'] = dt.date()
                     initial['hora'] = dt.strftime('%H:%M')
                 else:
-                    dt = datetime.strptime(fecha_str, '%Y-%m-%d')
-                    initial['fecha'] = dt.date()
-                    initial['hora'] = '09:00'
-            except ValueError:
+                    initial['fecha'] = parse_date(fecha_raw)
+            except Exception:
                 pass
         return initial
 
