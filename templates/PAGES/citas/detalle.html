@@ -904,8 +904,8 @@
             </form>
             {% endif %}
 
-            <!-- Eliminar Cita (Solo Admin) -->
-            {% if user.rol == 'admin' and cita.estado != 'completada' %}
+            <!-- Eliminar Cita -->
+            {% if puede_eliminar %}
             <a href="{% url 'citas_eliminar' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-eliminar" onclick="return confirm('¿Estás seguro? Esta acción eliminará permanentemente la cita.');">
               <i class="bi bi-trash"></i>
               Eliminar Cita

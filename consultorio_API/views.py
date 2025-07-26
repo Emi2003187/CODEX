@@ -1231,6 +1231,7 @@ def detalle_cita(request, cita_id):
         'puede_tomar_cita': puede_tomar_cita(request.user, cita),
         'puede_editar': puede_editar_cita(request.user, cita),
         'puede_reprogramar': puede_reprogramar_cita(request.user, cita),
+        'puede_eliminar': puede_eliminar_cita(request.user, cita),
         'usuario': request.user,
     }
     return render(request, 'PAGES/citas/detalle.html', context)
@@ -1723,6 +1724,18 @@ def puede_reprogramar_cita(user, cita):
             return True
         # Para médicos y asistentes solo verificamos pertenencia al consultorio
         return cita.consultorio == user.consultorio
+    return False
+
+
+def puede_eliminar_cita(user, cita):
+    """Verifica si el usuario puede eliminar la cita"""
+    if user.rol == 'admin':
+        return cita.estado != 'completada'
+    if user.rol == 'medico':
+        return (
+            cita.estado == 'reprogramada'
+            and cita.medico_asignado == user
+        )
     return False
 
 
@@ -4608,6 +4621,7 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
             'puede_tomar_cita': self._puede_tomar_cita(user, cita),
             'puede_editar': self._puede_editar_cita(user, cita),
             'puede_reprogramar': self._puede_reprogramar_cita(user, cita),
+            'puede_eliminar': self._puede_eliminar_cita(user, cita),
             'usuario': user,
             'now': timezone.now(),
         })
@@ -4651,6 +4665,17 @@ class CitaDetailView(CitaPermisoMixin, DetailView):
             if user.rol == 'admin':
                 return True
             return cita.consultorio == user.consultorio
+        return False
+
+    def _puede_eliminar_cita(self, user, cita):
+        """Verifica si el usuario puede eliminar la cita"""
+        if user.rol == 'admin':
+            return cita.estado != 'completada'
+        if user.rol == 'medico':
+            return (
+                cita.estado == 'reprogramada'
+                and cita.medico_asignado == user
+            )
         return False
 
 
