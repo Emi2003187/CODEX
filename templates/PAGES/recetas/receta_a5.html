@@ -1,5 +1,4 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,9 +14,10 @@
          data-id="{{ receta.pk }}"
          data-paciente="{{ receta.consulta.paciente|slugify }}"
          data-fecha="{{ receta.fecha_emision|date:'Y-m-d' }}">
-
-        <!-- 0 · ENCABEZADO -------------------------------------------------->
+        
+        <!-- 0 · ENCABEZADO COMPACTO -------------------------------------------------->
         <header class="hdr">
+            <span class="sub">RECETA INDIVIDUAL</span>
             <h2>CONSULTORIO MÉDICO</h2>
         </header>
 
@@ -54,7 +54,7 @@
                     <b>Médico responsable:</b> Dr. {{ receta.consulta.medico.get_full_name }}
                 </div>
                 <div class="data-item right-align">
-                    <b>FOLIO:</b> {{ receta.pk|default:"—" }}
+                    <b>Cédula Prof.:</b> {{ receta.consulta.medico.cedula_profesional|default:"—" }}
                 </div>
             </div>
         </section>
@@ -112,18 +112,18 @@
             </ol>
         </section>
 
-        <!-- 6 · OBSERVACIONES, FIRMA Y PIE (Bloque indivisible) ---------------->
+        <!-- 6 · NOTAS, FIRMA Y PIE (Bloque indivisible) ---------------->
         <div class="bottom-block">
             <section class="obs">
                 <div class="obs-box">
-                    <span class="obs-title-inner"></span>
+                    <span class="obs-title-inner">NOTAS</span>
                     <div class="obs-text">{{ receta.observaciones|default:"" }}</div>
                 </div>
             </section>
-<br>
+            
             <!-- 7 · FIRMA ------------------------------------------------------->
             <div class="firma-line"></div>
-
+            
             <!-- 8 · PIE --------------------------------------------------------->
             <footer class="pie">
                 Dr. {{ receta.consulta.medico.get_full_name }}<br>
