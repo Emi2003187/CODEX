@@ -503,7 +503,7 @@
                     </a>
                 {% elif usuario.rol == "asistente" %}
                     <!-- Assistants start at the appointment list -->
-                    <a href="{% url 'citas_lista' %}" class="menu-item {% if 'citas' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Citas">
+                    <a href="{% url 'citas_lista' %}" class="menu-item {% if 'citas' in request.resolver_match.url_name and request.resolver_match.url_name != 'mis_citas_asignadas' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Citas">
                         <i class="bi bi-calendar-event"></i>
                         <span class="menu-item-text">Citas Médicas</span>
                     </a>
@@ -540,7 +540,7 @@
                 </a>
                 {% endif %}
 
-                <a href="{% url 'citas_lista' %}" class="menu-item {% if 'citas' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Citas">
+                <a href="{% url 'citas_lista' %}" class="menu-item {% if 'citas' in request.resolver_match.url_name and request.resolver_match.url_name != 'mis_citas_asignadas' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Citas">
                     <i class="bi bi-calendar-event"></i>
                     <span class="menu-item-text">Citas Médicas</span>
                     {% if stats.citas_pendientes %}
