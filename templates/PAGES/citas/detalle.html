@@ -450,19 +450,6 @@
     color: #111827;
   }
 
-  .alert-info-custom {
-    background: #dbeafe;
-    border: none;
-    border-left: 4px solid #3b82f6;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .alert-info-custom .alert-heading {
-    color: #1e40af;
-    font-weight: 700;
-  }
 
   @media (max-width: 768px) {
     .page-container {
@@ -827,6 +814,10 @@
               <i class="bi bi-pencil-square"></i>
               Editar Cita
             </a>
+            <a href="{% url 'reprogramar_cita' cita.id %}?next={{ volver_a|urlencode }}" class="btn btn-action btn-warning">
+              <i class="bi bi-clock-history"></i>
+              Reprogramar
+            </a>
             {% endif %}
 
             <!-- Liberar Cita -->
@@ -893,7 +884,9 @@
             <form method="post" action="{% url 'cita_marcar_no_asistio' cita.id %}" class="d-inline w-100">
               {% csrf_token %}
               <input type="hidden" name="next" value="{{ volver_a }}">
-              <button type="submit" class="btn btn-action btn-no-asistio" onclick="return confirm('¿Marcar esta cita como NO ASISTIÓ?');">
+              <button type="submit" id="btnNoAsistio" class="btn btn-action btn-no-asistio"
+                onclick="return confirm('¿Marcar esta cita como NO ASISTIÓ?');"
+                {% if cita.fecha_hora|date:"U" > now|date:"U" %}disabled data-bs-toggle="tooltip" title="Disponible cuando la hora de la cita haya iniciado"{% endif %}>
                 <i class="bi bi-person-x"></i>
                 No Asistió
               </button>
@@ -943,19 +936,16 @@
 
         <!-- Información Adicional -->
         {% if cita.cita_anterior %}
-        <div class="alert alert-info-custom mt-4">
-          <h6 class="alert-heading">
+        <div class="alert alert-info mt-4">
+          <h6 class="alert-heading fw-bold">
             <i class="bi bi-info-circle me-2"></i>
-            Cita Relacionada
+            Cita Anterior
           </h6>
-          <p class="mb-0">
-            Esta cita tiene una <strong>cita anterior</strong> asociada:
-            <br>
-            <a href="{% url 'citas_detalle' cita.cita_anterior.id %}" class="fw-bold">
-              {{ cita.cita_anterior.numero_cita }} 
-              ({{ cita.cita_anterior.fecha_hora|date:"d/m/Y H:i" }})
-            </a>
+          <p class="mb-2">
+            Proviene de la cita <strong>{{ cita.cita_anterior.numero_cita }}</strong>
+            ({{ cita.cita_anterior.fecha_hora|date:"d/m/Y H:i" }})
           </p>
+          <a class="btn btn-sm btn-primary" href="{% url 'citas_detalle' cita.cita_anterior.id %}?next={{ request.get_full_path|urlencode }}">Ver Cita</a>
         </div>
         {% endif %}
       </div>
@@ -1003,6 +993,19 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.transform = 'translateY(0)';
         });
     });
+
+    // Habilitar "No Asistió" al llegar la hora
+    const btnNoAsistio = document.getElementById('btnNoAsistio');
+    if (btnNoAsistio && btnNoAsistio.disabled) {
+        const objetivo = new Date('{{ cita.fecha_hora|date:"Y-m-d\TH:i:s" }}');
+        function revisar(){
+            if(Date.now() >= objetivo.getTime()){
+                btnNoAsistio.disabled = false;
+            }
+        }
+        revisar();
+        setInterval(revisar, 60000);
+    }
 });
 </script>
 {% endblock %}
