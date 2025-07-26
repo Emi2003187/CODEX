@@ -369,7 +369,11 @@ class Cita(models.Model):
     
     TIPO_CITA_CHOICES = [
         ('primera_vez', 'Primera Vez'),
-        ('cita_normal', 'Cita Normal'),
+        ('control', 'Control'),
+        ('urgencia', 'Urgencia'),
+        ('cirugia', 'Cirugía'),
+        ('procedimiento', 'Procedimiento'),
+        ('teleconsulta', 'Teleconsulta'),
     ]
 
     # Identificación
@@ -405,7 +409,7 @@ class Cita(models.Model):
     # Información de la cita
     fecha_hora = models.DateTimeField()
     duracion = models.PositiveIntegerField(default=30, help_text="Duración en minutos")
-    tipo_cita = models.CharField(max_length=20, choices=TIPO_CITA_CHOICES, default='cita_normal')
+    tipo_cita = models.CharField(max_length=20, choices=TIPO_CITA_CHOICES, default='control')
     prioridad = models.CharField(max_length=10, choices=PRIORIDAD_CHOICES, default='normal')
     estado = models.CharField(max_length=15, choices=ESTADO_CHOICES, default='programada')
     

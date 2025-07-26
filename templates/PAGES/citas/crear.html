@@ -35,6 +35,27 @@
         margin-top: 0.5rem;
         font-size: 0.875rem;
     }
+    .info-horarios {
+        background: #eff6ff;
+        border: 1px solid var(--primary-light);
+        border-radius: 4px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+    }
+    .info-horarios h6 {
+        color: var(--primary-dark);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    .info-horarios ul {
+        margin-bottom: 0;
+        padding-left: 1.2rem;
+    }
+    .info-horarios li {
+        color: var(--primary-dark);
+        margin-bottom: 0.25rem;
+    }
     .form-control option:disabled {
         color: var(--text-secondary);
         background-color: var(--bg-color);
@@ -166,14 +187,13 @@
                         <!-- Fecha y Hora -->
                         <div class="form-section">
                             <h6><i class="fas fa-calendar-alt me-2"></i>Fecha y Hora</h6>
-                            <div class="alert alert-info d-flex align-items-start">
-                                <i class="bi bi-info-circle-fill me-2 fs-4"></i>
-                                <div>
-                                    <strong>Información de Horarios</strong><br>
-                                    • Horario de atención: 7:00 AM - 6:00 PM <br>
-                                    • Los horarios se actualizan automáticamente según disponibilidad <br>
-                                    • Solo se muestran horarios disponibles para la duración seleccionada
-                                </div>
+                            <div class="info-horarios">
+                                <h6><i class="fas fa-info-circle me-2"></i>Información de Horarios</h6>
+                                <ul>
+                                    <li>Horario de atención: 7:00 AM - 6:00 PM</li>
+                                    <li>Los horarios se actualizan automáticamente según disponibilidad</li>
+                                    <li>Solo se muestran horarios disponibles para la duración seleccionada</li>
+                                </ul>
                             </div>
                             <div class="row">
                                 <div class="col-md-4">
@@ -236,17 +256,6 @@
                                             <div class="invalid-feedback d-block">
                                                 {{ form.tipo_cita.errors.0 }}
                                             </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="col-md-6" id="citaAnteriorGroup" style="display:none;">
-                                    <div class="mb-3">
-                                        <label for="{{ form.cita_anterior.id_for_label }}" class="form-label">Cita Anterior</label>
-                                        {{ form.cita_anterior }}
-                                        {% if form.cita_anterior.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.cita_anterior.errors.0 }}
-                                        </div>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -410,7 +419,7 @@
         if (lista[i].estado === 'libre') libres++;
         else break;
       }
-      const minDisponibles = libres;        // minutos totales que caben
+      const minDisponibles = libres * 15;        // minutos totales que caben
 
       /* reconstruye el <select id="id_duracion"> */
       $dur.empty();
@@ -501,35 +510,6 @@
       .on('change', () => !cargando && setTimeout(cargarHorarios, 200));
 
     $selHora.on('change', actualizarDuraciones);
-
-    function toggleCitaAnterior(){
-      const val = $('#id_tipo_cita').val();
-      if(val === 'cita_normal') $('#citaAnteriorGroup').show();
-      else $('#citaAnteriorGroup').hide();
-    }
-    $('#id_tipo_cita').on('change', toggleCitaAnterior);
-    toggleCitaAnterior();
-
-    function cargarCitasPrevias(){
-      const pid = $('#id_paciente').val();
-      if(!pid){
-        $('#id_cita_anterior').html('<option value="">No hay citas anteriores</option>');
-        return;
-      }
-      $.getJSON('{% url "ajax_citas_previas" %}', {paciente_id: pid})
-        .done(function(r){
-          const $sel = $('#id_cita_anterior');
-          $sel.empty();
-          if(r.citas && r.citas.length){
-            $sel.append('<option value="">---------</option>');
-            r.citas.forEach(c=>{$sel.append(`<option value="${c.id}">${c.text}</option>`);});
-          }else{
-            $sel.append('<option value="">No hay citas anteriores</option>');
-          }
-        });
-    }
-    $('#id_paciente').on('change', cargarCitasPrevias);
-    cargarCitasPrevias();
 
     /* Validación simple al enviar */
     $('#citaForm').on('submit', function (e) {
