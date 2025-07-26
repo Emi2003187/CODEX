@@ -166,15 +166,6 @@
                         <!-- Fecha y Hora -->
                         <div class="form-section">
                             <h6><i class="fas fa-calendar-alt me-2"></i>Fecha y Hora</h6>
-                            <div class="alert alert-info d-flex align-items-start">
-                                <i class="bi bi-info-circle-fill me-2 fs-4"></i>
-                                <div>
-                                    <strong>Información de Horarios</strong><br>
-                                    • Horario de atención: 7:00 AM - 6:00 PM <br>
-                                    • Los horarios se actualizan automáticamente según disponibilidad <br>
-                                    • Solo se muestran horarios disponibles para la duración seleccionada
-                                </div>
-                            </div>
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="mb-3">
@@ -516,7 +507,12 @@
         $('#id_cita_anterior').html('<option value="">No hay citas anteriores</option>');
         return;
       }
-      $.getJSON('{% url "ajax_citas_previas" %}', {paciente_id: pid})
+      const params = {paciente_id: pid};
+      const f = $('#id_fecha').val();
+      const h = $('#id_hora').val();
+      if(f) params.fecha = f;
+      if(h) params.hora = h;
+      $.getJSON('{% url "ajax_citas_previas" %}', params)
         .done(function(r){
           const $sel = $('#id_cita_anterior');
           $sel.empty();
@@ -528,7 +524,7 @@
           }
         });
     }
-    $('#id_paciente').on('change', cargarCitasPrevias);
+    $('#id_paciente, #id_fecha, #id_hora').on('change', cargarCitasPrevias);
     cargarCitasPrevias();
 
     /* Validación simple al enviar */
