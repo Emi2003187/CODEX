@@ -6,91 +6,85 @@
      data-paciente="{{ receta.consulta.paciente|slugify }}"
      data-fecha="{{ receta.fecha_emision|date:'Y-m-d' }}">
 
-  <!-- CABECERA -->
-  <header class="hdr">
-      {% if show_logo %}
-        <img src="{% static 'img/imss-logo.png' %}" class="logo">
-      {% endif %}
-      <span class="sub">RECETA INDIVIDUAL</span>
-      <h2>CONSULTORIO MEDICO</h2>
-  </header>
+<header class="hdr text-center mb-3">
+  <img src="{% static 'img/consultorio_venados_logo.png' %}"
+       alt="Logo Consultorio Venados"
+       class="logo mb-1">
+  <h3 class="m-0 fw-bold">Consultorio Venados</h3>
+  <span class="text-muted small">Universidad Autónoma de Chiapas</span>
+</header>
 
-  <!-- DATOS PACIENTE / CONSULTORIO -->
-  <section class="grid-2">
-      <div><strong>NOMBRE DEL PACIENTE:</strong> {{ receta.consulta.paciente }}</div>
-      <div><strong>CONSULTORIO:</strong> {{ receta.consulta.medico.consultorio }}</div>
-  </section>
-
-  <!-- FECHAS -->
-  <section class="grid-2">
-      <div><strong>Fecha:</strong> {{ receta.fecha_emision|date:"d/m/Y" }}</div>
-      <div class="right"><strong>Válido hasta:</strong>
-          {{ receta.fecha_validez|default_if_none:receta.fecha_emision|date:"d/m/Y" }}
+{# === SECCIÓN MOTIVO Y DIAGNÓSTICO ======================= #}
+<section class="section mb-3">
+  <h5 class="section-title text-primary text-center mb-2">
+    <i class="bi bi-clipboard me-1"></i>Motivo y Diagnóstico
+  </h5>
+  <div class="row g-2">
+    {% for label, value in (
+      ('Motivo de Consulta', receta.consulta.motivo_consulta),
+      ('Diagnóstico', receta.consulta.diagnostico),
+      ('Tratamiento', receta.consulta.tratamiento),
+      ('Observaciones', receta.consulta.observaciones)
+    ) %}
+      <div class="col-6">
+        <p class="mb-0 fw-semibold">{{ label }}</p>
+        <p class="border rounded p-2 min-h-80">{{ value|default:'—' }}</p>
       </div>
-  </section>
+    {% endfor %}
+  </div>
+</section>
 
-  <!-- MÉDICO -->
-  <section class="grid-2">
-      <div><strong>Nombre y firma del médico:</strong> DR. {{ receta.consulta.medico.get_full_name }}</div>
-      <div class="right"><strong>Cédula Prof.:</strong> {{ receta.consulta.medico.cedula_profesional|default:"—" }}</div>
-  </section>
+{# === SECCIÓN RECETA MÉDICA ============================== #}
+<section class="section mb-3">
+  <h5 class="section-title text-primary text-center mb-2">
+    <i class="bi bi-file-medical me-1"></i>Receta Médica
+  </h5>
+  <div class="row g-2">
+    <div class="col-9">
+      <p class="mb-0 fw-semibold">Indicaciones Generales</p>
+      <p class="border rounded p-2 min-h-80">{{ receta.indicaciones_generales|default:'—' }}</p>
+    </div>
+    <div class="col-3">
+      <p class="mb-0 fw-semibold">Válido Hasta</p>
+      <p class="border rounded p-2">{{ receta.valido_hasta|date:'d/m/Y'|default:'—' }}</p>
+    </div>
+    <div class="col-12">
+      <p class="mb-0 fw-semibold">Notas Adicionales</p>
+      <p class="border rounded p-2 min-h-80">{{ receta.notas|default:'—' }}</p>
+    </div>
+  </div>
+</section>
 
-  <!-- SIGNOS VITALES -->
-  <h4 class="section-title">Signos Vitales y Alergias</h4>
-  <table class="tbl-signos">
-      <tr><th>T.A.</th><th>F.C.</th><th>Temp.</th><th>Peso</th></tr>
+{# === SECCIÓN MEDICAMENTOS =============================== #}
+<section class="section">
+  <h5 class="section-title text-primary text-center mb-2">
+    <i class="bi bi-capsule me-1"></i>Medicamentos
+  </h5>
+  <table class="table table-sm border">
+    <thead class="table-light">
       <tr>
-        <td>{{ receta.consulta.signos_vitales.tension_arterial|default:"—" }}</td>
-        <td>{{ receta.consulta.signos_vitales.frecuencia_cardiaca|default:"—" }}</td>
-        <td>{{ receta.consulta.signos_vitales.temperatura|default:"—" }}</td>
-        <td>{{ receta.consulta.signos_vitales.peso|default:"—" }}</td>
+        <th>#</th><th>Nombre</th><th>Principio Activo</th><th>Dosis</th>
+        <th>Frecuencia</th><th>Vía</th><th>Duración</th><th>Cant.</th><th>Indicaciones Específicas</th>
       </tr>
-      <tr><th>Talla</th><th>Circ. Abd.</th><th>IMC</th><th>&nbsp;</th></tr>
-      <tr>
-        <td>{{ receta.consulta.signos_vitales.talla|default:"—" }}</td>
-        <td>{{ receta.consulta.signos_vitales.circunferencia_abdominal|default:"—" }}</td>
-        <td>{{ receta.consulta.signos_vitales.imc|default:"—" }}</td>
-        <td>{{ ""|default:"—" }}</td>
-      </tr>
+    </thead>
+    <tbody>
+      {% for med in receta.medicamentos.all %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ med.nombre }}</td>
+          <td>{{ med.principio_activo|default:'—' }}</td>
+          <td>{{ med.dosis }}</td>
+          <td>{{ med.frecuencia }}</td>
+          <td>{{ med.via_administracion|default:'—' }}</td>
+          <td>{{ med.duracion }}</td>
+          <td>{{ med.cantidad|default:'—' }}</td>
+          <td>{{ med.indicaciones_especificas|default:'—' }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="9" class="text-center">Sin medicamentos registrados.</td></tr>
+      {% endfor %}
+    </tbody>
   </table>
+</section>
 
-  <p class="aler">
-     <strong>Alergias:</strong>
-     {{ receta.consulta.signos_vitales.alergias|default:"NEGATIVO" }}
-  </p>
-
-  <!-- MEDICAMENTOS -->
-  <h4 class="section-title">Medicamentos</h4>
-  <ol class="lista-meds">
-     {% for m in receta.medicamentos.all %}
-       <li>
-         <span class="med-nombre">{{ m.nombre|title }}</span> – 
-         Dosis: {{ m.dosis }}, Frecuencia: {{ m.frecuencia }},
-         Duración: {{ m.duracion }}, Indicaciones: {{ m.indicaciones|default:"N/A" }}
-       </li>
-     {% empty %}
-       <li>No hay medicamentos.</li>
-     {% endfor %}
-  </ol>
-
-  <!-- OBSERVACIONES -->
-  <h4 class="section-title">Observaciones</h4>
-  <div class="obs-box">{{ receta.notas|default:"" }}</div>
-
-
-<br>
- <br>
- <br>
-  <br>
- <br>
- <br>
-
-
-  <!-- FIRMA -->
-  <footer class="pie">
-      DR. {{ receta.consulta.medico.get_full_name|default:"—" }}<br>
-      CÉDULA PROFESIONAL: {{ receta.consulta.medico.cedula_profesional|default:"—" }} –
-      INSTITUCIÓN: {{ receta.consulta.medico.institucion_cedula|default:"—" }}<br>
-      DIRECCIÓN: {{ receta.consulta.medico.consultorio.ubicacion|default:"—" }}
-  </footer>
 </div>

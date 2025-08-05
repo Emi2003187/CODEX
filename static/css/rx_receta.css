@@ -1,53 +1,34 @@
-@page { size:A5 portrait; margin:10mm; }
-body  { margin:0; }
-
-.receta{
-
-    width:126mm; height:178mm;
-
-    font:11pt/1.35 "Helvetica","Arial",sans-serif;
-    display:flex; flex-direction:column;
-    page-break-inside:avoid;
+/* ======= TITULOS DE SECCIÓN ============================= */
+.section-title{
+  position:relative;
+  display:inline-block;
+  padding-bottom:.25rem;
+}
+.section-title::after{
+  content:'';
+  position:absolute;
+  left:0;right:0;bottom:0;
+  height:2px;
+  background:#0d6efd;
 }
 
-.hdr            { text-align:center; margin-bottom:4mm; }
-.logo           { max-height:18mm; margin:0 auto 2mm; display:block; }
-.sub            { font-size:10pt; display:block; margin-bottom:1mm; }
-.grid-2         { display:grid; grid-template-columns:1fr 1fr; gap:1mm; margin-bottom:4mm; }
-.right          { text-align:right; }
+/* ======= HEADER LOGO =================================== */
+.logo{max-height:60px;}
 
-.section-title  { font-size:11pt; margin:2.5mm 0 1.2mm; text-align:center; text-decoration:underline; }
+/* ======= CONTENEDORES TIPO TEXTAREA ===================== */
+.min-h-80{min-height:80px;}
 
-.tbl-signos     { width:100%; border-collapse:collapse; font-size:10pt; margin-bottom:1.5mm; }
-.tbl-signos th,
-.tbl-signos td  { border:1px solid #000; padding:1mm 2mm; text-align:center; }
+/* ======= TABLA COMPACTA ================================= */
+.table-sm td,.table-sm th{padding:.35rem .45rem;font-size:.75rem;}
+.table td,.table th{vertical-align:top;}
 
-.aler           { margin:1mm 0 3mm; }
-
-.lista-meds     { font-size:10pt; margin:0 0 3mm 0; padding-left:4mm; }
-.lista-meds li  { margin-bottom:2mm; text-align:justify; }
-
-/* Observaciones */
-.obs-box{
-    min-height:40mm;
-    border:0.4pt solid #666; padding:2mm; margin-bottom:3mm;
-    white-space:pre-wrap;
-    break-inside:avoid; page-break-inside:avoid;
-}
-
-/* Recuadro adicional con líneas */
-
-.extra-box{ height:25mm; margin-bottom:10mm; }
-
-.extra-box .dotted{
-    border-bottom:0.25pt dotted #999; height:6mm; margin-bottom:2mm;
-}
-
-/* Firma al pie */
-.pie{ margin-top:auto; text-align:center; font-size:9pt;
-      border-top:0.4pt dotted #666; padding-top:2mm; }
-
-/* Garantizar impresión idéntica */
+/* ======= PRINT LAYOUT =================================== */
+@page{size:A5 portrait;margin:12mm;}
 @media print{
-    .receta{ page-break-after:avoid; }
+  html,body{height:auto;overflow:visible;}
+  .receta,
+  .receta section,
+  .receta table,
+  .receta tr{page-break-inside:avoid;}
+  .receta{transform-origin:top left;scale:0.95;} /* Ajusta ^ si fuera necesario */
 }
