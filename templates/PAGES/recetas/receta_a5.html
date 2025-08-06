@@ -43,9 +43,6 @@
                 <div class="data-item">
                     <b>Fecha:</b> {{ receta.fecha_emision|date:"d/m/Y" }}
                 </div>
-                <div class="data-item right-align">
-                    <b>Válido hasta:</b> {{ receta.fecha_validez|default_if_none:receta.fecha_emision|date:"d/m/Y" }}
-                </div>
             </div>
         </section>
 
@@ -98,7 +95,7 @@
                 </div>
                 <div class="col-3">
                     <p class="mb-0 fw-semibold">Válido Hasta</p>
-                    <p class="box">{{ receta.valido_hasta|date:'d/m/Y'|default:'—' }}</p>
+                    <p class="box">{{ receta.fecha_validez|default_if_none:receta.fecha_emision|date:'d/m/Y'|default:'—' }}</p>
                 </div>
                 <div class="col-12">
                     <p class="mb-0 fw-semibold">Notas Adicionales</p>

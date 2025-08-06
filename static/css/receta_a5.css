@@ -17,6 +17,7 @@ body {
   font-size: 10pt; /* Base font size for most text */
   line-height: 1.35;
   box-sizing: border-box;
+  padding: 0 8px; /* Add horizontal padding so content doesn't touch edges */
 }
 
 /* Header */
@@ -199,9 +200,15 @@ body {
 /* Print specific adjustments */
 @media print{
   html,body{height:auto;overflow:visible;}
+  a{color:#000;text-decoration:none;}
+  .section-title{color:#000;}
+  .section-title a{display:none;}
+  .section-title::after{background:#000;}
+  .section{margin-top:4mm;margin-bottom:4mm;}
   .receta,
   .receta section,
   .receta table,
   .receta tr{page-break-inside:avoid;}
-  .receta{transform-origin:top left;scale:0.95;}
+  .receta tbody{display:table-row-group;}
+  .receta{transform-origin:top left;scale:0.93;}
 }
