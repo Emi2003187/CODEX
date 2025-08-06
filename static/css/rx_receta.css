@@ -16,7 +16,8 @@
 .logo{max-height:60px;}
 
 /* ======= CONTENEDORES TIPO TEXTAREA ===================== */
-.min-h-80{min-height:80px;}
+.label{margin-bottom:0;font-weight:600;}
+.box{border:1px solid #dee2e6;border-radius:.25rem;padding:.5rem;min-height:80px;}
 
 /* ======= TABLA COMPACTA ================================= */
 .table-sm td,.table-sm th{padding:.35rem .45rem;font-size:.75rem;}

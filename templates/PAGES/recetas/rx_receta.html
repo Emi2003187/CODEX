@@ -6,60 +6,51 @@
      data-paciente="{{ receta.consulta.paciente|slugify }}"
      data-fecha="{{ receta.fecha_emision|date:'Y-m-d' }}">
 
+{# --- 0 · CABECERA NUEVA ------------------------------------ #}
 <header class="hdr text-center mb-3">
-  <img src="{% static 'img/consultorio_venados_logo.png' %}"
-       alt="Logo Consultorio Venados"
-       class="logo mb-1">
-  <h3 class="m-0 fw-bold">Consultorio Venados</h3>
-  <span class="text-muted small">Universidad Autónoma de Chiapas</span>
+  <img src="{% static 'img/consultorio_venados_logo.png' %}" class="logo mb-1"
+       alt="Logo Consultorio Venados">
+  <h2 class="m-0 fw-bold">CONSULTORIO VENADOS</h2>
+  <small class="text-muted d-block">Universidad Autónoma de Chiapas</small>
 </header>
 
-{# === SECCIÓN MOTIVO Y DIAGNÓSTICO ======================= #}
+{# --- 1 · MOTIVO Y DIAGNÓSTICO ------------------------------ #}
 <section class="section mb-3">
-  <h5 class="section-title text-primary text-center mb-2">
+  <h4 class="section-title text-primary text-center mb-2">
     <i class="bi bi-clipboard me-1"></i>Motivo y Diagnóstico
-  </h5>
+  </h4>
   <div class="row g-2">
-    {% for label, value in (
-      ('Motivo de Consulta', receta.consulta.motivo_consulta),
-      ('Diagnóstico', receta.consulta.diagnostico),
-      ('Tratamiento', receta.consulta.tratamiento),
-      ('Observaciones', receta.consulta.observaciones)
-    ) %}
-      <div class="col-6">
-        <p class="mb-0 fw-semibold">{{ label }}</p>
-        <p class="border rounded p-2 min-h-80">{{ value|default:'—' }}</p>
-      </div>
-    {% endfor %}
+    <div class="col-6"><p class="label">Motivo de Consulta</p>
+        <p class="box">{{ receta.consulta.motivo_consulta|default:"—" }}</p></div>
+    <div class="col-6"><p class="label">Diagnóstico</p>
+        <p class="box">{{ receta.consulta.diagnostico|default:"—" }}</p></div>
+    <div class="col-6"><p class="label">Tratamiento</p>
+        <p class="box">{{ receta.consulta.tratamiento|default:"—" }}</p></div>
+    <div class="col-6"><p class="label">Observaciones</p>
+        <p class="box">{{ receta.consulta.observaciones|default:"—" }}</p></div>
   </div>
 </section>
 
-{# === SECCIÓN RECETA MÉDICA ============================== #}
+{# --- 2 · RECETA MÉDICA ------------------------------------- #}
 <section class="section mb-3">
-  <h5 class="section-title text-primary text-center mb-2">
+  <h4 class="section-title text-primary text-center mb-2">
     <i class="bi bi-file-medical me-1"></i>Receta Médica
-  </h5>
+  </h4>
   <div class="row g-2">
-    <div class="col-9">
-      <p class="mb-0 fw-semibold">Indicaciones Generales</p>
-      <p class="border rounded p-2 min-h-80">{{ receta.indicaciones_generales|default:'—' }}</p>
-    </div>
-    <div class="col-3">
-      <p class="mb-0 fw-semibold">Válido Hasta</p>
-      <p class="border rounded p-2">{{ receta.valido_hasta|date:'d/m/Y'|default:'—' }}</p>
-    </div>
-    <div class="col-12">
-      <p class="mb-0 fw-semibold">Notas Adicionales</p>
-      <p class="border rounded p-2 min-h-80">{{ receta.notas|default:'—' }}</p>
-    </div>
+    <div class="col-9"><p class="label">Indicaciones Generales</p>
+        <p class="box">{{ receta.indicaciones_generales|default:"—" }}</p></div>
+    <div class="col-3"><p class="label">Válido Hasta</p>
+        <p class="box">{{ receta.valido_hasta|date:"d/m/Y"|default:"—" }}</p></div>
+    <div class="col-12"><p class="label">Notas Adicionales</p>
+        <p class="box">{{ receta.notas|default:"—" }}</p></div>
   </div>
 </section>
 
-{# === SECCIÓN MEDICAMENTOS =============================== #}
+{# --- 3 · MEDICAMENTOS -------------------------------------- #}
 <section class="section">
-  <h5 class="section-title text-primary text-center mb-2">
+  <h4 class="section-title text-primary text-center mb-2">
     <i class="bi bi-capsule me-1"></i>Medicamentos
-  </h5>
+  </h4>
   <table class="table table-sm border">
     <thead class="table-light">
       <tr>
@@ -72,13 +63,13 @@
         <tr>
           <td>{{ forloop.counter }}</td>
           <td>{{ med.nombre }}</td>
-          <td>{{ med.principio_activo|default:'—' }}</td>
+          <td>{{ med.principio_activo|default:"—" }}</td>
           <td>{{ med.dosis }}</td>
           <td>{{ med.frecuencia }}</td>
-          <td>{{ med.via_administracion|default:'—' }}</td>
+          <td>{{ med.via_administracion|default:"—" }}</td>
           <td>{{ med.duracion }}</td>
-          <td>{{ med.cantidad|default:'—' }}</td>
-          <td>{{ med.indicaciones_especificas|default:'—' }}</td>
+          <td>{{ med.cantidad|default:"—" }}</td>
+          <td>{{ med.indicaciones_especificas|default:"—" }}</td>
         </tr>
       {% empty %}
         <tr><td colspan="9" class="text-center">Sin medicamentos registrados.</td></tr>
