@@ -62,10 +62,10 @@ def eliminar_consulta(request, pk):
     """Eliminar una consulta si el usuario tiene permisos."""
     ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
 
-    if request.user.rol == "asistente":
+    if request.user.rol != "admin":
         if ajax:
             return JsonResponse(
-                {"error": "No tienes permiso para cancelar consultas."},
+                {"error": "No tienes permiso para eliminar consultas."},
                 status=403,
             )
         messages.error(request, "No puedes eliminar consultas.")
