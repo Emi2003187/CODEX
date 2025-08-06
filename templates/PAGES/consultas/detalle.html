@@ -50,7 +50,7 @@
       </form>
       {% endif %}
 
-      {% if consulta.estado != 'en_progreso' %}
+      {% if usuario.rol == 'admin' and consulta.estado != 'en_progreso' %}
       <form method="post" action="{% url 'consulta_eliminar' consulta.pk %}" class="d-inline js-consulta-eliminar" data-confirm="¿Estás seguro de eliminar?">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ volver_a }}">

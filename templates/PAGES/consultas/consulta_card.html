@@ -192,7 +192,7 @@
                 </li>
               {% endif %}
 
-              {% if consulta.estado != "en_progreso" %}
+              {% if usuario.rol == 'admin' and consulta.estado != "en_progreso" %}
                 <li>
                   <form method="post" action="{% url 'consulta_eliminar' consulta.pk %}" class="js-consulta-eliminar" data-confirm="¿Estás seguro de eliminar?">
                     {% csrf_token %}
