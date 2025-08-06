@@ -82,14 +82,6 @@ body {
   justify-content: flex-end; /* Align content to the right within its flex item */
 }
 
-.rx-symbol {
-  font-family: serif;
-  font-style: italic;
-  font-size: 14pt;
-  margin-right: 2px;
-  margin-left: 2px;
-}
-
 /* Section Titles (Signos Vitales, Medicamentos) */
 .section-title {
   font-size: 10pt;

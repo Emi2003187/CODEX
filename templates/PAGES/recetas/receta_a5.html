@@ -18,10 +18,10 @@
         <!-- 0 · ENCABEZADO -------------------------------------------------->
         <header class="hdr">
             {% if show_logo %}
-                <img src="{% static 'img/logo-medico.png' %}" class="logo" alt="Logo Médico">
+                <img src="{% static 'img/consultorio_venados_logo.png' %}" class="logo" alt="Logo Consultorio Venados">
             {% endif %}
-            <span class="sub">RECETA INDIVIDUAL</span>
-            <h2>CONSULTORIO MÉDICO</h2>
+            <h2>Consultorio Venados</h2>
+            <span class="sub">Universidad Autónoma de Chiapas</span>
         </header>
 
         <!-- 1 · DATOS PACIENTE / CONSULTORIO -------------------------------->
@@ -29,7 +29,6 @@
             <div class="data-row">
                 <div class="data-item">
                     <b>Paciente:</b>
-                    <span class="rx-symbol">Rx</span>
                     <span>{{ receta.consulta.paciente }}</span>
                 </div>
                 <div class="data-item right-align">
