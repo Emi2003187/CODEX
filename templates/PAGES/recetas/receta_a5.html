@@ -16,12 +16,12 @@
          data-fecha="{{ receta.fecha_emision|date:'Y-m-d' }}">
 
         <!-- 0 · ENCABEZADO -------------------------------------------------->
-        <header class="hdr">
-            {% if show_logo %}
-                <img src="{% static 'img/consultorio_venados_logo.png' %}" class="logo" alt="Logo Consultorio Venados">
-            {% endif %}
-            <h2>Consultorio Venados</h2>
-            <span class="sub">Universidad Autónoma de Chiapas</span>
+        <header class="hdr text-center mb-3">
+            <img src="{% static 'img/consultorio_venados_logo.png' %}"
+                 alt="Logo Consultorio Venados"
+                 class="logo mb-1">
+            <h3 class="m-0 fw-bold">Consultorio Venados</h3>
+            <span class="text-muted small">Universidad Autónoma de Chiapas</span>
         </header>
 
         <!-- 1 · DATOS PACIENTE / CONSULTORIO -------------------------------->
@@ -61,6 +61,79 @@
             </div>
         </section>
 
+        {# === SECCIÓN MOTIVO Y DIAGNÓSTICO ======================= #}
+        <section class="section mb-3">
+            <h5 class="section-title text-primary text-center mb-2">
+                <i class="bi bi-clipboard me-1"></i>Motivo y Diagnóstico
+            </h5>
+            <div class="row g-2">
+                {% for label, value in (
+                  ('Motivo de Consulta', receta.consulta.motivo_consulta),
+                  ('Diagnóstico', receta.consulta.diagnostico),
+                  ('Tratamiento', receta.consulta.tratamiento),
+                  ('Observaciones', receta.consulta.observaciones)
+                ) %}
+                  <div class="col-6">
+                    <p class="mb-0 fw-semibold">{{ label }}</p>
+                    <p class="box">{{ value|default:'—' }}</p>
+                  </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# === SECCIÓN RECETA MÉDICA ============================== #}
+        <section class="section mb-3">
+            <h5 class="section-title text-primary text-center mb-2">
+                <i class="bi bi-file-medical me-1"></i>Receta Médica
+            </h5>
+            <div class="row g-2">
+                <div class="col-9">
+                    <p class="mb-0 fw-semibold">Indicaciones Generales</p>
+                    <p class="box">{{ receta.indicaciones_generales|default:'—' }}</p>
+                </div>
+                <div class="col-3">
+                    <p class="mb-0 fw-semibold">Válido Hasta</p>
+                    <p class="box">{{ receta.valido_hasta|date:'d/m/Y'|default:'—' }}</p>
+                </div>
+                <div class="col-12">
+                    <p class="mb-0 fw-semibold">Notas Adicionales</p>
+                    <p class="box">{{ receta.notas|default:'—' }}</p>
+                </div>
+            </div>
+        </section>
+
+        {# === SECCIÓN MEDICAMENTOS =============================== #}
+        <section class="section">
+            <h5 class="section-title text-primary text-center mb-2">
+                <i class="bi bi-capsule me-1"></i>Medicamentos
+            </h5>
+            <table class="table table-sm border">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th><th>Nombre</th><th>Principio Activo</th><th>Dosis</th>
+                        <th>Frecuencia</th><th>Vía</th><th>Duración</th><th>Cant.</th><th>Indicaciones Específicas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in receta.medicamentos.all %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ med.nombre }}</td>
+                            <td>{{ med.principio_activo|default:'—' }}</td>
+                            <td>{{ med.dosis }}</td>
+                            <td>{{ med.frecuencia }}</td>
+                            <td>{{ med.via_administracion|default:'—' }}</td>
+                            <td>{{ med.duracion }}</td>
+                            <td>{{ med.cantidad|default:'—' }}</td>
+                            <td>{{ med.indicaciones_especificas|default:'—' }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="9" class="text-center">Sin medicamentos registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
         <!-- 4 · SIGNOS VITALES --------------------------------------------->
         <section class="signos">
             <h4 class="section-title">Signos Vitales y Alergias</h4>
@@ -95,23 +168,6 @@
                 </tbody>
             </table>
             <p class="alerg"><b>Alergias:</b> {{ sv.alergias|default:"NEGATIVO" }}</p>
-        </section>
-
-        <!-- 5 · MEDICAMENTOS ------------------------------------------------>
-        <section class="meds">
-            <h4 class="section-title">Medicamentos</h4>
-            <ol class="lista-meds">
-                {% for m in receta.medicamentos.all %}
-                    <li>
-                        <b>{{ m.nombre|title }}</b> – Dosis: {{ m.dosis }},
-                        Frecuencia: {{ m.frecuencia }},
-                        Duración: {{ m.duracion }}{% if m.indicaciones and m.indicaciones != "N/A" %},
-                        Indicaciones: {{ m.indicaciones }}{% endif %}
-                    </li>
-                {% empty %}
-                    <li>No hay medicamentos.</li>
-                {% endfor %}
-            </ol>
         </section>
 
         <!-- 6 · OBSERVACIONES, FIRMA Y PIE (Bloque indivisible) ---------------->

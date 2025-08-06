@@ -1,6 +1,6 @@
 @page {
   size: A5 portrait;
-  margin: 8mm;
+  margin: 12mm;
 }
 
 body {
@@ -10,8 +10,8 @@ body {
 }
 
 .receta {
-  width: 132mm; /* A5 width (148mm) - 8mm left - 8mm right = 132mm */
-  height: 194mm; /* A5 height (210mm) - 8mm top - 8mm bottom = 194mm */
+  width: 124mm; /* A5 width (148mm) - 12mm left - 12mm right = 124mm */
+  height: 186mm; /* A5 height (210mm) - 12mm top - 12mm bottom = 186mm */
   display: flex;
   flex-direction: column;
   font-size: 10pt; /* Base font size for most text */
@@ -32,14 +32,7 @@ body {
   width: auto;
 }
 
-.sub {
-  font-size: 9pt;
-  display: block;
-  margin-bottom: 0.5mm;
-  letter-spacing: normal;
-}
-
-.hdr h2 {
+.hdr h3 {
   font-size: 18pt;
   font-weight: bold;
   margin: 0;
@@ -82,13 +75,29 @@ body {
   justify-content: flex-end; /* Align content to the right within its flex item */
 }
 
-/* Section Titles (Signos Vitales, Medicamentos) */
-.section-title {
-  font-size: 10pt;
-  font-weight: bold;
-  text-decoration: underline;
-  margin: 0 0 2mm; /* Space below title */
-  padding: 0;
+/* Section Titles */
+.section-title{
+  position:relative;
+  display:inline-block;
+  font-size:10pt;
+  font-weight:bold;
+  margin:0 0 2mm;
+  padding-bottom:.25rem;
+}
+.section-title::after{
+  content:'';
+  position:absolute;
+  left:0;right:0;bottom:0;
+  height:2px;
+  background:#0d6efd;
+}
+
+/* Box containers (textarea-like) */
+.box{
+  border:0.5pt solid #000;
+  border-radius:4px;
+  padding:2mm;
+  min-height:80px;
 }
 
 /* Signos Vitales Table */
@@ -127,20 +136,15 @@ body {
   text-align: left;
 }
 
-/* Medicamentos List */
-.meds {
-  margin-bottom: 5mm;
+/* Compact table */
+.table-sm td,
+.table-sm th{
+  padding:.35rem .45rem;
+  font-size:.75rem;
 }
-
-.lista-meds {
-  margin-left: 4mm;
-  font-size: 9.5pt;
-  padding: 0;
-}
-
-.lista-meds li {
-  margin-bottom: 1.5mm;
-  text-align: justify;
+.table td,
+.table th{
+  vertical-align:top;
 }
 
 /* Observations, Signature, and Footer Block */
@@ -193,8 +197,11 @@ body {
 }
 
 /* Print specific adjustments */
-@media print {
-  .receta {
-    page-break-after: avoid;
-  }
+@media print{
+  html,body{height:auto;overflow:visible;}
+  .receta,
+  .receta section,
+  .receta table,
+  .receta tr{page-break-inside:avoid;}
+  .receta{transform-origin:top left;scale:0.95;}
 }
