@@ -67,17 +67,22 @@
                 <i class="bi bi-clipboard me-1"></i>Motivo y Diagnóstico
             </h5>
             <div class="row g-2">
-                {% for label, value in (
-                  ('Motivo de Consulta', receta.consulta.motivo_consulta),
-                  ('Diagnóstico', receta.consulta.diagnostico),
-                  ('Tratamiento', receta.consulta.tratamiento),
-                  ('Observaciones', receta.consulta.observaciones)
-                ) %}
-                  <div class="col-6">
-                    <p class="mb-0 fw-semibold">{{ label }}</p>
-                    <p class="box">{{ value|default:'—' }}</p>
-                  </div>
-                {% endfor %}
+                <div class="col-6">
+                    <p class="mb-0 fw-semibold">Motivo de Consulta</p>
+                    <p class="box">{{ receta.consulta.motivo_consulta|default:'—' }}</p>
+                </div>
+                <div class="col-6">
+                    <p class="mb-0 fw-semibold">Diagnóstico</p>
+                    <p class="box">{{ receta.consulta.diagnostico|default:'—' }}</p>
+                </div>
+                <div class="col-6">
+                    <p class="mb-0 fw-semibold">Tratamiento</p>
+                    <p class="box">{{ receta.consulta.tratamiento|default:'—' }}</p>
+                </div>
+                <div class="col-6">
+                    <p class="mb-0 fw-semibold">Observaciones</p>
+                    <p class="box">{{ receta.consulta.observaciones|default:'—' }}</p>
+                </div>
             </div>
         </section>
 
