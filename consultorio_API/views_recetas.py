@@ -1,5 +1,7 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import FileResponse, HttpResponseForbidden
+from django.shortcuts import redirect
 from django.views.generic import DetailView
 from io import BytesIO
 from django.utils import timezone
@@ -15,6 +17,13 @@ class _RecetaPDFBase(LoginRequiredMixin, DetailView):
 
     def get(self, request, *args, **kwargs):
         receta = self.get_object()
+        if receta.consulta.estado != "finalizada":
+            messages.error(
+                request,
+                "La receta solo puede emitirse cuando la consulta está finalizada."
+            )
+            return redirect("consulta_detalle", pk=receta.consulta.pk)
+
         buf = BytesIO()
         build_receta_pdf(buf, receta)
         buf.seek(0)
@@ -54,6 +63,13 @@ def receta_pdf_reportlab(request, pk: int):
         or request.user == getattr(receta.consulta, "medico", None)
     ):
         return HttpResponseForbidden()
+
+    if receta.consulta.estado != "finalizada":
+        messages.error(
+            request,
+            "La receta solo puede emitirse cuando la consulta está finalizada."
+        )
+        return redirect("consulta_detalle", pk=receta.consulta.pk)
 
     buf = BytesIO()
     build_receta_pdf(buf, receta)

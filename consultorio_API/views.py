@@ -3837,8 +3837,11 @@ def receta_pdf_view(request, receta_id):
     )
     consulta = receta.consulta
 
-    if not receta.medicamentos.exists():
-        messages.error(request, "La receta aún no cuenta con medicamentos.")
+    if consulta.estado != "finalizada":
+        messages.error(
+            request,
+            "La receta solo puede emitirse cuando la consulta está finalizada."
+        )
         return redirect("consulta_detalle", pk=consulta.pk)
 
     if not request.user.has_perm("consultorio.view_receta"):
