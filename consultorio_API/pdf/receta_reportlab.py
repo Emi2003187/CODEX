@@ -251,8 +251,11 @@ def build_receta_pdf(buffer, receta):
         story += [meds_tbl, Spacer(1, 2*mm)]
 
     # QR + folio/fecha en una fila
-    folio = f"Folio: {getattr(getattr(consulta, 'cita', None), 'numero_cita', None) or f'R-{receta.pk}'}"
-    fecha_emision = f"Emitida: {timezone.localtime(timezone.now()).strftime('%d/%m/%Y %H:%M') if timezone.is_aware(timezone.now()) else timezone.now().strftime('%d/%m/%Y %H:%M')}"
+    folio = f"Folio: {receta.pk}"
+    emision = receta.fecha_emision or timezone.now()
+    if timezone.is_aware(emision):
+        emision = timezone.localtime(emision)
+    fecha_emision = f"Emitida: {emision.strftime('%d/%m/%Y %H:%M')}"
     qr = _qr_flowable(f"{folio} | {fecha_emision}")
     meta_tbl = Table(
         [[qr, Paragraph(f"{folio}<br/>{fecha_emision}", styles['XS'])]],
