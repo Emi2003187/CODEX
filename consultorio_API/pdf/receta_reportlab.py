@@ -24,7 +24,7 @@ def _register_fonts():
 def _style_sheet():
     styles = getSampleStyleSheet()
     # Si registramos DejaVuSans, úsala.
-    if "DejaVuSans" in [f.name for f in pdfmetrics._fonts.values()]:
+    if "DejaVuSans" in pdfmetrics.getRegisteredFontNames():
         base = "DejaVuSans"
     else:
         base = styles["Normal"].fontName
