@@ -12,6 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from xhtml2pdf import pisa
+from io import BytesIO
 from datetime import datetime, timedelta, time, date
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
@@ -37,6 +38,7 @@ from .models import (
 from .forms import *
 from .utils import redirect_next
 from django.utils.http import url_has_allowed_host_and_scheme
+from .pdf.receta_reportlab import build_receta_pdf
 
 
 def doctor_tiene_consulta_en_progreso(medico):
@@ -3825,37 +3827,29 @@ class PacientePDFView(View):
     
 # Actualización para la vista de PDF de receta
 def receta_pdf_view(request, receta_id):
-    """Vista mejorada para generar PDF de receta médica"""
-    receta = get_object_or_404(Receta, pk=receta_id)
+    """Genera el PDF de la receta médica usando ReportLab."""
+    receta = get_object_or_404(
+        Receta.objects.select_related(
+            "consulta", "consulta__paciente", "consulta__medico"
+        ).prefetch_related("medicamentos"),
+        pk=receta_id,
+    )
     consulta = receta.consulta
 
     if not receta.medicamentos.exists():
         messages.error(request, "La receta aún no cuenta con medicamentos.")
         return redirect("consulta_detalle", pk=consulta.pk)
 
-    # Verificar permisos
-    if request.user.rol not in ['medico', 'admin']:
-        if request.user.rol == 'asistente' and consulta.medico and request.user.consultorio != consulta.medico.consultorio:
-            messages.error(request, 'No tienes permisos para ver esta receta.')
-            return redirect_next(request, 'consultas_lista')
+    if not request.user.has_perm("consultorio.view_receta"):
+        return HttpResponseForbidden()
 
-    template_path = "PAGES/pdf/receta_consulta.html"
-    context = {
-        "consulta": consulta,
-        "receta": receta,
-        "fecha_actual": timezone.now(),
-    }
+    buf = BytesIO()
+    build_receta_pdf(buf, receta)
+    buf.seek(0)
 
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="receta_{consulta.paciente.nombre_completo.replace(" ", "_")}_{receta.fecha_emision.strftime("%Y%m%d")}.pdf"'
-
-    template = get_template(template_path)
-    html = template.render(context)
-
-    pisa_status = pisa.CreatePDF(html, dest=response)
-    if pisa_status.err:
-        return HttpResponse("Error al generar el PDF", status=500)
-
+    filename = f"receta_{receta.pk}.pdf"
+    response = HttpResponse(buf.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
 # ═══════════════════════════════════════════════════════════════
 # 🔧 AJAX Y FUNCIONES AUXILIARES
