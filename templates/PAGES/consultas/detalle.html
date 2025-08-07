@@ -34,7 +34,7 @@
           <i class="bi bi-pencil me-1"></i>Editar
         </a>
       {% endif %}
-      {% if receta and receta.medicamentos.exists %}
+      {% if receta and consulta.estado == 'finalizada' %}
         <a class="btn btn-outline-primary"
            data-bs-toggle="modal"
            data-bs-target="#modalReceta"
@@ -230,7 +230,7 @@
               <i class="bi bi-check-circle me-1"></i>
               Receta emitida el {{ receta.fecha_emision|date:"d/m/Y" }}
             </p>
-            {% if receta.medicamentos.exists %}
+            {% if consulta.estado == 'finalizada' %}
               <a class="btn btn-sm btn-outline-primary w-100 mb-3"
                  data-bs-toggle="modal"
                  data-bs-target="#modalReceta"

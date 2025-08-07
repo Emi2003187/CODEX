@@ -21,6 +21,7 @@ from rest_framework.response import Response
 from consultorio_API.notifications import NotificationManager
 from .serializers import UsuarioSerializer
 from django.utils import timezone
+from django.utils.text import slugify
 from collections import OrderedDict, defaultdict
 from django.utils.timezone import localtime
 from django.forms import inlineformset_factory
@@ -3836,8 +3837,11 @@ def receta_pdf_view(request, receta_id):
     )
     consulta = receta.consulta
 
-    if not receta.medicamentos.exists():
-        messages.error(request, "La receta aún no cuenta con medicamentos.")
+    if consulta.estado != "finalizada":
+        messages.error(
+            request,
+            "La receta solo puede emitirse cuando la consulta está finalizada."
+        )
         return redirect("consulta_detalle", pk=consulta.pk)
 
     if not request.user.has_perm("consultorio.view_receta"):
@@ -3847,7 +3851,8 @@ def receta_pdf_view(request, receta_id):
     build_receta_pdf(buf, receta)
     buf.seek(0)
 
-    filename = f"receta_{receta.pk}.pdf"
+    fecha = receta.fecha_emision or timezone.now()
+    filename = f"{receta.pk}_{slugify(consulta.paciente.nombre_completo)}_{fecha.strftime('%Y%m%d')}.pdf"
     response = HttpResponse(buf.getvalue(), content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
