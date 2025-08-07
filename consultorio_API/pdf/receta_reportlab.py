@@ -37,21 +37,18 @@ def _style_sheet():
     styles.add(ParagraphStyle(name="XS", fontName=base, fontSize=8, leading=10, textColor=colors.HexColor("#6c757d")))
     return styles
 
-def _logo_flowable(usuario):
-    # Busca un logo razonable: usuario.consultorio.logo (si existiera), o static/logo.png, o nada
-    candidatos = [
-        getattr(getattr(usuario, "consultorio", None), "logo", None).path
-        if getattr(getattr(usuario, "consultorio", None), "logo", None) else None,
-        os.path.join(settings.BASE_DIR, "static", "img", "logo.png"),
-        os.path.join(settings.BASE_DIR, "static", "logo.png"),
-    ]
-    for path in candidatos:
-        if path and os.path.exists(path):
-            try:
-                img = Image(path, width=28*mm, height=28*mm, hAlign="LEFT")
-                return img
-            except Exception:
-                continue
+def _logo_flowable(usuario=None):
+    """Devuelve un flowable con el logo del consultorio.
+
+    Actualmente se utiliza un logo estático ubicado en ``static/img/logo_receta.jpg``.
+    Si no se encuentra el archivo, simplemente no se muestra el logo.
+    """
+    path = os.path.join(settings.BASE_DIR, "static", "img", "logo_receta.jpg")
+    if os.path.exists(path):
+        try:
+            return Image(path, width=28*mm, height=28*mm, hAlign="LEFT")
+        except Exception:
+            pass
     return None
 
 def _qr_flowable(text):
@@ -100,7 +97,7 @@ def build_receta_pdf(buffer, receta):
     story = []
 
     # Encabezado (logo + info consultorio/médico)
-    logo = _logo_flowable(medico) if medico else None
+    logo = _logo_flowable()
     titulo = []
     titulo.append(Paragraph("<b>Receta Médica</b>", styles["H1"]))
     if consultorio and getattr(consultorio, "nombre", None):
@@ -111,6 +108,8 @@ def build_receta_pdf(buffer, receta):
         titulo.append(Paragraph(nombre_medico, styles["SM"]))
         if getattr(medico, "cedula_profesional", None):
             titulo.append(Paragraph(f"Cédula: {_fmt(medico.cedula_profesional)}", styles["XS"]))
+        if getattr(medico, "institucion_cedula", None):
+            titulo.append(Paragraph(f"Institución: {_fmt(medico.institucion_cedula)}", styles["XS"]))
         if getattr(medico, "telefono", None):
             titulo.append(Paragraph(f"Tel.: {_fmt(medico.telefono)}", styles["XS"]))
 
@@ -133,9 +132,9 @@ def build_receta_pdf(buffer, receta):
     p_info = [
         ["Nombre", _fmt(paciente.nombre_completo)],
         ["Edad", f"{_fmt(paciente.edad)} años"],
-        ["Teléfono", _fmt(paciente.telefono)],
-        ["Email", _fmt(paciente.correo)],
     ]
+    if consultorio and getattr(consultorio, "nombre", None):
+        p_info.append(["Consultorio", _fmt(consultorio.nombre)])
     p_tbl = Table(p_info, colWidths=[35*mm, None], style=TableStyle([
         ("FONTNAME", (0,0), (-1,-1), "Helvetica"),
         ("FONTSIZE", (0,0), (-1,-1), 10),
