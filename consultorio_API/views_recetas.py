@@ -1,5 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import FileResponse, HttpResponseForbidden
 from django.views.generic import DetailView
 from io import BytesIO
 
@@ -17,9 +17,7 @@ class _RecetaPDFBase(LoginRequiredMixin, DetailView):
         build_receta_pdf(buf, receta)
         buf.seek(0)
         filename = f"receta_{receta.pk}.pdf"
-        resp = HttpResponse(buf.getvalue(), content_type="application/pdf")
-        resp["Content-Disposition"] = f'inline; filename="{filename}"'
-        return resp
+        return FileResponse(buf, as_attachment=False, filename=filename, content_type="application/pdf")
 
 
 class RecetaPreviewView(_RecetaPDFBase):
@@ -37,3 +35,18 @@ class RxRecetaView(RecetaPreviewView):
 
 class RecetaA5View(_RecetaPDFBase):
     pass
+
+
+def receta_pdf_reportlab(request, pk: int):
+    receta = Receta.objects.select_related(
+        "consulta", "consulta__paciente", "consulta__medico"
+    ).prefetch_related("medicamentos").get(pk=pk)
+
+    if not request.user.has_perm("consultorio.view_receta"):
+        return HttpResponseForbidden()
+
+    buf = BytesIO()
+    build_receta_pdf(buf, receta)
+    buf.seek(0)
+    filename = f"receta_{receta.pk}.pdf"
+    return FileResponse(buf, as_attachment=False, filename=filename, content_type="application/pdf")
