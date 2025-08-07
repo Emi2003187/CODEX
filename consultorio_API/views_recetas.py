@@ -13,8 +13,6 @@ class _RecetaPDFBase(LoginRequiredMixin, DetailView):
 
     def get(self, request, *args, **kwargs):
         receta = self.get_object()
-        if not request.user.has_perm("consultorio.view_receta"):
-            return HttpResponseForbidden()
         buf = BytesIO()
         build_receta_pdf(buf, receta)
         buf.seek(0)
@@ -27,8 +25,13 @@ class _RecetaPDFBase(LoginRequiredMixin, DetailView):
 class RecetaPreviewView(_RecetaPDFBase):
     """Previsualización/impresión de receta generada con ReportLab."""
 
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.has_perm("consultorio.view_receta"):
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
 
-class RxRecetaView(_RecetaPDFBase):
+
+class RxRecetaView(RecetaPreviewView):
     pass
 
 
