@@ -2,7 +2,16 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image, PageBreak
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Table,
+    TableStyle,
+    Spacer,
+    Image,
+    PageBreak,
+    HRFlowable,
+)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from django.utils import timezone
@@ -96,25 +105,23 @@ def build_receta_pdf(buffer, receta):
     )
     story = []
 
-    # Encabezado (logo + info consultorio/médico)
+    # Encabezado con logo y datos del médico
     logo = _logo_flowable()
-    titulo = []
-    titulo.append(Paragraph("<b>Receta Médica</b>", styles["H1"]))
-    if consultorio and getattr(consultorio, "nombre", None):
-        titulo.append(Paragraph(_fmt(consultorio.nombre), styles["TXT"]))
-    # Datos del médico
+    info = []
     if medico:
-        nombre_medico = f"{_fmt(medico.get_full_name())} ({_fmt(medico.rol)})"
-        titulo.append(Paragraph(nombre_medico, styles["SM"]))
+        info.append(Paragraph(f"Dr. {_fmt(medico.get_full_name())}", styles["H1"]))
+        if consultorio and getattr(consultorio, "nombre", None):
+            info.append(Paragraph(_fmt(consultorio.nombre), styles["TXT"]))
         if getattr(medico, "cedula_profesional", None):
-            titulo.append(Paragraph(f"Cédula: {_fmt(medico.cedula_profesional)}", styles["XS"]))
+            info.append(Paragraph(f"Cédula: {_fmt(medico.cedula_profesional)}", styles["XS"]))
         if getattr(medico, "institucion_cedula", None):
-            titulo.append(Paragraph(f"Institución: {_fmt(medico.institucion_cedula)}", styles["XS"]))
-        if getattr(medico, "telefono", None):
-            titulo.append(Paragraph(f"Tel.: {_fmt(medico.telefono)}", styles["XS"]))
+            info.append(Paragraph(f"Institución: {_fmt(medico.institucion_cedula)}", styles["XS"]))
+        telefono = getattr(medico, "telefono", None)
+        if telefono and any(ch.isdigit() for ch in str(telefono)):
+            info.append(Paragraph(f"Tel.: {_fmt(telefono)}", styles["XS"]))
 
     header_tbl = Table(
-        [[logo, titulo]],
+        [[logo, info]],
         colWidths=[32*mm, None],
         hAlign="LEFT",
         style=TableStyle([
@@ -125,7 +132,14 @@ def build_receta_pdf(buffer, receta):
             ("TOPPADDING", (0,0), (-1,-1), 0),
         ])
     )
-    story += [header_tbl, Spacer(1, 3*mm)]
+    story += [
+        header_tbl,
+        Spacer(1, 2*mm),
+        HRFlowable(width="100%", thickness=0.7, color=colors.HexColor("#0d6efd")),
+        Spacer(1, 2*mm),
+        Paragraph("Receta Médica", styles["H1"]),
+        Spacer(1, 3*mm),
+    ]
 
     # Información del Paciente
     story += [Paragraph("Información del Paciente", styles["H2"])]
