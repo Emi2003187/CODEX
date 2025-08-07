@@ -15,7 +15,7 @@ from .views_consultas import (
 from django.contrib.auth.views import LogoutView
 from .views import CitaCreateView, Receta
 from consultorio_API import views, viewscitas
-from consultorio_API.views_recetas import RecetaPreviewView, RxRecetaView, RecetaA5View, receta_pdf_reportlab
+from consultorio_API.views_recetas import RecetaPreviewView, RxRecetaView, RecetaA5View
 
 urlpatterns = [
     path('', views.home_redirect, name='home'),
@@ -114,7 +114,6 @@ urlpatterns = [
     path('recetas/<int:pk>/preview/', RecetaPreviewView.as_view(), name='receta_preview'),
     path('recetas/<int:pk>/rx/', RxRecetaView.as_view(), name='receta_rx'),
     path('recetas/<int:pk>/a5/', RecetaA5View.as_view(), name='receta_a5'),
-    path('recetas/<int:pk>/pdf-rl/', receta_pdf_reportlab, name='receta_pdf_reportlab'),
     path('citas/exportar-csv/', viewscitas.exportar_citas_csv, name='exportar_citas_csv'),  # CAMBIAR
     
     

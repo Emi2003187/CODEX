@@ -92,7 +92,10 @@ def build_receta_pdf(buffer, receta):
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        leftMargin=18*mm, rightMargin=18*mm, topMargin=16*mm, bottomMargin=16*mm
+        leftMargin=10*mm,
+        rightMargin=10*mm,
+        topMargin=10*mm,
+        bottomMargin=10*mm,
     )
     story = []
 
@@ -123,7 +126,7 @@ def build_receta_pdf(buffer, receta):
             ("TOPPADDING", (0,0), (-1,-1), 0),
         ])
     )
-    story += [header_tbl, Spacer(1, 4*mm)]
+    story += [header_tbl, Spacer(1, 3*mm)]
 
     # Información del Paciente
     story += [Paragraph("Información del Paciente", styles["H2"])]
@@ -140,7 +143,7 @@ def build_receta_pdf(buffer, receta):
         ("ALIGN", (0,0), (0,-1), "RIGHT"),
         ("BOTTOMPADDING", (0,0), (-1,-1), 4),
     ]))
-    story += [p_tbl, Spacer(1, 3*mm)]
+    story += [p_tbl, Spacer(1, 2*mm)]
 
     # Información de la Consulta
     story += [Paragraph("Información de la Consulta", styles["H2"])]
@@ -158,7 +161,7 @@ def build_receta_pdf(buffer, receta):
         ],
         colWidths=[None, None]
     )
-    story += [c_tbl, Spacer(1, 4*mm)]
+    story += [c_tbl, Spacer(1, 3*mm)]
 
     # Signos vitales (si existen)
     signos = getattr(consulta, "signos_vitales", None)
@@ -193,7 +196,7 @@ def build_receta_pdf(buffer, receta):
             Spacer(1, 1*mm),
             Paragraph("<font color='#6c757d'>Síntomas</font>", styles["SM"]),
             Paragraph(_fmt(signos.sintomas), styles["TXT"]),
-            Spacer(1, 3*mm),
+            Spacer(1, 2*mm),
         ]
 
     # Receta
@@ -211,7 +214,7 @@ def build_receta_pdf(buffer, receta):
         ("VALIGN", (0,0), (-1,-1), "TOP"),
         ("BOTTOMPADDING", (0,0), (-1,-1), 4),
     ]))
-    story += [r_tbl, Spacer(1, 3*mm)]
+    story += [r_tbl, Spacer(1, 2*mm)]
 
     # Medicamentos recetados
     meds = list(receta.medicamentos.all()) if hasattr(receta, "medicamentos") else []
@@ -256,10 +259,9 @@ def build_receta_pdf(buffer, receta):
         w, h = A4
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(colors.HexColor("#6c757d"))
-        page = f"Página {doc.page} de "  # total se completa con onLaterPages
-        canvas.drawRightString(w - 18*mm, 12*mm, page)
+        canvas.drawRightString(w - 10*mm, 8*mm, f"Página {canvas.getPageNumber()}")
         canvas.restoreState()
 
     # Render
-    doc.build(story)
+    doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
     return buffer
