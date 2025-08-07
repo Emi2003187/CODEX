@@ -2,20 +2,10 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Table,
-    TableStyle,
-    Spacer,
-    Image,
-    PageBreak,
-    HRFlowable,
-)
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image, PageBreak
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from django.utils import timezone
-from datetime import datetime, time
 from django.conf import settings
 from io import BytesIO
 import os
@@ -47,18 +37,21 @@ def _style_sheet():
     styles.add(ParagraphStyle(name="XS", fontName=base, fontSize=8, leading=10, textColor=colors.HexColor("#6c757d")))
     return styles
 
-def _logo_flowable(usuario=None):
-    """Devuelve un flowable con el logo del consultorio.
-
-    Actualmente se utiliza un logo estático ubicado en ``static/img/logo_receta.jpg``.
-    Si no se encuentra el archivo, simplemente no se muestra el logo.
-    """
-    path = os.path.join(settings.BASE_DIR, "static", "img", "logo_receta.jpg")
-    if os.path.exists(path):
-        try:
-            return Image(path, width=28*mm, height=28*mm, hAlign="LEFT")
-        except Exception:
-            pass
+def _logo_flowable(usuario):
+    # Busca un logo razonable: usuario.consultorio.logo (si existiera), o static/logo.png, o nada
+    candidatos = [
+        getattr(getattr(usuario, "consultorio", None), "logo", None).path
+        if getattr(getattr(usuario, "consultorio", None), "logo", None) else None,
+        os.path.join(settings.BASE_DIR, "static", "img", "logo.png"),
+        os.path.join(settings.BASE_DIR, "static", "logo.png"),
+    ]
+    for path in candidatos:
+        if path and os.path.exists(path):
+            try:
+                img = Image(path, width=28*mm, height=28*mm, hAlign="LEFT")
+                return img
+            except Exception:
+                continue
     return None
 
 def _qr_flowable(text):
@@ -106,23 +99,23 @@ def build_receta_pdf(buffer, receta):
     )
     story = []
 
-    # Encabezado con logo y datos del médico
-    logo = _logo_flowable()
-    info = []
+    # Encabezado (logo + info consultorio/médico)
+    logo = _logo_flowable(medico) if medico else None
+    titulo = []
+    titulo.append(Paragraph("<b>Receta Médica</b>", styles["H1"]))
+    if consultorio and getattr(consultorio, "nombre", None):
+        titulo.append(Paragraph(_fmt(consultorio.nombre), styles["TXT"]))
+    # Datos del médico
     if medico:
-        info.append(Paragraph(f"Dr. {_fmt(medico.get_full_name())}", styles["H1"]))
-        if consultorio and getattr(consultorio, "nombre", None):
-            info.append(Paragraph(_fmt(consultorio.nombre), styles["TXT"]))
+        nombre_medico = f"{_fmt(medico.get_full_name())} ({_fmt(medico.rol)})"
+        titulo.append(Paragraph(nombre_medico, styles["SM"]))
         if getattr(medico, "cedula_profesional", None):
-            info.append(Paragraph(f"Cédula: {_fmt(medico.cedula_profesional)}", styles["XS"]))
-        if getattr(medico, "institucion_cedula", None):
-            info.append(Paragraph(f"Institución: {_fmt(medico.institucion_cedula)}", styles["XS"]))
-        telefono = getattr(medico, "telefono", None)
-        if telefono and any(ch.isdigit() for ch in str(telefono)):
-            info.append(Paragraph(f"Tel.: {_fmt(telefono)}", styles["XS"]))
+            titulo.append(Paragraph(f"Cédula: {_fmt(medico.cedula_profesional)}", styles["XS"]))
+        if getattr(medico, "telefono", None):
+            titulo.append(Paragraph(f"Tel.: {_fmt(medico.telefono)}", styles["XS"]))
 
     header_tbl = Table(
-        [[logo, info]],
+        [[logo, titulo]],
         colWidths=[32*mm, None],
         hAlign="LEFT",
         style=TableStyle([
@@ -133,23 +126,16 @@ def build_receta_pdf(buffer, receta):
             ("TOPPADDING", (0,0), (-1,-1), 0),
         ])
     )
-    story += [
-        header_tbl,
-        Spacer(1, 2*mm),
-        HRFlowable(width="100%", thickness=0.7, color=colors.HexColor("#0d6efd")),
-        Spacer(1, 2*mm),
-        Paragraph("Receta Médica", styles["H1"]),
-        Spacer(1, 3*mm),
-    ]
+    story += [header_tbl, Spacer(1, 3*mm)]
 
     # Información del Paciente
     story += [Paragraph("Información del Paciente", styles["H2"])]
     p_info = [
         ["Nombre", _fmt(paciente.nombre_completo)],
         ["Edad", f"{_fmt(paciente.edad)} años"],
+        ["Teléfono", _fmt(paciente.telefono)],
+        ["Email", _fmt(paciente.correo)],
     ]
-    if consultorio and getattr(consultorio, "nombre", None):
-        p_info.append(["Consultorio", _fmt(consultorio.nombre)])
     p_tbl = Table(p_info, colWidths=[35*mm, None], style=TableStyle([
         ("FONTNAME", (0,0), (-1,-1), "Helvetica"),
         ("FONTSIZE", (0,0), (-1,-1), 10),
@@ -252,18 +238,8 @@ def build_receta_pdf(buffer, receta):
         story += [meds_tbl, Spacer(1, 2*mm)]
 
     # QR + folio/fecha en una fila
-    folio = f"Folio: {receta.pk}"
-    emision = receta.fecha_emision or timezone.now()
-
-    # ``fecha_emision`` es un DateField, por lo que puede devolver un ``date``.
-    # Convertimos a ``datetime`` para evitar errores de atributos y poder
-    # formatear con hora.
-    if not isinstance(emision, datetime):
-        emision = datetime.combine(emision, timezone.now().time())
-
-    if timezone.is_aware(emision):
-        emision = timezone.localtime(emision)
-    fecha_emision = f"Emitida: {emision.strftime('%d/%m/%Y %H:%M')}"
+    folio = f"Folio: {getattr(getattr(consulta, 'cita', None), 'numero_cita', None) or f'R-{receta.pk}'}"
+    fecha_emision = f"Emitida: {timezone.localtime(timezone.now()).strftime('%d/%m/%Y %H:%M') if timezone.is_aware(timezone.now()) else timezone.now().strftime('%d/%m/%Y %H:%M')}"
     qr = _qr_flowable(f"{folio} | {fecha_emision}")
     meta_tbl = Table(
         [[qr, Paragraph(f"{folio}<br/>{fecha_emision}", styles['XS'])]],
