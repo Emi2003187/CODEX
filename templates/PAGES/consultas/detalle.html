@@ -35,8 +35,10 @@
         </a>
       {% endif %}
       {% if receta and receta.medicamentos.exists %}
-        <a class="btn btn-outline-primary btn-preview-receta"
-           data-preview-url="{% url 'receta_a5' consulta.receta.pk %}">
+        <a class="btn btn-outline-primary"
+           data-bs-toggle="modal"
+           data-bs-target="#modalReceta"
+           data-receta-pdf="{% url 'receta_pdf_reportlab' pk=consulta.receta.pk %}">
            👁️ Ver Receta
         </a>
       {% endif %}
@@ -229,8 +231,10 @@
               Receta emitida el {{ receta.fecha_emision|date:"d/m/Y" }}
             </p>
             {% if receta.medicamentos.exists %}
-              <a href="#" class="btn btn-sm btn-outline-primary btn-preview-receta w-100 mb-3"
-                 data-preview-url="{% url 'receta_a5' receta.pk %}">
+              <a class="btn btn-sm btn-outline-primary w-100 mb-3"
+                 data-bs-toggle="modal"
+                 data-bs-target="#modalReceta"
+                 data-receta-pdf="{% url 'receta_pdf_reportlab' pk=receta.pk %}">
                 <i class="bi bi-eye me-1"></i>Ver Receta
               </a>
             {% endif %}
@@ -307,7 +311,8 @@
         </div>
       </div>
       {% endif %}
-    </div>
+  </div>
   </div>
 </div>
+{% include "PAGES/recetas/_modal_receta.html" %}
 {% endblock %}

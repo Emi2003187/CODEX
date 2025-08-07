@@ -57,6 +57,8 @@ MIDDLEWARE = [
     'consultorio_API.views.AuditMiddleware',
 ]
 
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
 ROOT_URLCONF = 'consultorio_medico.urls'
 
 TEMPLATES = [

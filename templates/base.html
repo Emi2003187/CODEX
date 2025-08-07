@@ -711,59 +711,6 @@
         }
     </script>
 
-    <div class="modal fade" id="modalReceta" tabindex="-1">
-      <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Receta médica</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body text-center py-4">Cargando…</div>
-          <div class="modal-footer">
-            <button id="modalRecetaPrint"  class="btn btn-primary">Imprimir</button>
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const modal      = new bootstrap.Modal('#modalReceta');
-  const bodyEl     = document.querySelector('#modalReceta .modal-body');
-  const btnPrint   = document.getElementById('modalRecetaPrint');
-
-  document.querySelectorAll('.btn-preview-receta').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.preventDefault();
-      fetch(btn.dataset.previewUrl)
-        .then(r => r.text())
-        .then(html => {
-          bodyEl.innerHTML = html;
-          modal.show();
-        });
-
-      /* —— imprimir —— */
-      btnPrint.onclick = () => {
-        const node = bodyEl.querySelector('#receta-print-area').cloneNode(true);
-        const w    = window.open("", "_blank","width=850,height=600");
-        w.document.write(`
-     <html><head>
-
-       <link rel="stylesheet" href="/static/css/receta_a5.css">
-
-       <title>Receta</title>
-     </head><body></body></html>`);
-        w.document.body.appendChild(node);
-        w.document.close();
-        w.onload = () => { w.focus(); w.print(); w.close(); };
-      };
-
-    });
-  });
-});
-</script>
-
     <script src="{% static 'js/consulta_actions.js' %}"></script>
 
     {% block scripts %}{% endblock %}
