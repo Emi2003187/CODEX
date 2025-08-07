@@ -24,7 +24,11 @@ class RecetaPreviewView(_RecetaPDFBase):
     """Previsualización/impresión de receta generada con ReportLab."""
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.has_perm("consultorio.view_receta"):
+        receta = self.get_object()
+        if not (
+            request.user.has_perm("consultorio.view_receta")
+            or request.user == receta.consulta.medico
+        ):
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
 
@@ -42,7 +46,10 @@ def receta_pdf_reportlab(request, pk: int):
         "consulta", "consulta__paciente", "consulta__medico"
     ).prefetch_related("medicamentos").get(pk=pk)
 
-    if not request.user.has_perm("consultorio.view_receta"):
+    if not (
+        request.user.has_perm("consultorio.view_receta")
+        or request.user == getattr(receta.consulta, "medico", None)
+    ):
         return HttpResponseForbidden()
 
     buf = BytesIO()
