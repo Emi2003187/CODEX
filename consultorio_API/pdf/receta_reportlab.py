@@ -15,6 +15,7 @@ from reportlab.platypus import (
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from django.utils import timezone
+from datetime import datetime, time
 from django.conf import settings
 from io import BytesIO
 import os
@@ -253,6 +254,13 @@ def build_receta_pdf(buffer, receta):
     # QR + folio/fecha en una fila
     folio = f"Folio: {receta.pk}"
     emision = receta.fecha_emision or timezone.now()
+
+    # ``fecha_emision`` es un DateField, por lo que puede devolver un ``date``.
+    # Convertimos a ``datetime`` para evitar errores de atributos y poder
+    # formatear con hora.
+    if not isinstance(emision, datetime):
+        emision = datetime.combine(emision, timezone.now().time())
+
     if timezone.is_aware(emision):
         emision = timezone.localtime(emision)
     fecha_emision = f"Emitida: {emision.strftime('%d/%m/%Y %H:%M')}"
