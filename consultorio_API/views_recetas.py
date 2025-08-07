@@ -1,10 +1,33 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden
 from django.views.generic import DetailView
 from django.utils import timezone
 from datetime import timedelta
 
 from .models import Receta
+
+# NUEVO:
+from io import BytesIO
+from .pdf.receta_reportlab import build_receta_pdf
+
+
+def receta_pdf_reportlab(request, pk: int):
+    receta = Receta.objects.select_related(
+        "consulta", "consulta__paciente", "consulta__medico"
+    ).prefetch_related("medicamentos").get(pk=pk)
+
+    # Permisos equivalentes a las vistas actuales de receta
+    if not request.user.has_perm("consultorio.view_receta"):
+        return HttpResponseForbidden()
+
+    buf = BytesIO()
+    build_receta_pdf(buf, receta)
+    buf.seek(0)
+
+    filename = f"receta_{receta.pk}.pdf"
+    resp = HttpResponse(buf.getvalue(), content_type="application/pdf")
+    resp["Content-Disposition"] = f'inline; filename="{filename}"'
+    return resp
 
 
 class RecetaPreviewView(LoginRequiredMixin, DetailView):
