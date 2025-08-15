@@ -20,7 +20,10 @@ Si el Excel no existe, devolver 0 resultados sin romper la vista.
 from pathlib import Path
 from unicodedata import normalize
 from django.conf import settings
-from openpyxl import load_workbook
+try:  # openpyxl es opcional; si falta, devolvemos 0 resultados
+    from openpyxl import load_workbook
+except Exception:  # ModuleNotFoundError o similar
+    load_workbook = None
 
 EXCEL_PATH = Path(getattr(settings, "CATALOGO_EXCEL_PATH"))
 
@@ -48,11 +51,11 @@ def _to_float(v):
 
 
 def catalogo_disponible() -> bool:
-    return EXCEL_PATH.exists()
+    return EXCEL_PATH.exists() and load_workbook is not None
 
 
 def buscar_articulos(q: str = "", limit: int = 30):
-    if not EXCEL_PATH.exists():
+    if not EXCEL_PATH.exists() or load_workbook is None:
         return []
 
     wb = load_workbook(EXCEL_PATH, data_only=True)
