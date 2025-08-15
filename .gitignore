@@ -29,3 +29,7 @@ htmlcov/
 # Migraciones (opcional ignorarlas en equipo)
 **/migrations/*
 !**/migrations/__init__.py
+
+
+# Catálogo Excel
+Catalogo de Artículos.xlsx
