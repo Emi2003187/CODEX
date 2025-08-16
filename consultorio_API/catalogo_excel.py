@@ -1,34 +1,30 @@
 """
 Lector SOLO LECTURA del Excel `settings.CATALOGO_EXCEL_PATH`.
 
-Campos devueltos por artículo:
-- nombre        (Nombre/Presentación) -> str
-- clave         (código de barras/GTIN)-> str
-- existencia    -> int
-- departamento  -> str
-- precio        -> float (sin $)
-- categoria     -> str
-- imagen_url    -> str (opcional; si no existe, usar placeholder en la UI)
+Devuelve páginas de artículos con:
+- nombre        (Nombre/Presentación)
+- clave         (código de barras / GTIN)
+- existencia    (int)
+- departamento  (str)
+- precio        (float, sin $)
+- categoria     (str)
+- imagen_url    (str, opcional)
 
-Filtra por: nombre, clave, existencia, departamento, precio, categoria
-(búsqueda case/acento-insensible). Tolerante a dos formatos del Excel:
-  a) Hoja tabular con encabezados (descripcion/nombre/presentacion,
-     clave/codigo, existencia, departamento, precio, categoria,
-     imagen/url_imagen/foto).
-  b) Bloques "Etiqueta: valor" (Clave:, Existencia:, Departamento:,
-     Precio:, Categoría:) con el nombre arriba.
-
-Si el Excel no existe, devolver 0 resultados sin romper la vista.
+Filtra por: nombre, clave, departamento, categoria y precio (si q es numérico).
+Tolera: (A) hoja tabular con encabezados, (B) bloques "Clave:/Existencia:/...".
+Si el Excel no existe o no hay openpyxl, devuelve 0 resultados sin romper vistas.
 """
 from pathlib import Path
 from unicodedata import normalize
+from typing import Dict, Any, List
 from django.conf import settings
-try:  # openpyxl es opcional; si falta, devolvemos 0 resultados
-    from openpyxl import load_workbook
-except Exception:  # ModuleNotFoundError o similar
+
+try:
+    from openpyxl import load_workbook  # type: ignore
+except Exception:  # pragma: no cover - openpyxl opcional
     load_workbook = None
 
-EXCEL_PATH = Path(getattr(settings, "CATALOGO_EXCEL_PATH"))
+EXCEL_PATH = Path(getattr(settings, "CATALOGO_EXCEL_PATH", Path()))
 
 
 def _norm(s: str) -> str:
@@ -57,15 +53,30 @@ def catalogo_disponible() -> bool:
     return EXCEL_PATH.exists() and load_workbook is not None
 
 
-def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> dict:
-    """Busca artículos en el Excel aplicando filtrado y paginación."""
-    if not EXCEL_PATH.exists() or load_workbook is None:
-        return {"items": [], "total": 0, "page": page, "per_page": per_page}
+def _add(items: List[Dict[str, Any]], nombre, clave, existencia, dep, precio, cat, img=None):
+    if not str(clave or "").strip():
+        return
+    items.append(
+        {
+            "nombre": str(nombre or "").strip(),
+            "clave": str(clave or "").strip(),
+            "existencia": _to_int(existencia),
+            "departamento": str(dep or "").strip(),
+            "precio": _to_float(precio),
+            "categoria": str(cat or "").strip(),
+            "imagen_url": str(img or "").strip(),
+        }
+    )
+
+
+def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> Dict[str, Any]:
+    if not catalogo_disponible():
+        return {"items": [], "total": 0, "page": 1, "per_page": per_page}
 
     wb = load_workbook(EXCEL_PATH, data_only=True)
     ws = wb.active
 
-    # Intento A: encabezados tabulares en la primera fila
+    # Intento A: encabezados
     headers = {}
     first = next(ws.iter_rows(min_row=1, max_row=1, values_only=True), None)
     if first:
@@ -73,20 +84,7 @@ def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> dict:
             if v:
                 headers[_norm(v)] = i
 
-    items = []
-
-    def add(nombre, clave, existencia, departamento, precio, categoria, imagen_url=None):
-        if not str(clave or "").strip():
-            return
-        items.append({
-            "nombre": str(nombre or "").strip(),
-            "clave": str(clave or "").strip(),
-            "existencia": _to_int(existencia),
-            "departamento": str(departamento or "").strip(),
-            "precio": _to_float(precio),
-            "categoria": str(categoria or "").strip(),
-            "imagen_url": str(imagen_url or "").strip(),
-        })
+    items: List[Dict[str, Any]] = []
 
     if headers:
         def col(*alts):
@@ -108,13 +106,13 @@ def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> dict:
             nombre = row[c_nom] if c_nom is not None else ""
             clave = row[c_cla] if c_cla is not None else ""
             existencia = row[c_exi] if c_exi is not None else 0
-            departamento = row[c_dep] if c_dep is not None else ""
+            dep = row[c_dep] if c_dep is not None else ""
             precio = row[c_pre] if c_pre is not None else 0
-            categoria = row[c_cat] if c_cat is not None else ""
-            imagen = row[c_img] if c_img is not None else ""
-            add(nombre, clave, existencia, departamento, precio, categoria, imagen)
+            cat = row[c_cat] if c_cat is not None else ""
+            img = row[c_img] if c_img is not None else ""
+            _add(items, nombre, clave, existencia, dep, precio, cat, img)
     else:
-        # Intento B: bloques "Etiqueta: Valor"
+        # Intento B: bloques "Etiqueta: valor"
         nom = cla = dep = cat = img = None
         exi = 0
         pre = 0
@@ -141,33 +139,30 @@ def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> dict:
                         img = nxt
             else:
                 if nom or cla:
-                    add(nom, cla, exi, dep, pre, cat, img)
+                    _add(items, nom, cla, exi, dep, pre, cat, img)
                 nom = cla = dep = cat = img = None
                 exi = pre = 0
         if nom or cla:
-            add(nom, cla, exi, dep, pre, cat, img)
+            _add(items, nom, cla, exi, dep, pre, cat, img)
 
+    # Filtro (si q vacío, devolvemos primera página)
     if q:
         s = _norm(q)
 
-        def match(it):
+        def ok(it):
             return (
                 s in _norm(it["nombre"]) or
                 s in _norm(it["clave"]) or
-                s in _norm(str(it["existencia"])) or
                 s in _norm(it["departamento"]) or
                 s in _norm(it["categoria"]) or
-                (s.replace(".", "").isdigit() and it["precio"] == _to_float(q))
+                (s.replace(".", "").isdigit() and abs(it["precio"] - _to_float(q)) < 1e-9)
             )
 
-        items = [it for it in items if match(it)]
+        items = [it for it in items if ok(it)]
 
     total = len(items)
-    if per_page <= 0:
-        per_page = 15
-    if page < 1:
-        page = 1
+    page = max(page, 1)
     start = (page - 1) * per_page
     end = start + per_page
-    items = items[start:end]
-    return {"items": items, "total": total, "page": page, "per_page": per_page}
+    return {"items": items[start:end], "total": total, "page": page, "per_page": per_page}
+

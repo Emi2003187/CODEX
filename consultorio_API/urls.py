@@ -170,21 +170,9 @@ urlpatterns = [
 
 
 urlpatterns += [
-    # Catálogo Excel (UI y datos)
-    path(
-        "recetas/<uuid:receta_id>/catalogo-excel/",
-        views_recetas.receta_catalogo_excel,
-        name="receta_catalogo_excel",
-    ),
     path(
         "recetas/catalogo-excel.json",
         views_recetas.catalogo_excel_json,
         name="catalogo_excel_json",
-    ),
-    # Agregar a una receta vía POST (sin descontar stock)
-    path(
-        "recetas/<uuid:receta_id>/catalogo-excel/agregar/",
-        views_recetas.receta_catalogo_excel_agregar,
-        name="receta_catalogo_excel_agregar",
     ),
 ]
