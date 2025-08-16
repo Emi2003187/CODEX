@@ -3227,6 +3227,7 @@ def receta_nueva(request, consulta_id):
         'consulta': consulta,
         'receta_form': receta_form,
         'med_formset': med_formset,
+        'catalogo_excel_url': reverse('receta_catalogo_excel', args=[receta.id]),
     })
 
 

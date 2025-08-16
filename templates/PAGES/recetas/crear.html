@@ -19,148 +19,31 @@
       {{ receta_form.notas }}
     </div>
 
-      <!-- ========== Selector en tiempo real desde Excel (SOLO LECTURA) ========== -->
-      <div class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <strong>Agregar desde Catálogo (Excel)</strong>
-          <small class="text-muted">No descuenta stock • Se guarda la Clave como código de barras</small>
-        </div>
-        <div class="card-body">
-          <div class="row g-2">
-            <div class="col-md-8">
-              <input id="cat-q" class="form-control" placeholder="Buscar por Nombre/Presentación, Clave, Departamento, Categoría o Precio">
+    <h5>Medicamentos</h5>
+    {{ med_formset.management_form }}
+    <div id="medicamentos-formset">
+      {% for form in med_formset.forms %}
+        <div class="card mb-3 p-3 border">
+          {% for field in form.visible_fields %}
+            <div class="mb-2">
+              {{ field.label_tag }}<br>
+              {{ field }}
+              {% if field.errors %}<div class="text-danger">{{ field.errors }}</div>{% endif %}
             </div>
-            <div class="col-md-4 d-flex gap-2">
-              <button id="cat-buscar" class="btn btn-primary flex-fill" type="button">Buscar</button>
-              <button id="cat-agregar-todos" class="btn btn-success d-none" type="button">Agregar seleccionados</button>
+          {% endfor %}
+          {% if form.instance.pk %}
+            <div class="form-check">
+              {{ form.DELETE }} <label class="form-check-label">Eliminar este</label>
             </div>
-          </div>
-
-          <div id="cat-resultados" class="list-group mt-3">
-            <div class="list-group-item text-muted text-center">Escribe para buscar…</div>
-          </div>
+          {% endif %}
         </div>
-      </div>
-
-      <script>
-      (function(){
-        const urlSearch = "{% url 'catalogo_excel_search' %}";
-        const $q = document.getElementById('cat-q');
-        const $btn = document.getElementById('cat-buscar');
-        const $list = document.getElementById('cat-resultados');
-        const $addAll = document.getElementById('cat-agregar-todos');
-        const mgmt = document.querySelector('input[name$="-TOTAL_FORMS"]');
-        const prefix = mgmt ? mgmt.name.replace('-TOTAL_FORMS','') : 'medicamentorecetado_set';
-        const addBtn = document.getElementById('add-med');
-        function totalForms(){ return parseInt(mgmt.value,10); }
-        function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'}[m])); }
-        function placeholderImg(){ return "{% static 'img/default_user.png' %}"; }
-        function render(items){
-          if(!items.length){
-            $list.innerHTML = `<div class="list-group-item text-center text-muted">Sin resultados</div>`;
-            $addAll.classList.add('d-none');
-            return;
-          }
-          $list.innerHTML = items.map(it => {
-            const foto = it.imagen_url ? it.imagen_url : placeholderImg();
-            const key = escapeHtml(it.clave||'');
-            return `
-<div class="list-group-item">
-  <div class="row g-2 align-items-center">
-    <div class="col-auto"><img src="${foto}" style="width:48px;height:48px;object-fit:contain;border:1px solid #eee;border-radius:6px"></div>
-    <div class="col">
-      <div class="fw-semibold">${escapeHtml(it.nombre||'')}</div>
-      <div class="text-muted small">Clave: <code>${key}</code> · Dep: ${escapeHtml(it.departamento||'')} · Cat: ${escapeHtml(it.categoria||'')}</div>
+      {% endfor %}
     </div>
-    <div class="col-auto text-end">
-      <div class="small text-muted mb-1">Existencia: ${it.existencia ?? 0} · Precio: ${it.precio!=null?('$ '+Number(it.precio).toFixed(2)):'—'}</div>
-      <div class="input-group input-group-sm" style="width: 160px;">
-        <input type="number" min="1" value="1" class="form-control qty" data-clave="${key}">
-        <button class="btn btn-success btn-sm add" data-clave="${key}" data-nombre="${escapeHtml(it.nombre||'')}">Agregar</button>
-      </div>
-    </div>
-  </div>
-</div>`;
-          }).join('');
-          $addAll.classList.remove('d-none');
-        }
-        async function buscar(){
-          const res = await fetch(urlSearch + "?q=" + encodeURIComponent($q.value||''));
-          const js = await res.json();
-          render(js.items || []);
-        }
-        let to=null;
-        $q.addEventListener('input', ()=>{ clearTimeout(to); to=setTimeout(buscar,250); });
-        $btn.addEventListener('click', buscar);
-        $list.addEventListener('click', (ev)=>{
-          const btn = ev.target.closest('button.add');
-          if(!btn) return;
-          const row = btn.closest('.list-group-item');
-          const qty = row.querySelector('.qty');
-          const cantidad = Math.max(1, parseInt(qty.value||'1',10));
-          agregarAlFormset([{clave: btn.dataset.clave, nombre: btn.dataset.nombre, cantidad}]);
-        });
-        $addAll.addEventListener('click', ()=>{
-          const items=[];
-          $list.querySelectorAll('button.add').forEach(btn=>{
-            const row = btn.closest('.list-group-item');
-            const qty = row.querySelector('.qty');
-            items.push({clave: btn.dataset.clave, nombre: btn.dataset.nombre, cantidad: Math.max(1, parseInt(qty.value||'1',10))});
-          });
-          agregarAlFormset(items);
-        });
-        function agregarAlFormset(items){
-          for(const it of items){
-            addBtn.click();
-            const idx = totalForms() - 1;
-            const n = document.getElementById(`id_${prefix}-${idx}-nombre`);
-            if(n) n.value = it.nombre;
-            const c = document.getElementById(`id_${prefix}-${idx}-cantidad`);
-            if(c) c.value = it.cantidad;
-            const cb = document.getElementById(`id_${prefix}-${idx}-codigo_barras`);
-            if(cb) cb.value = it.clave;
-          }
-          showToast('Medicamento(s) agregados desde Excel.');
-        }
-        function showToast(msg){
-          try{
-            const el = document.createElement('div');
-            el.className = 'toast align-items-center text-bg-success border-0 show position-fixed bottom-0 end-0 m-3';
-            el.role = 'alert'; el.ariaLive='assertive'; el.ariaAtomic='true';
-            el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
-            document.body.appendChild(el);
-            setTimeout(()=>{ el.remove(); },2000);
-          }catch(e){ alert(msg); }
-        }
-      })();
-      </script>
-      <!-- ========== /Selector Excel ========== -->
 
-      <h5>Medicamentos</h5>
-      {{ med_formset.management_form }}
-      <div id="medicamentos-formset">
-        {% for form in med_formset.forms %}
-          <div class="card mb-3 p-3 border">
-            {% for field in form.visible_fields %}
-              <div class="mb-2">
-                {{ field.label_tag }}<br>
-                {{ field }}
-                {% if field.errors %}<div class="text-danger">{{ field.errors }}</div>{% endif %}
-              </div>
-            {% endfor %}
-            {% if form.instance.pk %}
-              <div class="form-check">
-                {{ form.DELETE }} <label class="form-check-label">Eliminar este</label>
-              </div>
-            {% endif %}
-          </div>
-        {% endfor %}
-      </div>
-
-      <button type="button" id="add-med" class="btn btn-sm btn-outline-secondary mb-3">
-        + Agregar otro medicamento
-      </button>
-      <button type="submit" class="btn btn-primary">Guardar Receta</button>
+    <button type="button" id="add-med" class="btn btn-sm btn-outline-secondary mb-3">
+      + Agregar otro medicamento
+    </button>
+    <button type="submit" class="btn btn-primary">Guardar Receta</button>
   </form>
 </div>
 

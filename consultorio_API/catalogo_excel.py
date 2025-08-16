@@ -10,10 +10,13 @@ Campos devueltos por artículo:
 - categoria     -> str
 - imagen_url    -> str (opcional; si no existe, usar placeholder en la UI)
 
-Filtra por: nombre, clave, departamento, categoria y, si q es numérico, precio.
-Tolerante a dos formatos del Excel:
-  a) Hoja tabular con encabezados (descripcion/nombre/presentacion, clave/codigo, existencia, departamento, precio, categoria, imagen/url_imagen/foto).
-  b) Bloques "Etiqueta: valor" (Clave:, Existencia:, Departamento:, Precio:, Categoría:) con el nombre arriba.
+Filtra por: nombre, clave, existencia, departamento, precio, categoria
+(búsqueda case/acento-insensible). Tolerante a dos formatos del Excel:
+  a) Hoja tabular con encabezados (descripcion/nombre/presentacion,
+     clave/codigo, existencia, departamento, precio, categoria,
+     imagen/url_imagen/foto).
+  b) Bloques "Etiqueta: valor" (Clave:, Existencia:, Departamento:,
+     Precio:, Categoría:) con el nombre arriba.
 
 Si el Excel no existe, devolver 0 resultados sin romper la vista.
 """
@@ -54,9 +57,10 @@ def catalogo_disponible() -> bool:
     return EXCEL_PATH.exists() and load_workbook is not None
 
 
-def buscar_articulos(q: str = "", limit: int = 30):
+def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> dict:
+    """Busca artículos en el Excel aplicando filtrado y paginación."""
     if not EXCEL_PATH.exists() or load_workbook is None:
-        return []
+        return {"items": [], "total": 0, "page": page, "per_page": per_page}
 
     wb = load_workbook(EXCEL_PATH, data_only=True)
     ws = wb.active
@@ -145,14 +149,25 @@ def buscar_articulos(q: str = "", limit: int = 30):
 
     if q:
         s = _norm(q)
+
         def match(it):
             return (
                 s in _norm(it["nombre"]) or
                 s in _norm(it["clave"]) or
+                s in _norm(str(it["existencia"])) or
                 s in _norm(it["departamento"]) or
                 s in _norm(it["categoria"]) or
                 (s.replace(".", "").isdigit() and it["precio"] == _to_float(q))
             )
+
         items = [it for it in items if match(it)]
 
-    return items[:limit]
+    total = len(items)
+    if per_page <= 0:
+        per_page = 15
+    if page < 1:
+        page = 1
+    start = (page - 1) * per_page
+    end = start + per_page
+    items = items[start:end]
+    return {"items": items, "total": total, "page": page, "per_page": per_page}

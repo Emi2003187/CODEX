@@ -1,14 +1,22 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import FileResponse, HttpResponseForbidden, JsonResponse
-from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+from django.http import (
+    FileResponse,
+    HttpResponseForbidden,
+    JsonResponse,
+    HttpResponseBadRequest,
+)
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views.generic import DetailView
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
+from django.core.paginator import Paginator
+from django.db import transaction
 from io import BytesIO
 from django.utils import timezone
 from django.utils.text import slugify
 
-from .models import Receta
+from .models import Receta, MedicamentoRecetado
 from .pdf.receta_reportlab import build_receta_pdf
 from .catalogo_excel import buscar_articulos, catalogo_disponible
 
@@ -84,9 +92,78 @@ def receta_pdf_reportlab(request, pk: int):
 # --- Catálogo Excel -------------------------------------------------------
 
 
+@login_required
 @require_GET
-def catalogo_excel_search(request):
+def receta_catalogo_excel(request, receta_id):
+    receta = get_object_or_404(Receta, id=receta_id)
     q = (request.GET.get("q") or "").strip()
+    page = int(request.GET.get("page") or 1)
+    per_page = 15
+
+    data = (
+        buscar_articulos(q=q, page=page, per_page=per_page)
+        if catalogo_disponible()
+        else {"items": [], "total": 0, "page": 1, "per_page": per_page}
+    )
+    paginator = Paginator(range(data["total"]), per_page)
+    try:
+        page_obj = paginator.page(page)
+    except Exception:
+        page_obj = paginator.page(1)
+
+    return render(
+        request,
+        "PAGES/recetas/catalogo_excel.html",
+        {
+            "receta": receta,
+            "q": q,
+            "items": data["items"],
+            "page_obj": page_obj,
+            "per_page": per_page,
+            "excel_disponible": catalogo_disponible(),
+        },
+    )
+
+
+@login_required
+@require_GET
+def catalogo_excel_json(request):
+    q = (request.GET.get("q") or "").strip()
+    page = int(request.GET.get("page") or 1)
+    per_page = int(request.GET.get("per_page") or 15)
     if not catalogo_disponible():
-        return JsonResponse({"items": []})
-    return JsonResponse({"items": buscar_articulos(q=q, limit=30)})
+        return JsonResponse({"items": [], "total": 0, "page": 1, "per_page": per_page})
+    return JsonResponse(buscar_articulos(q=q, page=page, per_page=per_page))
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def receta_catalogo_excel_agregar(request, receta_id):
+    receta = get_object_or_404(Receta, id=receta_id)
+    nombre = (request.POST.get("nombre") or "").strip()
+    clave = (request.POST.get("clave") or "").strip()
+    try:
+        cantidad = int(request.POST.get("cantidad") or "1")
+    except Exception:
+        cantidad = 1
+    if cantidad < 1:
+        cantidad = 1
+    if not nombre:
+        return JsonResponse({"ok": False, "error": "Nombre requerido"}, status=400)
+
+    mr = MedicamentoRecetado.objects.create(
+        receta=receta,
+        nombre=nombre,
+        cantidad=cantidad,
+        codigo_barras=clave or None,
+    )
+    return JsonResponse(
+        {
+            "ok": True,
+            "id": str(mr.id),
+            "nombre": mr.nombre,
+            "cantidad": mr.cantidad,
+            "codigo_barras": mr.codigo_barras or "",
+        }
+    )
