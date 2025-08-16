@@ -527,131 +527,9 @@ textarea.form-control {
         </h3>
         
         {{ med_formset.management_form }}
-
-        {% load static %}
-        <div class="card mb-3">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>Agregar desde Catálogo (Excel)</strong>
-            <small class="text-muted">Solo lectura · No descuenta stock</small>
-          </div>
-          <div class="card-body">
-            <div class="row g-2">
-              <div class="col-md-8">
-                <input id="excel-q" class="form-control" placeholder="Buscar por Nombre/Presentación, Clave, Departamento, Categoría o Precio">
-              </div>
-              <div class="col-md-4">
-                <button id="excel-buscar" type="button" class="btn btn-primary w-100">Buscar</button>
-              </div>
-            </div>
-
-        <div class="table-responsive mt-3">
-          <table class="table table-sm align-middle">
-            <thead class="table-light">
-              <tr>
-                    <th>Imagen</th>
-                    <th>Nombre / Presentación</th>
-                    <th>Clave</th>
-                    <th class="text-end">Existencia</th>
-                    <th>Departamento</th>
-                    <th class="text-end">Precio</th>
-                    <th>Categoría</th>
-                    <th style="width:140px;">Cantidad</th>
-                    <th style="width:120px;"></th>
-                  </tr>
-                </thead>
-                <tbody id="excel-tbody">
-                  <tr><td colspan="9" class="text-center text-muted">Escribe y presiona Buscar…</td></tr>
-                </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-<script>
-(function(){
-  const urlJSON = "{% url 'catalogo_excel_json' %}";
-  const $q = document.getElementById('excel-q');
-  const $btn = document.getElementById('excel-buscar');
-  const $tb = document.getElementById('excel-tbody');
-
-  // Detecta el prefix del formset leyendo -TOTAL_FORMS
-  const mgmt = document.querySelector('input[name$="-TOTAL_FORMS"]');
-  const prefix = mgmt ? mgmt.name.replace('-TOTAL_FORMS','') : 'meds';
-  function total(){ return parseInt(mgmt.value || "0", 10); }
-  function inc(){ mgmt.value = String(total() + 1); }
-
-  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m])); }
-  function placeholder(){ return "{% static 'img/default_user.png' %}"; }
-
-  async function buscar(p=1){
-    const res = await fetch(urlJSON + "?q=" + encodeURIComponent($q.value || '') + "&page=" + p);
-    const js = await res.json();
-    const rows = js.items || [];
-    if (!rows.length){
-      $tb.innerHTML = `<tr><td colspan="9" class="text-center text-muted">Sin resultados</td></tr>`;
-      return;
-    }
-    $tb.innerHTML = rows.map(it=>{
-      const img = it.imagen_url ? it.imagen_url : placeholder();
-      return `
-        <tr>
-          <td><img src="${img}" style="width:48px;height:48px;object-fit:contain;border:1px solid #eee;border-radius:6px"></td>
-          <td><strong>${escapeHtml(it.nombre||'')}</strong></td>
-          <td><code>${escapeHtml(it.clave||'')}</code></td>
-          <td class="text-end">${it.existencia ?? 0}</td>
-          <td>${escapeHtml(it.departamento||'')}</td>
-          <td class="text-end">${it.precio != null ? ('$ ' + Number(it.precio).toFixed(2)) : ''}</td>
-          <td>${escapeHtml(it.categoria||'')}</td>
-          <td><input type="number" min="1" value="1" class="form-control form-control-sm qty"></td>
-          <td><button type="button" class="btn btn-sm btn-success usar" data-n="${escapeHtml(it.nombre||'')}" data-c="${escapeHtml(it.clave||'')}">Usar</button></td>
-        </tr>`;
-    }).join('');
-  }
-
-  // Primera página al cargar (útil para validar que el Excel se está leyendo)
-  buscar(1).catch(()=>{ $tb.innerHTML = `<tr><td colspan="9" class="text-center text-danger">No se pudo leer el Excel</td></tr>`; });
-
-  $btn.addEventListener('click', ()=>buscar(1));
-  $q.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ buscar(1); } });
-
-  // Insertar en formset
-  $tb.addEventListener('click', (ev)=>{
-    const btn = ev.target.closest('button.usar');
-    if(!btn) return;
-    const tr = btn.closest('tr');
-    const nombre = btn.getAttribute('data-n');
-    const clave = btn.getAttribute('data-c');
-    const qty = Math.max(1, parseInt(tr.querySelector('.qty').value || "1", 10));
-    insertar({ nombre, clave, cantidad: qty });
-  });
-
-  function insertar(it){
-    const cont = document.getElementById('meds-formset') || document.body;
-    const i = total(); inc();
-    const html = `
-      <div class="card mb-2">
-        <div class="card-body">
-          <div class="row g-2">
-            <div class="col-md-6">
-              <label class="form-label" for="id_${prefix}-${i}-nombre">Nombre del Medicamento</label>
-              <input type="text" name="${prefix}-${i}-nombre" id="id_${prefix}-${i}-nombre" class="form-control" value="${it.nombre}">
-            </div>
-            <div class="col-md-2">
-              <label class="form-label" for="id_${prefix}-${i}-cantidad">Cantidad</label>
-              <input type="number" name="${prefix}-${i}-cantidad" id="id_${prefix}-${i}-cantidad" class="form-control" min="1" value="${it.cantidad}">
-            </div>
-            <input type="hidden" name="${prefix}-${i}-codigo_barras" id="id_${prefix}-${i}-codigo_barras" value="${it.clave}">
-            <input type="hidden" name="${prefix}-${i}-id" id="id_${prefix}-${i}-id">
-          </div>
-        </div>
-      </div>`;
-    cont.insertAdjacentHTML('beforeend', html);
-  }
-})();
-</script>
-
+        
         <div class="medication-section">
-          <div id="meds-formset">
+          <div id="med-container">
             {% for form in med_formset %}
               <div class="medication-form">
                 <div class="medication-header">
@@ -828,7 +706,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Medication formset management
   const addBtn = document.getElementById("add-med-btn");
-  const medContainer = document.getElementById("meds-formset");
+  const medContainer = document.getElementById("med-container");
   
   function bindRemove(btn) {
     btn.addEventListener('click', () => {

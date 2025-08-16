@@ -16,7 +16,6 @@ from django.contrib.auth.views import LogoutView
 from .views import CitaCreateView, Receta
 from consultorio_API import views, viewscitas
 from consultorio_API.views_recetas import RecetaPreviewView, RxRecetaView, RecetaA5View, receta_pdf_reportlab
-from . import views_recetas
 
 urlpatterns = [
     path('', views.home_redirect, name='home'),
@@ -166,23 +165,4 @@ urlpatterns = [
     path('signos/<int:pk>/editar/', views.signos_editar, name='signos_editar'), # Added
     path('signos/<int:pk>/eliminar/', views.signos_eliminar, name='signos_eliminar'), # Added
 
-]
-
-
-urlpatterns += [
-    path(
-        "recetas/<uuid:receta_id>/catalogo-excel/",
-        views_recetas.receta_catalogo_excel,
-        name="receta_catalogo_excel",
-    ),
-    path(
-        "recetas/catalogo-excel.json",
-        views_recetas.catalogo_excel_json,
-        name="catalogo_excel_json",
-    ),
-    path(
-        "recetas/<uuid:receta_id>/catalogo-excel/agregar/",
-        views_recetas.receta_catalogo_excel_agregar,
-        name="receta_catalogo_excel_agregar",
-    ),
 ]

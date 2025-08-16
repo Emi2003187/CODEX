@@ -14,8 +14,6 @@ from reportlab.platypus import (
 )
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.graphics.barcode import eanbc, code128
-from reportlab.graphics.shapes import Drawing
 from django.utils import timezone
 from datetime import datetime, time
 from django.conf import settings
@@ -73,20 +71,6 @@ def _qr_flowable(text):
         img.save(buf, format="PNG")
         buf.seek(0)
         return Image(buf, width=24*mm, height=24*mm, hAlign="RIGHT")
-    except Exception:
-        return None
-
-def _barcode_flowable(code: str):
-    if not code:
-        return None
-    try:
-        if code.isdigit() and len(code) == 13:
-            bc = eanbc.Ean13BarcodeWidget(code)
-        else:
-            bc = code128.Code128(code)
-        d = Drawing(40 * mm, 12 * mm)
-        d.add(bc)
-        return d
     except Exception:
         return None
 
@@ -250,15 +234,12 @@ def build_receta_pdf(buffer, receta):
     meds = list(receta.medicamentos.all()) if hasattr(receta, "medicamentos") else []
     if meds:
         story += [Paragraph("Medicamentos Recetados", styles["H2"])]
-        data = [["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones", "Código"]]
+        data = [["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones"]]
         for m in meds:
-            bc = _barcode_flowable(getattr(m, "codigo_barras", ""))
-            if not bc and getattr(m, "codigo_barras", ""):
-                bc = Paragraph(_fmt(m.codigo_barras), styles["XS"])
             data.append([
                 _fmt(m.nombre), _fmt(m.principio_activo), _fmt(m.dosis),
                 _fmt(m.frecuencia), _fmt(m.via_administracion),
-                _fmt(m.duracion), _fmt(m.cantidad), _fmt(m.indicaciones_especificas), bc
+                _fmt(m.duracion), _fmt(m.cantidad), _fmt(m.indicaciones_especificas)
             ])
         meds_tbl = Table(data, repeatRows=1, style=TableStyle([
             ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#dee2e6")),
