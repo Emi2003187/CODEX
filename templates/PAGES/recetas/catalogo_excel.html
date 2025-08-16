@@ -1,6 +1,257 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block content %}
-{% include "PAGES/recetas/_catalogo_excel_block.html" with receta=receta excel_disponible=excel_disponible %}
+{% block title %}Catálogo (Receta #{{ receta.pk }}){% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Overlay de carga */
+  .loading-overlay{
+    position:fixed; inset:0; background:rgba(255,255,255,.6);
+    display:none; align-items:center; justify-content:center; z-index:1050;
+  }
+  .loading-overlay.show{ display:flex; }
+
+  .table thead th{ white-space:nowrap; }
+  .qty-input{ width: 80px; }
+
+  /* Panel lateral */
+  .side-card{ position:sticky; top:1rem; }
+  .med-chip{
+    display:flex; align-items:center; justify-content:space-between;
+    border:1px solid #e5e7eb; border-radius:.5rem; padding:.5rem .75rem; margin-bottom:.5rem;
+    background:#fff;
+  }
+  .med-chip small{ color:#6c757d; }
+</style>
 {% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="mb-0"><i class="fas fa-pills me-2 text-primary"></i>Catálogo de artículos (Excel)</h4>
+      <small class="text-muted">Receta #{{ receta.pk }}</small>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'consultas_atencion' receta.consulta.pk %}">
+      <i class="fas fa-chevron-left me-1"></i> Volver a la atención
+    </a>
+  </div>
+
+  {% if not excel_disponible %}
+    <div class="alert alert-warning">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      El catálogo Excel no está disponible actualmente.
+    </div>
+  {% endif %}
+
+  <div class="row">
+    <!-- Catálogo -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="input-group mb-3">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input id="q" type="text" class="form-control" placeholder="Buscar por Nombre/Presentación, Clave, Departamento, Categoría o Precio" autocomplete="off">
+            <button id="btn-limpiar" class="btn btn-outline-secondary" type="button">
+              Limpiar
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle" id="tabla-catalogo">
+              <thead class="table-light">
+                <tr>
+                  <th>Nombre/Presentación</th>
+                  <th>Clave</th>
+                  <th>Existencia</th>
+                  <th>Departamento</th>
+                  <th>Precio</th>
+                  <th>Categoría</th>
+                  <th class="text-center">Cantidad</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Filas renderizadas por JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted" id="resumen"></small>
+            <div>
+              <button id="btn-mas" class="btn btn-outline-primary">Cargar más</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Receta actual -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm side-card">
+        <div class="card-header bg-primary text-white">
+          <i class="fas fa-receipt me-2"></i>Receta actual
+        </div>
+        <div class="card-body" id="receta-actual">
+          {% if receta.medicamentos.all %}
+            {% for m in receta.medicamentos.all %}
+              <div class="med-chip">
+                <div>
+                  <strong>{{ m.nombre }}</strong>
+                  {% if m.codigo_barras %}<br><small>CB: {{ m.codigo_barras }}</small>{% endif %}
+                </div>
+                <div><span class="badge bg-secondary">x{{ m.cantidad|default:1 }}</span></div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted mb-0">No hay medicamentos aún. Usa el catálogo para agregarlos.</p>
+          {% endif %}
+        </div>
+        <div class="card-footer d-grid gap-2">
+          <a class="btn btn-outline-success" href="{% url 'receta_preview' receta.pk %}">
+            <i class="fas fa-print me-1"></i> Previsualizar/Imprimir
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay de carga -->
+<div class="loading-overlay" id="loading">
+  <div class="text-center">
+    <div class="spinner-border" role="status" aria-hidden="true"></div>
+    <div class="mt-2 fw-semibold">Cargando catálogo…</div>
+  </div>
+</div>
+
+<!-- Toast Bootstrap -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
+  <div id="toast-ok" class="toast align-items-center text-bg-success border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toast-msg">Agregado</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+{% csrf_token %}
+<script>
+(function(){
+  const urlJSON = "{% url 'catalogo_excel_json' %}";
+  const urlAdd  = "{% url 'receta_catalogo_excel_agregar' receta.pk %}";
+  const csrf = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+
+  const $q = document.getElementById('q');
+  const $tabla = document.querySelector('#tabla-catalogo tbody');
+  const $resumen = document.getElementById('resumen');
+  const $btnMas = document.getElementById('btn-mas');
+  const $btnLimpiar = document.getElementById('btn-limpiar');
+  const $loading = document.getElementById('loading');
+  const $receta = document.getElementById('receta-actual');
+
+  let page = 1, per_page = 15, total = 0, q = "";
+
+  function showLoading(v){ $loading.classList.toggle('show', !!v); }
+
+  function fmt(n){ return (n ?? 0).toLocaleString('es-MX'); }
+
+  function renderRows(items, append=false){
+    if(!append) $tabla.innerHTML = "";
+    for(const it of items){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${it.nombre || ''}</td>
+        <td><code>${it.clave || ''}</code></td>
+        <td>${it.existencia ?? ''}</td>
+        <td>${it.departamento || ''}</td>
+        <td>${it.precio != null ? '$'+fmt(it.precio) : ''}</td>
+        <td>${it.categoria || ''}</td>
+        <td class="text-center">
+          <input type="number" min="1" value="1" class="form-control form-control-sm qty-input">
+        </td>
+        <td class="text-end">
+          <button class="btn btn-success btn-sm">
+            Usar
+          </button>
+        </td>
+      `;
+      const btn = tr.querySelector('button');
+      btn.addEventListener('click', async () => {
+        const qty = parseInt(tr.querySelector('.qty-input').value || '1', 10);
+        await agregar(it, isNaN(qty)||qty<1 ? 1 : qty);
+      });
+      $tabla.appendChild(tr);
+    }
+  }
+
+  async function fetchPage(append=false){
+    showLoading(true);
+    try{
+      const params = new URLSearchParams({ q, page, per_page });
+      const r = await fetch(`${urlJSON}?${params.toString()}`, { credentials:'same-origin' });
+      const data = await r.json();
+      total = data.total || 0;
+      renderRows(data.items || [], append);
+      $resumen.textContent = `Resultados: ${fmt((data.page-1)*per_page + (data.items||[]).length)} / ${fmt(total)}`;
+      $btnMas.disabled = ((data.page || 1) * per_page) >= total;
+    }finally{
+      showLoading(false);
+    }
+  }
+
+  let t=null;
+  $q.addEventListener('input', ()=>{
+    clearTimeout(t);
+    t = setTimeout(()=>{ q=$q.value.trim(); page=1; fetchPage(false); }, 350);
+  });
+
+  $btnLimpiar.addEventListener('click', ()=>{ $q.value=""; q=""; page=1; fetchPage(false); });
+  $btnMas.addEventListener('click', ()=>{ page+=1; fetchPage(true); });
+
+  // Agregar a la receta
+  async function agregar(item, cantidad){
+    const form = new FormData();
+    form.append('nombre', item.nombre || '');
+    form.append('clave',  item.clave || '');
+    form.append('cantidad', String(cantidad));
+    const r = await fetch(urlAdd, {
+      method:'POST',
+      headers:{ 'X-CSRFToken': csrf },
+      body: form,
+      credentials:'same-origin'
+    });
+    const data = await r.json();
+    if(data && data.ok){
+      // pintar en panel derecho
+      const chip = document.createElement('div');
+      chip.className = 'med-chip';
+      chip.innerHTML = `
+        <div>
+          <strong>${data.nombre}</strong>
+          ${data.codigo_barras ? `<br><small>CB: ${data.codigo_barras}</small>` : ``}
+        </div>
+        <div><span class="badge bg-secondary">x${data.cantidad || 1}</span></div>
+      `;
+      // Si estaba el mensaje “No hay…”, lo quitamos
+      if($receta.firstElementChild && $receta.firstElementChild.tagName === 'P'){ $receta.firstElementChild.remove(); }
+      $receta.prepend(chip);
+
+      // Toast
+      const msg = document.getElementById('toast-msg');
+      msg.textContent = `Agregado: ${data.nombre}  (x${data.cantidad || 1})`;
+      const toast = new bootstrap.Toast(document.getElementById('toast-ok'));
+      toast.show();
+    }else{
+      alert(data.error || 'No se pudo agregar.');
+    }
+  }
+
+  // Primera carga
+  fetchPage(false);
+})();
+</script>
+{% endblock %}
+
