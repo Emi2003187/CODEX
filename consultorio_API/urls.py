@@ -171,7 +171,7 @@ urlpatterns = [
 
 urlpatterns += [
     path(
-        "recetas/<uuid:receta_id>/catalogo-excel/",
+        "recetas/<int:receta_id>/catalogo-excel/",
         views_recetas.receta_catalogo_excel,
         name="receta_catalogo_excel",
     ),
@@ -181,7 +181,7 @@ urlpatterns += [
         name="catalogo_excel_json",
     ),
     path(
-        "recetas/<uuid:receta_id>/catalogo-excel/agregar/",
+        "recetas/<int:receta_id>/catalogo-excel/agregar/",
         views_recetas.receta_catalogo_excel_agregar,
         name="receta_catalogo_excel_agregar",
     ),
