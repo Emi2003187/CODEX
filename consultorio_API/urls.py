@@ -15,8 +15,15 @@ from .views_consultas import (
 from django.contrib.auth.views import LogoutView
 from .views import CitaCreateView, Receta
 from consultorio_API import views, viewscitas
-from consultorio_API.views_recetas import RecetaPreviewView, RxRecetaView, RecetaA5View, receta_pdf_reportlab
-from . import views_recetas
+from consultorio_API.views_recetas import (
+    RecetaPreviewView,
+    RxRecetaView,
+    RecetaA5View,
+    receta_pdf_reportlab,
+    catalogo_excel_json,
+    receta_catalogo_excel,
+    receta_catalogo_excel_agregar,
+)
 
 urlpatterns = [
     path('', views.home_redirect, name='home'),
@@ -172,17 +179,17 @@ urlpatterns = [
 urlpatterns += [
     path(
         "recetas/<int:receta_id>/catalogo-excel/",
-        views_recetas.receta_catalogo_excel,
+        receta_catalogo_excel,
         name="receta_catalogo_excel",
     ),
     path(
-        "recetas/catalogo-excel.json",
-        views_recetas.catalogo_excel_json,
-        name="catalogo_excel_json",
+        "recetas/<int:receta_id>/catalogo-excel/agregar/",
+        receta_catalogo_excel_agregar,
+        name="receta_catalogo_excel_agregar",
     ),
     path(
-        "recetas/<int:receta_id>/catalogo-excel/agregar/",
-        views_recetas.receta_catalogo_excel_agregar,
-        name="receta_catalogo_excel_agregar",
+        "recetas/catalogo-excel/json/",
+        catalogo_excel_json,
+        name="catalogo_excel_json",
     ),
 ]

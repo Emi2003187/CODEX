@@ -248,27 +248,58 @@ def build_receta_pdf(buffer, receta):
 
     # Medicamentos recetados
     meds = list(receta.medicamentos.all()) if hasattr(receta, "medicamentos") else []
-    if meds:
+    has_clinical = any(
+        (m.dosis or m.frecuencia or m.via_administracion or m.duracion or m.indicaciones_especificas)
+        for m in meds
+    )
+    has_code = any(getattr(m, "codigo_barras", None) for m in meds)
+
+    if not meds:
+        story.append(Paragraph("Sin medicamentos recetados.", styles["TXT"]))
+    else:
         story += [Paragraph("Medicamentos Recetados", styles["H2"])]
-        data = [["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones", "Código"]]
-        for m in meds:
-            bc = _barcode_flowable(getattr(m, "codigo_barras", ""))
-            if not bc and getattr(m, "codigo_barras", ""):
-                bc = Paragraph(_fmt(m.codigo_barras), styles["XS"])
-            data.append([
-                _fmt(m.nombre), _fmt(m.principio_activo), _fmt(m.dosis),
-                _fmt(m.frecuencia), _fmt(m.via_administracion),
-                _fmt(m.duracion), _fmt(m.cantidad), _fmt(m.indicaciones_especificas), bc
-            ])
-        meds_tbl = Table(data, repeatRows=1, style=TableStyle([
-            ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#dee2e6")),
-            ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#f1f3f5")),
-            ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-            ("FONTNAME", (0,1), (-1,-1), "Helvetica"),
-            ("FONTSIZE", (0,0), (-1,-1), 9),
-            ("VALIGN", (0,0), (-1,-1), "TOP"),
-        ]))
-        story += [meds_tbl, Spacer(1, 2*mm)]
+        if not has_clinical:
+            headers = ["Nombre", "Cant."]
+            if has_code:
+                headers.append("Código")
+            data = [headers]
+            for m in meds:
+                row = [
+                    _fmt(getattr(m, "nombre", "")),
+                    str(getattr(m, "cantidad", 1)),
+                ]
+                if has_code:
+                    row.append(_fmt(getattr(m, "codigo_barras", ""), ""))
+                data.append(row)
+            col_widths = [290, 50] + ([140] if has_code else [])
+            t = Table(data, colWidths=col_widths)
+            t.setStyle(TableStyle([
+                ("GRID", (0,0), (-1,-1), 0.5, colors.black),
+                ("BACKGROUND", (0,0), (-1,0), colors.whitesmoke),
+                ("ALIGN", (-1,1), (-1,-1), "CENTER"),
+            ]))
+            story += [t, Spacer(1, 2*mm)]
+        else:
+            headers = ["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones"]
+            data = [headers]
+            for m in meds:
+                data.append([
+                    _fmt(getattr(m, "nombre", "")),
+                    _fmt(getattr(m, "principio_activo", "")),
+                    _fmt(getattr(m, "dosis", "")),
+                    _fmt(getattr(m, "frecuencia", "")),
+                    _fmt(getattr(m, "via_administracion", "")),
+                    _fmt(getattr(m, "duracion", "")),
+                    _fmt(getattr(m, "cantidad", "")),
+                    _fmt(getattr(m, "indicaciones_especificas", "")),
+                ])
+            t = Table(data, colWidths=[150, 120, 60, 70, 40, 60, 35, 140])
+            t.setStyle(TableStyle([
+                ("GRID", (0,0), (-1,-1), 0.5, colors.black),
+                ("BACKGROUND", (0,0), (-1,0), colors.whitesmoke),
+                ("ALIGN", (6,1), (6,-1), "CENTER"),
+            ]))
+            story += [t, Spacer(1, 2*mm)]
 
     # QR + folio/fecha en una fila
     folio = f"Folio: {receta.pk}"
