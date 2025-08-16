@@ -1168,7 +1168,7 @@ class MedicamentoRecetadoForm(forms.ModelForm):
         model = MedicamentoRecetado
         fields = [
             'nombre', 'principio_activo', 'dosis', 'frecuencia',
-            'via_administracion', 'duracion', 'cantidad', 'indicaciones_especificas'
+            'via_administracion', 'duracion', 'cantidad', 'indicaciones_especificas', 'codigo_barras'
         ]
         widgets = {
             'nombre': forms.TextInput(attrs={
@@ -1204,6 +1204,7 @@ class MedicamentoRecetadoForm(forms.ModelForm):
                 'rows': 2,
                 'placeholder': 'Indicaciones específicas...'
             }),
+            'codigo_barras': forms.HiddenInput(),
         }
         labels = {
             'nombre': 'Nombre del Medicamento',
@@ -1709,7 +1710,7 @@ MedicamentoRecetadoFormSet = inlineformset_factory(
     fields=[
         "nombre", "principio_activo", "dosis", "frecuencia",
         "via_administracion", "duracion", "cantidad",
-        "indicaciones_especificas",
+        "indicaciones_especificas", "codigo_barras",
     ],
     extra=1,
     can_delete=True,
