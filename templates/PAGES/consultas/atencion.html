@@ -526,7 +526,7 @@ textarea.form-control {
           Medicamentos Recetados
         </h3>
         
-        {% include "PAGES/recetas/catalogo_excel.html" with receta=consulta.receta %}
+        {% include "PAGES/recetas/_catalogo_excel_block.html" with receta=consulta.receta excel_disponible=excel_disponible %}
       </div>
 
       <!-- Navigation Buttons -->
