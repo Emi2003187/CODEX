@@ -2656,23 +2656,14 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
         if post_data:
             consulta_form = ConsultaMedicoForm(post_data, instance=consulta)
             receta_form = RecetaForm(post_data, instance=receta)
-            med_formset = MedicamentoRecetadoFormSet(
-                post_data,
-                instance=receta,
-                prefix="meds",
-            )
 
         else:
             consulta_form = ConsultaMedicoForm(instance=consulta)
             receta_form = RecetaForm(instance=receta)
-            med_formset = MedicamentoRecetadoFormSet(
-                instance=receta,
-                prefix="meds",
-            )
 
 
 
-        return consulta_form, receta_form, med_formset
+        return consulta_form, receta_form
 
     def get(self, request, pk):
         consulta = get_object_or_404(Consulta, pk=pk)
@@ -2684,7 +2675,7 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             consulta.estado = "en_progreso"
             consulta.fecha_atencion = timezone.now()
             consulta.save()
-        consulta_form, receta_form, med_formset = self._setup_forms(consulta)
+        consulta_form, receta_form = self._setup_forms(consulta)
         return render(
             request,
             self.template_name,
@@ -2693,7 +2684,6 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
                 "consulta": consulta,
                 "consulta_form": consulta_form,
                 "receta_form": receta_form,
-                "med_formset": med_formset,
                 "next": self.next_url,
             },
         )
@@ -2701,9 +2691,9 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
     def post(self, request, pk):
         consulta = get_object_or_404(Consulta, pk=pk)
         action = request.POST.get("action", "save")
-        consulta_form, receta_form, med_formset = self._setup_forms(consulta, post_data=request.POST)
+        consulta_form, receta_form = self._setup_forms(consulta, post_data=request.POST)
 
-        if all([consulta_form.is_valid(), receta_form.is_valid(), med_formset.is_valid()]):
+        if all([consulta_form.is_valid(), receta_form.is_valid()]):
             consulta = consulta_form.save(commit=False)
 
             if action == "start" and consulta.estado == "espera":
@@ -2726,8 +2716,6 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             receta = receta_form.save(commit=False)
             receta.medico = request.user
             receta.save()
-            med_formset.instance = receta
-            med_formset.save()
 
             if action == "finish":
                 return redirect(self.next_url)
@@ -2742,7 +2730,6 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
                 "consulta": consulta,
                 "consulta_form": consulta_form,
                 "receta_form": receta_form,
-                "med_formset": med_formset,
                 "next": self.next_url,
             },
         )
