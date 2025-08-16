@@ -69,6 +69,14 @@ def _add(items: List[Dict[str, Any]], nombre, clave, existencia, dep, precio, ca
     )
 
 
+def _right_value(line: List[str], start_idx: int, max_hop: int = 6):
+    """Busca el primer valor no vacío a la derecha de ``start_idx``."""
+    for j in range(start_idx + 1, min(len(line), start_idx + 1 + max_hop)):
+        if str(line[j]).strip():
+            return line[j]
+    return ""
+
+
 def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> Dict[str, Any]:
     if not catalogo_disponible():
         return {"items": [], "total": 0, "page": 1, "per_page": per_page}
@@ -117,33 +125,31 @@ def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> Dict[str
         exi = 0
         pre = 0
         for row in ws.iter_rows(values_only=True):
-            line = [str(c or "").strip() for c in row]
+            raw = [c if c is not None else "" for c in row]
+            line = [str(c).strip() for c in raw]
             if any(line):
                 joined = " ".join(line)
                 if ":" not in joined and not nom:
                     nom = joined
                 for i, val in enumerate(line):
                     lv = _norm(val)
-                    nxt = line[i + 1] if i + 1 < len(line) else ""
                     if lv.startswith("clave"):
-                        cla = nxt
+                        cla = _right_value(raw, i)
                     elif lv.startswith("existencia"):
-                        exi = nxt
+                        exi = _right_value(raw, i)
                     elif lv.startswith("departamento"):
-                        dep = nxt
+                        dep = _right_value(raw, i)
                     elif lv.startswith("precio"):
-                        pre = nxt
+                        pre = _right_value(raw, i)
                     elif lv.startswith("categoria"):
-                        cat = nxt
-                    elif lv.startswith("imagen") or lv.startswith("foto"):
-                        img = nxt
+                        cat = _right_value(raw, i)
             else:
                 if nom or cla:
-                    _add(items, nom, cla, exi, dep, pre, cat, img)
-                nom = cla = dep = cat = img = None
+                    _add(items, nom, cla, exi, dep, pre, cat)
+                nom = cla = dep = cat = None
                 exi = pre = 0
         if nom or cla:
-            _add(items, nom, cla, exi, dep, pre, cat, img)
+            _add(items, nom, cla, exi, dep, pre, cat)
 
     # Filtro (si q vacío, devolvemos primera página)
     if q:
@@ -155,6 +161,7 @@ def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> Dict[str
                 s in _norm(it["clave"]) or
                 s in _norm(it["departamento"]) or
                 s in _norm(it["categoria"]) or
+                s in _norm(str(it["existencia"])) or
                 (s.replace(".", "").isdigit() and abs(it["precio"] - _to_float(q)) < 1e-9)
             )
 
