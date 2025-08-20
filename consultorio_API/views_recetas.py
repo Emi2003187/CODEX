@@ -14,10 +14,12 @@ from django.db import transaction
 from io import BytesIO
 from django.utils import timezone
 from django.utils.text import slugify
+from django.conf import settings
 
 from .models import Receta, MedicamentoRecetado, MedicamentoCatalogo
 from .pdf.receta_reportlab import build_receta_pdf
 from django.db.models import Q
+from .catalogo_excel import buscar_articulos, catalogo_disponible
 
 
 class _RecetaPDFBase(LoginRequiredMixin, DetailView):
@@ -91,9 +93,40 @@ def receta_pdf_reportlab(request, pk: int):
 # --- Catálogo Excel -------------------------------------------------------
 
 
+def _ensure_catalogo():
+    """Populate `MedicamentoCatalogo` from Excel if it's empty."""
+    if MedicamentoCatalogo.objects.exists():
+        return
+    if not catalogo_disponible():
+        return
+    data = buscar_articulos(q="", page=1, per_page=1000000)
+    items = data.get("items", [])
+    if not items:
+        return
+    media_url = getattr(settings, "MEDIA_URL", "/media/")
+    for it in items:
+        codigo = str(it.get("clave") or "").strip()
+        if not codigo:
+            continue
+        defaults = {
+            "nombre": it.get("nombre", "")[:255],
+            "existencia": it.get("existencia", 0) or 0,
+            "departamento": it.get("departamento") or None,
+            "precio": it.get("precio") or None,
+            "categoria": it.get("categoria") or None,
+        }
+        img_url = it.get("imagen_url")
+        if img_url and img_url.startswith(media_url):
+            defaults["imagen"] = img_url[len(media_url) :]
+        MedicamentoCatalogo.objects.update_or_create(
+            codigo_barras=codigo, defaults=defaults
+        )
+
+
 @login_required
 @require_GET
 def catalogo_excel_json(request):
+    _ensure_catalogo()
     q = (request.GET.get("q") or "").strip()
     page = int(request.GET.get("page") or 1)
     per_page = int(request.GET.get("per_page") or 15)
@@ -129,6 +162,7 @@ def catalogo_excel_json(request):
 @require_GET
 def receta_catalogo_excel(request, receta_id):
     receta = get_object_or_404(Receta, id=receta_id)
+    _ensure_catalogo()
     return render(
         request,
         "PAGES/recetas/catalogo_excel.html",
