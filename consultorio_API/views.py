@@ -40,7 +40,7 @@ from .forms import *
 from .utils import redirect_next
 from django.utils.http import url_has_allowed_host_and_scheme
 from .pdf.receta_reportlab import build_receta_pdf
-from .catalogo_excel import catalogo_disponible
+from .models import MedicamentoCatalogo
 
 
 def doctor_tiene_consulta_en_progreso(medico):
@@ -2692,7 +2692,7 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
                 "consulta_form": consulta_form,
                 "receta_form": receta_form,
                 "next": self.next_url,
-                "excel_disponible": catalogo_disponible(),
+                "excel_disponible": MedicamentoCatalogo.objects.exists(),
             },
         )
 
@@ -2740,7 +2740,7 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
                 "consulta_form": consulta_form,
                 "receta_form": receta_form,
                 "next": self.next_url,
-                "excel_disponible": catalogo_disponible(),
+                "excel_disponible": MedicamentoCatalogo.objects.exists(),
             },
         )
 
@@ -2803,7 +2803,7 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
                 "signos_form": signos_form,
                 "receta_form": receta_form,
                 "receta": receta_form.instance,
-                "excel_disponible": catalogo_disponible(),
+                "excel_disponible": MedicamentoCatalogo.objects.exists(),
                 "return_to": self._get_return_to(),
             }
         )

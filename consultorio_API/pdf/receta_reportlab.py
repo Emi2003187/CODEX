@@ -81,10 +81,10 @@ def _barcode_flowable(code: str):
         return None
     try:
         if code.isdigit() and len(code) == 13:
-            bc = eanbc.Ean13BarcodeWidget(code)
+            bc = eanbc.Ean13BarcodeWidget(code, barHeight=20, barWidth=0.6)
         else:
-            bc = code128.Code128(code)
-        d = Drawing(40 * mm, 12 * mm)
+            bc = code128.Code128(str(code), barHeight=20, barWidth=0.6)
+        d = Drawing(40 * mm, 20 * mm)
         d.add(bc)
         return d
     except Exception:

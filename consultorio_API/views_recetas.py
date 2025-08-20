@@ -15,9 +15,9 @@ from io import BytesIO
 from django.utils import timezone
 from django.utils.text import slugify
 
-from .models import Receta, MedicamentoRecetado
+from .models import Receta, MedicamentoRecetado, MedicamentoCatalogo
 from .pdf.receta_reportlab import build_receta_pdf
-from .catalogo_excel import buscar_articulos, catalogo_disponible
+from django.db.models import Q
 
 
 class _RecetaPDFBase(LoginRequiredMixin, DetailView):
@@ -97,9 +97,32 @@ def catalogo_excel_json(request):
     q = (request.GET.get("q") or "").strip()
     page = int(request.GET.get("page") or 1)
     per_page = int(request.GET.get("per_page") or 15)
-    if not catalogo_disponible():
-        return JsonResponse({"items": [], "total": 0, "page": 1, "per_page": per_page})
-    return JsonResponse(buscar_articulos(q=q, page=page, per_page=per_page))
+
+    qs = MedicamentoCatalogo.objects.all()
+    if q:
+        qs = qs.filter(
+            Q(nombre__icontains=q)
+            | Q(codigo_barras__icontains=q)
+            | Q(departamento__icontains=q)
+            | Q(categoria__icontains=q)
+        )
+
+    total = qs.count()
+    start = (page - 1) * per_page
+    items = []
+    for m in qs[start : start + per_page]:
+        items.append(
+            {
+                "nombre": m.nombre,
+                "clave": m.codigo_barras,
+                "existencia": m.existencia,
+                "departamento": m.departamento or "",
+                "precio": float(m.precio) if m.precio is not None else "",
+                "categoria": m.categoria or "",
+                "imagen_url": m.imagen.url if m.imagen else "",
+            }
+        )
+    return JsonResponse({"items": items, "total": total, "page": page, "per_page": per_page})
 
 
 @login_required
@@ -109,7 +132,7 @@ def receta_catalogo_excel(request, receta_id):
     return render(
         request,
         "PAGES/recetas/catalogo_excel.html",
-        {"receta": receta, "excel_disponible": catalogo_disponible()},
+        {"receta": receta, "excel_disponible": MedicamentoCatalogo.objects.exists()},
     )
 
 
@@ -126,13 +149,18 @@ def receta_catalogo_excel_agregar(request, receta_id):
         cantidad = 1
     if cantidad < 1:
         cantidad = 1
-    if not nombre:
+    if not nombre and not clave:
         return JsonResponse({"ok": False, "error": "Nombre requerido"}, status=400)
+    cat = None
+    if clave:
+        cat = MedicamentoCatalogo.objects.filter(codigo_barras=clave).first()
     mr = MedicamentoRecetado.objects.create(
         receta=receta,
-        nombre=nombre,
+        nombre=cat.nombre if cat else nombre,
         cantidad=cantidad,
-        codigo_barras=clave or None,
+        codigo_barras=cat.codigo_barras if cat else (clave or None),
+        categoria=getattr(cat, "categoria", None),
+        departamento=getattr(cat, "departamento", None),
     )
     return JsonResponse(
         {
