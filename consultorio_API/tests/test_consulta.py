@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 from django.utils import timezone
-from consultorio_API.models import Usuario, Paciente, Consulta, Consultorio, Cita
+from consultorio_API.models import Usuario, Paciente, Consulta, Consultorio, Cita, Receta, MedicamentoRecetado
 
 
 def doctor_tiene_consulta_en_progreso(medico):
@@ -20,9 +20,40 @@ def test_doctor_solo_una_en_progreso(client):
 
     client.force_login(medico)
     url = reverse('consultas_atencion', args=[c2.pk])
-    client.get(url)
+    resp = client.get(url)
+    assert resp.status_code == 302
+    assert reverse('consultas_atencion', args=[c1.pk]) in resp['Location']
     c2.refresh_from_db()
     assert c2.estado == 'espera'
+
+
+@pytest.mark.django_db
+def test_agregar_actualizar_eliminar_medicamento(client):
+    consultorio = Consultorio.objects.create(nombre="CEX")
+    medico = Usuario.objects.create(username="docx", rol="medico", first_name="Doc", consultorio=consultorio)
+    paciente = Paciente.objects.create(nombre_completo="Px", fecha_nacimiento="2000-01-01", sexo='M', telefono='1', correo='p@p.com', direccion='x', consultorio=consultorio)
+    consulta = Consulta.objects.create(paciente=paciente, medico=medico, tipo='sin_cita', estado='en_progreso')
+    receta = Receta.objects.create(consulta=consulta, medico=medico)
+
+    client.force_login(medico)
+    add_url = reverse('receta_catalogo_excel_agregar', args=[receta.id])
+    resp = client.post(add_url, {'nombre': 'Paracetamol', 'clave': '123', 'cantidad': 2})
+    data = resp.json()
+    assert data['ok'] is True
+    med_id = int(data['id'])
+    med = MedicamentoRecetado.objects.get(id=med_id)
+    assert med.cantidad == 2
+
+    upd_url = reverse('receta_medicamento_actualizar', args=[receta.id, med_id])
+    resp2 = client.post(upd_url, {'cantidad': 5})
+    assert resp2.json()['ok'] is True
+    med.refresh_from_db()
+    assert med.cantidad == 5
+
+    del_url = reverse('receta_medicamento_eliminar', args=[receta.id, med_id])
+    resp3 = client.post(del_url)
+    assert resp3.json()['ok'] is True
+    assert MedicamentoRecetado.objects.filter(id=med_id).count() == 0
 
 @pytest.mark.django_db
 def test_form_consulta_solapa(db, client):

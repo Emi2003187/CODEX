@@ -185,4 +185,19 @@ urlpatterns += [
         views_recetas.receta_catalogo_excel_agregar,
         name="receta_catalogo_excel_agregar",
     ),
+    path(
+        "recetas/<int:receta_id>/meds.json",
+        views_recetas.receta_medicamentos_json,
+        name="receta_medicamentos_json",
+    ),
+    path(
+        "recetas/<int:receta_id>/meds/<int:med_id>/update/",
+        views_recetas.receta_medicamento_actualizar,
+        name="receta_medicamento_actualizar",
+    ),
+    path(
+        "recetas/<int:receta_id>/meds/<int:med_id>/delete/",
+        views_recetas.receta_medicamento_eliminar,
+        name="receta_medicamento_eliminar",
+    ),
 ]

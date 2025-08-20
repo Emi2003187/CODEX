@@ -48,6 +48,11 @@ def doctor_tiene_consulta_en_progreso(medico):
     return Consulta.objects.filter(medico=medico, estado="en_progreso").exists()
 
 
+def obtener_consulta_en_progreso(medico):
+    """Devuelve la consulta en progreso del médico si existe."""
+    return Consulta.objects.filter(medico=medico, estado="en_progreso").first()
+
+
 class NextRedirectMixin:
     """Mixin para manejar redirecciones basadas en ?next."""
 
@@ -2670,9 +2675,10 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
         consulta = get_object_or_404(Consulta, pk=pk)
         # Al acceder por primera vez se marca como "en progreso" si estaba en espera
         if consulta.estado == "espera":
-            if consulta.medico and doctor_tiene_consulta_en_progreso(consulta.medico):
+            existente = obtener_consulta_en_progreso(consulta.medico) if consulta.medico else None
+            if existente and existente.pk != consulta.pk:
                 messages.error(request, "El médico ya tiene otra consulta en progreso.")
-                return redirect(self.next_url)
+                return redirect("consultas_atencion", pk=existente.pk)
             consulta.estado = "en_progreso"
             consulta.fecha_atencion = timezone.now()
             consulta.save()
@@ -2699,9 +2705,10 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             consulta = consulta_form.save(commit=False)
 
             if action == "start" and consulta.estado == "espera":
-                if consulta.medico and doctor_tiene_consulta_en_progreso(consulta.medico):
+                existente = obtener_consulta_en_progreso(consulta.medico) if consulta.medico else None
+                if existente and existente.pk != consulta.pk:
                     messages.error(request, "El médico ya tiene otra consulta en progreso.")
-                    return redirect(self.next_url)
+                    return redirect("consultas_atencion", pk=existente.pk)
                 consulta.estado = "en_progreso"
                 consulta.fecha_atencion = timezone.now()
                 messages.success(request, "Consulta iniciada.")
@@ -2765,7 +2772,7 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
         return self._get_return_to()
 
     def _init_extra_forms(self, consulta, post_data=None):
-        """Build forms for vital signs, recipe and medications."""
+        """Build forms for vital signs and recipe."""
         signos, _ = SignosVitales.objects.get_or_create(consulta=consulta)
         receta, _ = Receta.objects.get_or_create(
             consulta=consulta, defaults={"medico": self.request.user}
@@ -2774,17 +2781,11 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
         if post_data:
             signos_form = SignosVitalesForm(post_data, instance=signos)
             receta_form = RecetaForm(post_data, instance=receta)
-            med_formset = MedicamentoRecetadoFormSet(
-                post_data, instance=receta, prefix="meds"
-            )
         else:
             signos_form = SignosVitalesForm(instance=signos)
             receta_form = RecetaForm(instance=receta)
-            med_formset = MedicamentoRecetadoFormSet(
-                instance=receta, prefix="meds"
-            )
 
-        return signos_form, receta_form, med_formset
+        return signos_form, receta_form
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -2792,17 +2793,17 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
 
         signos_form = kwargs.get("signos_form")
         receta_form = kwargs.get("receta_form")
-        med_formset = kwargs.get("med_formset")
 
-        if not all([signos_form, receta_form, med_formset]):
-            signos_form, receta_form, med_formset = self._init_extra_forms(consulta)
+        if not all([signos_form, receta_form]):
+            signos_form, receta_form = self._init_extra_forms(consulta)
 
         ctx.update(
             {
                 "usuario": self.request.user,
                 "signos_form": signos_form,
                 "receta_form": receta_form,
-                "med_formset": med_formset,
+                "receta": receta_form.instance,
+                "excel_disponible": catalogo_disponible(),
                 "return_to": self._get_return_to(),
             }
         )
@@ -2828,21 +2829,20 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
         form_class = self.get_form_class()
         consulta_form = form_class(request.POST, instance=self.object)
 
-        signos_form, receta_form, med_formset = self._init_extra_forms(
+        signos_form, receta_form = self._init_extra_forms(
             self.object, post_data=request.POST
         )
         ctx = self.get_context_data(
             form=consulta_form,
             signos_form=signos_form,
             receta_form=receta_form,
-            med_formset=med_formset,
         )
 
         if (consulta_form.is_valid() and signos_form.is_valid()
-                and receta_form.is_valid() and med_formset.is_valid()):
-            
+                and receta_form.is_valid()):
+
             consulta = consulta_form.save()
-            
+
             signos = signos_form.save(commit=False)
             signos.consulta = consulta
             signos.save()
@@ -2851,9 +2851,6 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
             receta.consulta = consulta
             receta.medico = request.user
             receta.save()
-
-            med_formset.instance = receta
-            med_formset.save()
 
             messages.success(request, 'Consulta actualizada exitosamente.')
             return redirect(self.get_success_url())

@@ -141,5 +141,53 @@ def receta_catalogo_excel_agregar(request, receta_id):
             "nombre": mr.nombre,
             "cantidad": mr.cantidad,
             "codigo_barras": mr.codigo_barras or "",
+            "principio_activo": mr.principio_activo or "",
         }
     )
+
+
+@login_required
+@require_GET
+def receta_medicamentos_json(request, receta_id):
+    """Devuelve los medicamentos actuales de la receta."""
+    receta = get_object_or_404(Receta, id=receta_id)
+    items = [
+        {
+            "id": mr.id,
+            "nombre": mr.nombre,
+            "principio_activo": mr.principio_activo or "",
+            "cantidad": mr.cantidad,
+            "codigo_barras": mr.codigo_barras or "",
+        }
+        for mr in receta.medicamentos.all()
+    ]
+    return JsonResponse({"items": items})
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def receta_medicamento_actualizar(request, receta_id, med_id):
+    """Actualiza la cantidad de un medicamento en la receta."""
+    receta = get_object_or_404(Receta, id=receta_id)
+    med = get_object_or_404(MedicamentoRecetado, id=med_id, receta=receta)
+    try:
+        cantidad = int(request.POST.get("cantidad") or "1")
+    except Exception:
+        cantidad = 1
+    if cantidad < 1:
+        cantidad = 1
+    med.cantidad = cantidad
+    med.save()
+    return JsonResponse({"ok": True, "id": med.id, "cantidad": med.cantidad})
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def receta_medicamento_eliminar(request, receta_id, med_id):
+    """Elimina un medicamento de la receta."""
+    receta = get_object_or_404(Receta, id=receta_id)
+    med = get_object_or_404(MedicamentoRecetado, id=med_id, receta=receta)
+    med.delete()
+    return JsonResponse({"ok": True})

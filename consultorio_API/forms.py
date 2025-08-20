@@ -1197,6 +1197,8 @@ class MedicamentoRecetadoForm(forms.ModelForm):
             }),
             'cantidad': forms.NumberInput(attrs={
                 'class': 'form-control',
+                'min': '1',
+                'value': '1',
                 'placeholder': 'Cantidad total'
             }),
             'indicaciones_especificas': forms.Textarea(attrs={
