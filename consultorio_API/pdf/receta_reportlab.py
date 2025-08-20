@@ -253,12 +253,10 @@ def build_receta_pdf(buffer, receta):
         data = [["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones", "Código"]]
         for m in meds:
             bc = _barcode_flowable(getattr(m, "codigo_barras", ""))
-            if not bc and getattr(m, "codigo_barras", ""):
-                bc = Paragraph(_fmt(m.codigo_barras), styles["XS"])
             data.append([
                 _fmt(m.nombre), _fmt(m.principio_activo), _fmt(m.dosis),
                 _fmt(m.frecuencia), _fmt(m.via_administracion),
-                _fmt(m.duracion), _fmt(m.cantidad), _fmt(m.indicaciones_especificas), bc
+                _fmt(m.duracion), _fmt(m.cantidad), _fmt(m.indicaciones_especificas), bc or ""
             ])
         meds_tbl = Table(data, repeatRows=1, style=TableStyle([
             ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#dee2e6")),

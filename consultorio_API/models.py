@@ -337,7 +337,7 @@ class MedicamentoRecetado(models.Model):
     frecuencia = models.CharField(max_length=100)
     via_administracion = models.CharField(max_length=50, blank=True, null=True)
     duracion = models.CharField(max_length=50)
-    cantidad = models.PositiveSmallIntegerField(blank=True, null=True)
+    cantidad = models.PositiveIntegerField(default=1)
     codigo_barras = models.CharField(max_length=32, blank=True, null=True)
     indicaciones_especificas = models.TextField(blank=True, null=True)
 

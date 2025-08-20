@@ -2668,6 +2668,9 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         consulta = get_object_or_404(Consulta, pk=pk)
+        if consulta.estado == "finalizada":
+            messages.error(request, "Esta consulta ya fue finalizada.")
+            return redirect(self.next_url)
         # Al acceder por primera vez se marca como "en progreso" si estaba en espera
         if consulta.estado == "espera":
             if consulta.medico and doctor_tiene_consulta_en_progreso(consulta.medico):

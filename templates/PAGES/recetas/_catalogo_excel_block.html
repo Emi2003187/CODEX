@@ -9,6 +9,10 @@
     </div>
   </div>
 
+  <div class="progress mb-2" id="catalogo-progress" style="height:4px; display:none;">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div>
+  </div>
+
   <div class="table-responsive">
     <table class="table table-striped table-sm align-middle">
       <thead>
@@ -40,16 +44,41 @@
       <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
     </ul>
   </nav>
+
+  <div class="mt-4">
+    <h4>Medicamentos Seleccionados</h4>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Principio Activo</th>
+            <th style="width:90px;">Cantidad</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="carrito-body">
+          <tr><td colspan="4" class="text-center text-muted">Sin medicamentos</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <script>
 (function(){
+  const recetaId = {{ receta.id }};
   const urlJson = '/recetas/catalogo-excel.json';
   const urlAdd = "{% url 'receta_catalogo_excel_agregar' receta.id %}";
+  const urlList = `/recetas/${recetaId}/catalogo-excel/medicamentos/`;
+  const urlUpdate = id => `/recetas/${recetaId}/catalogo-excel/actualizar/${id}/`;
+  const urlDelete = id => `/recetas/${recetaId}/catalogo-excel/eliminar/${id}/`;
   const csrftoken = '{{ csrf_token }}';
   const tbody = document.getElementById('catalogo-body');
   const pag = document.getElementById('catalogo-pagination');
   const searchInput = document.getElementById('catalogo-search');
+  const cartBody = document.getElementById('carrito-body');
+  const progress = document.getElementById('catalogo-progress');
   const perPage = 15;
   const excelDisponible = {{ excel_disponible|yesno:'true,false' }};
   let currentPage = 1;
@@ -57,11 +86,16 @@
 
   async function loadItems(){
     if(!excelDisponible) return;
-    const params = new URLSearchParams({q: currentQuery, page: currentPage, per_page: perPage});
-    const res = await fetch(`${urlJson}?${params.toString()}`);
-    const js = await res.json();
-    renderRows(js.items || []);
-    renderPagination(js.total || 0);
+    progress.style.display = 'block';
+    try {
+      const params = new URLSearchParams({q: currentQuery, page: currentPage, per_page: perPage});
+      const res = await fetch(`${urlJson}?${params.toString()}`);
+      const js = await res.json();
+      renderRows(js.items || []);
+      renderPagination(js.total || 0);
+    } finally {
+      progress.style.display = 'none';
+    }
   }
 
   function renderRows(items){
@@ -113,7 +147,53 @@
           body: data
         });
         const js = await res.json();
-        alert(js.ok ? 'Agregado' : (js.error || 'Error'));
+        if(js.ok){ loadCart(); }
+      });
+    });
+  }
+
+  async function loadCart(){
+    const res = await fetch(urlList);
+    const js = await res.json();
+    renderCart(js.items || []);
+  }
+
+  function renderCart(items){
+    cartBody.innerHTML = '';
+    if(!items.length){
+      cartBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin medicamentos</td></tr>';
+      return;
+    }
+    for(const it of items){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `\n<td>${it.nombre}</td>\n<td>${it.principio_activo || ''}</td>\n<td><input type="number" min="1" value="${it.cantidad}" class="form-control form-control-sm cart-qty" data-id="${it.id}"></td>\n<td><button type="button" class="btn btn-sm btn-danger cart-del" data-id="${it.id}"><i class='bi bi-trash'></i></button></td>`;
+      cartBody.appendChild(tr);
+    }
+    attachCartEvents();
+  }
+
+  function attachCartEvents(){
+    cartBody.querySelectorAll('input.cart-qty').forEach(inp => {
+      inp.addEventListener('change', async () => {
+        const id = inp.dataset.id;
+        const cantidad = Math.max(1, parseInt(inp.value || '1', 10));
+        const data = new URLSearchParams({cantidad});
+        await fetch(urlUpdate(id), {
+          method: 'POST',
+          headers: {'X-CSRFToken': csrftoken, 'Content-Type': 'application/x-www-form-urlencoded'},
+          body: data
+        });
+        loadCart();
+      });
+    });
+    cartBody.querySelectorAll('button.cart-del').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        await fetch(urlDelete(id), {
+          method: 'POST',
+          headers: {'X-CSRFToken': csrftoken}
+        });
+        loadCart();
       });
     });
   }
@@ -134,6 +214,7 @@
 
   if(excelDisponible){
     loadItems();
+    loadCart();
   }
 })();
 </script>

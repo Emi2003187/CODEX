@@ -18,6 +18,7 @@ from django.utils.text import slugify
 from .models import Receta, MedicamentoRecetado
 from .pdf.receta_reportlab import build_receta_pdf
 from .catalogo_excel import buscar_articulos, catalogo_disponible
+from functools import lru_cache
 
 
 class _RecetaPDFBase(LoginRequiredMixin, DetailView):
@@ -93,13 +94,20 @@ def receta_pdf_reportlab(request, pk: int):
 
 @login_required
 @require_GET
+@lru_cache(maxsize=128)
+def _cached_buscar_articulos(q: str, page: int, per_page: int):
+    return buscar_articulos(q=q, page=page, per_page=per_page)
+
+
+@login_required
+@require_GET
 def catalogo_excel_json(request):
     q = (request.GET.get("q") or "").strip()
     page = int(request.GET.get("page") or 1)
     per_page = int(request.GET.get("per_page") or 15)
     if not catalogo_disponible():
         return JsonResponse({"items": [], "total": 0, "page": 1, "per_page": per_page})
-    return JsonResponse(buscar_articulos(q=q, page=page, per_page=per_page))
+    return JsonResponse(_cached_buscar_articulos(q, page, per_page))
 
 
 @login_required
@@ -143,3 +151,42 @@ def receta_catalogo_excel_agregar(request, receta_id):
             "codigo_barras": mr.codigo_barras or "",
         }
     )
+
+
+@login_required
+@require_GET
+def receta_catalogo_excel_medicamentos(request, receta_id):
+    receta = get_object_or_404(Receta, id=receta_id)
+    meds = list(
+        receta.medicamentos.values(
+            "id", "nombre", "principio_activo", "cantidad", "codigo_barras"
+        )
+    )
+    return JsonResponse({"items": meds})
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def receta_catalogo_excel_actualizar(request, receta_id, med_id):
+    receta = get_object_or_404(Receta, id=receta_id)
+    med = get_object_or_404(MedicamentoRecetado, id=med_id, receta=receta)
+    try:
+        cantidad = int(request.POST.get("cantidad") or "1")
+    except Exception:
+        cantidad = 1
+    if cantidad < 1:
+        cantidad = 1
+    med.cantidad = cantidad
+    med.save()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def receta_catalogo_excel_eliminar(request, receta_id, med_id):
+    receta = get_object_or_404(Receta, id=receta_id)
+    med = get_object_or_404(MedicamentoRecetado, id=med_id, receta=receta)
+    med.delete()
+    return JsonResponse({"ok": True})
