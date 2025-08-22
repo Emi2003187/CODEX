@@ -94,11 +94,17 @@ def receta_pdf_reportlab(request, pk: int):
 
 
 def _ensure_catalogo():
-    """Populate `MedicamentoCatalogo` from Excel if it's empty."""
-    if MedicamentoCatalogo.objects.exists():
+    """Populate ``MedicamentoCatalogo`` from Excel when fields are missing."""
+    needs_update = not MedicamentoCatalogo.objects.exists()
+    if not needs_update:
+        needs_update = MedicamentoCatalogo.objects.filter(
+            Q(departamento__isnull=True)
+            | Q(precio__isnull=True)
+            | Q(categoria__isnull=True)
+        ).exists()
+    if not needs_update or not catalogo_disponible():
         return
-    if not catalogo_disponible():
-        return
+
     data = buscar_articulos(q="", page=1, per_page=1000000)
     items = data.get("items", [])
     if not items:
