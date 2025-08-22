@@ -2,6 +2,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER
 from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
@@ -80,11 +81,16 @@ def _barcode_flowable(code: str):
     if not code:
         return None
     try:
+        target_height = 13 * mm
+        max_width = 25 * mm
+        code = str(code)
+        modules = max(len(code), 1) * 11
+        bar_width = min(0.4, max_width / modules)
         if code.isdigit() and len(code) == 13:
-            bc = eanbc.Ean13BarcodeWidget(code, barHeight=20, barWidth=0.6)
+            bc = eanbc.Ean13BarcodeWidget(code, barHeight=target_height, barWidth=bar_width)
         else:
-            bc = code128.Code128(str(code), barHeight=20, barWidth=0.6)
-        d = Drawing(40 * mm, 20 * mm)
+            bc = code128.Code128(code, barHeight=target_height, barWidth=bar_width)
+        d = Drawing(bc.width, target_height)
         d.add(bc)
         return d
     except Exception:
@@ -250,22 +256,64 @@ def build_receta_pdf(buffer, receta):
     meds = list(receta.medicamentos.all()) if hasattr(receta, "medicamentos") else []
     if meds:
         story += [Paragraph("Medicamentos Recetados", styles["H2"])]
-        data = [["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones", "Código"]]
+        header = [
+            "Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía",
+            "Duración", "Cant.", "Indicaciones", "Código"
+        ]
+        data = [header]
+        cell_style = ParagraphStyle("MEDTBL", parent=styles["SM"], wordWrap="CJK")
+        center_style = ParagraphStyle("MEDTBL_C", parent=cell_style, alignment=TA_CENTER)
         for m in meds:
-            bc = _barcode_flowable(getattr(m, "codigo_barras", "")) or ""
+            code_val = _fmt(getattr(m, "codigo_barras", ""))
+            code_txt = Paragraph(code_val, center_style)
+            bc = _barcode_flowable(code_val)
+            if bc:
+                code_cell = Table(
+                    [[code_txt], [bc]],
+                    colWidths=[25*mm],
+                    rowHeights=[None, 15*mm],
+                    style=TableStyle([
+                        ("ALIGN", (0,0), (0,0), "CENTER"),
+                        ("ALIGN", (0,1), (0,1), "RIGHT"),
+                        ("VALIGN", (0,1), (0,1), "BOTTOM"),
+                        ("LEFTPADDING", (0,0), (-1,-1), 2*mm),
+                        ("RIGHTPADDING", (0,0), (-1,-1), 2*mm),
+                        ("TOPPADDING", (0,0), (-1,-1), 2*mm),
+                        ("BOTTOMPADDING", (0,0), (-1,-1), 2*mm),
+                    ])
+                )
+            else:
+                code_cell = code_txt
             data.append([
-                _fmt(m.nombre), _fmt(m.principio_activo), _fmt(m.dosis),
-                _fmt(m.frecuencia), _fmt(m.via_administracion),
-                _fmt(m.duracion), _fmt(m.cantidad), _fmt(m.indicaciones_especificas), bc
+                Paragraph(_fmt(m.nombre), cell_style),
+                Paragraph(_fmt(m.principio_activo), cell_style),
+                Paragraph(_fmt(m.dosis), cell_style),
+                Paragraph(_fmt(m.frecuencia), cell_style),
+                Paragraph(_fmt(m.via_administracion), cell_style),
+                Paragraph(_fmt(m.duracion), cell_style),
+                Paragraph(_fmt(m.cantidad), center_style),
+                Paragraph(_fmt(m.indicaciones_especificas), cell_style),
+                code_cell,
             ])
-        meds_tbl = Table(data, repeatRows=1, style=TableStyle([
-            ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#dee2e6")),
-            ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#f1f3f5")),
-            ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-            ("FONTNAME", (0,1), (-1,-1), "Helvetica"),
-            ("FONTSIZE", (0,0), (-1,-1), 9),
-            ("VALIGN", (0,0), (-1,-1), "TOP"),
-        ]))
+        col_widths = [28*mm, 28*mm, 17*mm, 20*mm, 13*mm, 17*mm, 12*mm, 30*mm, 25*mm]
+        meds_tbl = Table(
+            data,
+            colWidths=col_widths,
+            repeatRows=1,
+            style=TableStyle([
+                ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#dee2e6")),
+                ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#f1f3f5")),
+                ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+                ("FONTNAME", (0,1), (-1,-1), "Helvetica"),
+                ("FONTSIZE", (0,0), (-1,-1), 9),
+                ("VALIGN", (0,0), (-1,-1), "TOP"),
+                ("ALIGN", (6,0), (6,-1), "CENTER"),
+                ("LEFTPADDING", (8,1), (8,-1), 0),
+                ("RIGHTPADDING", (8,1), (8,-1), 0),
+                ("TOPPADDING", (8,1), (8,-1), 0),
+                ("BOTTOMPADDING", (8,1), (8,-1), 0),
+            ])
+        )
         story += [meds_tbl, Spacer(1, 2*mm)]
 
     # QR + folio/fecha en una fila
