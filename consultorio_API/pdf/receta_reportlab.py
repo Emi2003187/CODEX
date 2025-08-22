@@ -236,15 +236,12 @@ def build_receta_pdf(buffer, receta):
     meds = list(receta.medicamentos.all()) if hasattr(receta, "medicamentos") else []
     if meds:
         story += [Paragraph("Medicamentos Recetados", styles["H2"])]
-        data = [["Nombre", "Cantidad", "Código", "Existencia", "Departamento", "Precio", "Categoría"]]
+        data = [["Nombre", "Cantidad", "Código", "Categoría"]]
         for m in meds:
             data.append([
                 _fmt(m.nombre),
                 _fmt(m.cantidad),
                 _fmt(m.codigo_barras),
-                _fmt(m.existencia),
-                _fmt(m.departamento),
-                _fmt(m.precio),
                 _fmt(m.categoria),
             ])
         meds_tbl = Table(
@@ -295,7 +292,8 @@ def build_receta_pdf(buffer, receta):
         canvas.setFillColor(colors.HexColor("#6c757d"))
         canvas.drawString(10*mm, 8*mm, f"Página {canvas.getPageNumber()}")
         try:
-            bc = code128.Code128(str(receta.pk), barHeight=15*mm, barWidth=0.35*mm)
+            code = str(receta.pk).zfill(8)
+            bc = code128.Code128(code, barHeight=15*mm, barWidth=0.5*mm)
             bc_width = bc.width
             bc.drawOn(canvas, w - bc_width - 10*mm, 5*mm)
         except Exception:
