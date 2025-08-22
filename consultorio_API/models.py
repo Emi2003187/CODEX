@@ -351,6 +351,7 @@ class MedicamentoRecetado(models.Model):
     via_administracion = models.CharField(max_length=50, blank=True, null=True)
     duracion = models.CharField(max_length=50)
     cantidad = models.PositiveIntegerField(default=1)
+    existencia = models.PositiveIntegerField(default=0)
     codigo_barras = models.CharField(max_length=32, blank=True, null=True)
     categoria = models.CharField(max_length=100, blank=True, null=True)
     departamento = models.CharField(max_length=100, blank=True, null=True)
