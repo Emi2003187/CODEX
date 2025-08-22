@@ -40,16 +40,46 @@
       <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
     </ul>
   </nav>
+
+  <hr class="my-4">
+  <h4>Medicamentos seleccionados</h4>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Principio activo</th>
+          <th style="width:80px;">Cantidad</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="carrito-body">
+        {% for m in receta.medicamentos.all %}
+        <tr data-id="{{ m.id }}">
+          <td>{{ m.nombre }}</td>
+          <td>{{ m.principio_activo|default:"" }}</td>
+          <td><input type="number" min="1" value="{{ m.cantidad }}" class="form-control form-control-sm qty"></td>
+          <td><button type="button" class="btn btn-sm btn-danger remove">&times;</button></td>
+        </tr>
+        {% empty %}
+        <tr class="empty"><td colspan="4" class="text-center text-muted">No hay medicamentos</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <script>
 (function(){
   const urlJson = '/recetas/catalogo-excel.json';
   const urlAdd = "{% url 'receta_catalogo_excel_agregar' receta.id %}";
+  const urlUpdateBase = "{% url 'receta_medicamento_actualizar' receta.id 0 %}";
+  const urlDeleteBase = "{% url 'receta_medicamento_eliminar' receta.id 0 %}";
   const csrftoken = '{{ csrf_token }}';
   const tbody = document.getElementById('catalogo-body');
   const pag = document.getElementById('catalogo-pagination');
   const searchInput = document.getElementById('catalogo-search');
+  const cartBody = document.getElementById('carrito-body');
   const perPage = 15;
   const excelDisponible = {{ excel_disponible|yesno:'true,false' }};
   let currentPage = 1;
@@ -73,7 +103,11 @@
     for(const it of items){
       const tr = document.createElement('tr');
       const imgSrc = it.imagen_url || "{% static 'img/default_user.png' %}";
-      tr.innerHTML = `\n<td><img src="${imgSrc}" style="width:40px;height:40px;object-fit:contain;border:1px solid #eee;border-radius:4px;"></td>\n<td>${it.nombre}</td>\n<td>${it.clave}</td>\n<td>${it.existencia}</td>\n<td>${it.departamento}</td>\n<td>${it.precio}</td>\n<td>${it.categoria}</td>\n<td><input type="number" min="1" value="1" class="form-control form-control-sm qty"></td>\n<td><button type="button" class="btn btn-sm btn-success add" data-nombre="${it.nombre}" data-clave="${it.clave}">Usar</button></td>`;
+      tr.innerHTML = `\n<td><img src="${imgSrc}" style="width:40px;height:40px;object-fit:contain;border:1px solid #eee;border-radius:4px;"></td>`+
+        `\n<td>${it.nombre}</td><td>${it.clave}</td><td>${it.existencia}</td><td>${it.departamento}</td><td>${it.precio}</td>`+
+        `\n<td>${it.categoria}</td>`+
+        `\n<td><input type="number" min="1" value="1" class="form-control form-control-sm qty"></td>`+
+        `\n<td><button type="button" class="btn btn-sm btn-success add" data-nombre="${it.nombre}" data-clave="${it.clave}">Usar</button></td>`;
       tbody.appendChild(tr);
     }
     attachAddEvents();
@@ -113,8 +147,61 @@
           body: data
         });
         const js = await res.json();
-        alert(js.ok ? 'Agregado' : (js.error || 'Error'));
+        if(js.ok){
+          addCartRow(js);
+        }else{
+          alert(js.error || 'Error');
+        }
       });
+    });
+  }
+
+  function addCartRow(item){
+    const empty = cartBody.querySelector('tr.empty');
+    if(empty) empty.remove();
+    const tr = document.createElement('tr');
+    tr.dataset.id = item.id;
+    tr.innerHTML = `<td>${item.nombre}</td><td>${item.principio_activo || ''}</td>`+
+      `<td><input type="number" min="1" value="${item.cantidad}" class="form-control form-control-sm qty"></td>`+
+      `<td><button type="button" class="btn btn-sm btn-danger remove">&times;</button></td>`;
+    cartBody.appendChild(tr);
+    attachCartEvents();
+  }
+
+  function attachCartEvents(){
+    cartBody.querySelectorAll('button.remove').forEach(btn => {
+      btn.onclick = async () => {
+        const tr = btn.closest('tr');
+        const id = tr.dataset.id;
+        const res = await fetch(urlDeleteBase.replace('0', id), {
+          method: 'POST',
+          headers: {'X-CSRFToken': csrftoken}
+        });
+        const js = await res.json();
+        if(js.ok){
+          tr.remove();
+          if(!cartBody.children.length){
+            const row = document.createElement('tr');
+            row.className = 'empty';
+            row.innerHTML = '<td colspan="4" class="text-center text-muted">No hay medicamentos</td>';
+            cartBody.appendChild(row);
+          }
+        }
+      };
+    });
+
+    cartBody.querySelectorAll('input.qty').forEach(inp => {
+      inp.onchange = async () => {
+        const tr = inp.closest('tr');
+        const id = tr.dataset.id;
+        let cantidad = Math.max(1, parseInt(inp.value || '1', 10));
+        inp.value = cantidad;
+        await fetch(urlUpdateBase.replace('0', id), {
+          method: 'POST',
+          headers: {'X-CSRFToken': csrftoken, 'Content-Type': 'application/x-www-form-urlencoded'},
+          body: new URLSearchParams({cantidad})
+        });
+      };
     });
   }
 
@@ -135,5 +222,6 @@
   if(excelDisponible){
     loadItems();
   }
+  attachCartEvents();
 })();
 </script>

@@ -14,9 +14,11 @@ from django.db import transaction
 from io import BytesIO
 from django.utils import timezone
 from django.utils.text import slugify
+from django.conf import settings
 
-from .models import Receta, MedicamentoRecetado
+from .models import Receta, MedicamentoRecetado, MedicamentoCatalogo
 from .pdf.receta_reportlab import build_receta_pdf
+from django.db.models import Q
 from .catalogo_excel import buscar_articulos, catalogo_disponible
 
 
@@ -91,25 +93,80 @@ def receta_pdf_reportlab(request, pk: int):
 # --- Catálogo Excel -------------------------------------------------------
 
 
+def _ensure_catalogo():
+    """Populate `MedicamentoCatalogo` from Excel if it's empty."""
+    if MedicamentoCatalogo.objects.exists():
+        return
+    if not catalogo_disponible():
+        return
+    data = buscar_articulos(q="", page=1, per_page=1000000)
+    items = data.get("items", [])
+    if not items:
+        return
+    media_url = getattr(settings, "MEDIA_URL", "/media/")
+    for it in items:
+        codigo = str(it.get("clave") or "").strip()
+        if not codigo:
+            continue
+        defaults = {
+            "nombre": it.get("nombre", "")[:255],
+            "existencia": it.get("existencia", 0) or 0,
+            "departamento": it.get("departamento") or None,
+            "precio": it.get("precio") or None,
+            "categoria": it.get("categoria") or None,
+        }
+        img_url = it.get("imagen_url")
+        if img_url and img_url.startswith(media_url):
+            defaults["imagen"] = img_url[len(media_url) :]
+        MedicamentoCatalogo.objects.update_or_create(
+            codigo_barras=codigo, defaults=defaults
+        )
+
+
 @login_required
 @require_GET
 def catalogo_excel_json(request):
+    _ensure_catalogo()
     q = (request.GET.get("q") or "").strip()
     page = int(request.GET.get("page") or 1)
     per_page = int(request.GET.get("per_page") or 15)
-    if not catalogo_disponible():
-        return JsonResponse({"items": [], "total": 0, "page": 1, "per_page": per_page})
-    return JsonResponse(buscar_articulos(q=q, page=page, per_page=per_page))
+
+    qs = MedicamentoCatalogo.objects.all()
+    if q:
+        qs = qs.filter(
+            Q(nombre__icontains=q)
+            | Q(codigo_barras__icontains=q)
+            | Q(departamento__icontains=q)
+            | Q(categoria__icontains=q)
+        )
+
+    total = qs.count()
+    start = (page - 1) * per_page
+    items = []
+    for m in qs[start : start + per_page]:
+        items.append(
+            {
+                "nombre": m.nombre,
+                "clave": m.codigo_barras,
+                "existencia": m.existencia,
+                "departamento": m.departamento or "",
+                "precio": float(m.precio) if m.precio is not None else "",
+                "categoria": m.categoria or "",
+                "imagen_url": m.imagen.url if m.imagen else "",
+            }
+        )
+    return JsonResponse({"items": items, "total": total, "page": page, "per_page": per_page})
 
 
 @login_required
 @require_GET
 def receta_catalogo_excel(request, receta_id):
     receta = get_object_or_404(Receta, id=receta_id)
+    _ensure_catalogo()
     return render(
         request,
         "PAGES/recetas/catalogo_excel.html",
-        {"receta": receta, "excel_disponible": catalogo_disponible()},
+        {"receta": receta, "excel_disponible": MedicamentoCatalogo.objects.exists()},
     )
 
 
@@ -126,13 +183,18 @@ def receta_catalogo_excel_agregar(request, receta_id):
         cantidad = 1
     if cantidad < 1:
         cantidad = 1
-    if not nombre:
+    if not nombre and not clave:
         return JsonResponse({"ok": False, "error": "Nombre requerido"}, status=400)
+    cat = None
+    if clave:
+        cat = MedicamentoCatalogo.objects.filter(codigo_barras=clave).first()
     mr = MedicamentoRecetado.objects.create(
         receta=receta,
-        nombre=nombre,
+        nombre=cat.nombre if cat else nombre,
         cantidad=cantidad,
-        codigo_barras=clave or None,
+        codigo_barras=cat.codigo_barras if cat else (clave or None),
+        categoria=getattr(cat, "categoria", None),
+        departamento=getattr(cat, "departamento", None),
     )
     return JsonResponse(
         {
@@ -141,5 +203,53 @@ def receta_catalogo_excel_agregar(request, receta_id):
             "nombre": mr.nombre,
             "cantidad": mr.cantidad,
             "codigo_barras": mr.codigo_barras or "",
+            "principio_activo": mr.principio_activo or "",
         }
     )
+
+
+@login_required
+@require_GET
+def receta_medicamentos_json(request, receta_id):
+    """Devuelve los medicamentos actuales de la receta."""
+    receta = get_object_or_404(Receta, id=receta_id)
+    items = [
+        {
+            "id": mr.id,
+            "nombre": mr.nombre,
+            "principio_activo": mr.principio_activo or "",
+            "cantidad": mr.cantidad,
+            "codigo_barras": mr.codigo_barras or "",
+        }
+        for mr in receta.medicamentos.all()
+    ]
+    return JsonResponse({"items": items})
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def receta_medicamento_actualizar(request, receta_id, med_id):
+    """Actualiza la cantidad de un medicamento en la receta."""
+    receta = get_object_or_404(Receta, id=receta_id)
+    med = get_object_or_404(MedicamentoRecetado, id=med_id, receta=receta)
+    try:
+        cantidad = int(request.POST.get("cantidad") or "1")
+    except Exception:
+        cantidad = 1
+    if cantidad < 1:
+        cantidad = 1
+    med.cantidad = cantidad
+    med.save()
+    return JsonResponse({"ok": True, "id": med.id, "cantidad": med.cantidad})
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def receta_medicamento_eliminar(request, receta_id, med_id):
+    """Elimina un medicamento de la receta."""
+    receta = get_object_or_404(Receta, id=receta_id)
+    med = get_object_or_404(MedicamentoRecetado, id=med_id, receta=receta)
+    med.delete()
+    return JsonResponse({"ok": True})

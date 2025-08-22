@@ -81,10 +81,10 @@ def _barcode_flowable(code: str):
         return None
     try:
         if code.isdigit() and len(code) == 13:
-            bc = eanbc.Ean13BarcodeWidget(code)
+            bc = eanbc.Ean13BarcodeWidget(code, barHeight=20, barWidth=0.6)
         else:
-            bc = code128.Code128(code)
-        d = Drawing(40 * mm, 12 * mm)
+            bc = code128.Code128(str(code), barHeight=20, barWidth=0.6)
+        d = Drawing(40 * mm, 20 * mm)
         d.add(bc)
         return d
     except Exception:
@@ -252,9 +252,7 @@ def build_receta_pdf(buffer, receta):
         story += [Paragraph("Medicamentos Recetados", styles["H2"])]
         data = [["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones", "Código"]]
         for m in meds:
-            bc = _barcode_flowable(getattr(m, "codigo_barras", ""))
-            if not bc and getattr(m, "codigo_barras", ""):
-                bc = Paragraph(_fmt(m.codigo_barras), styles["XS"])
+            bc = _barcode_flowable(getattr(m, "codigo_barras", "")) or ""
             data.append([
                 _fmt(m.nombre), _fmt(m.principio_activo), _fmt(m.dosis),
                 _fmt(m.frecuencia), _fmt(m.via_administracion),
