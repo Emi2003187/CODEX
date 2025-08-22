@@ -14,8 +14,7 @@ from reportlab.platypus import (
 )
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.graphics.barcode import eanbc, code128
-from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.barcode import code128
 from django.utils import timezone
 from datetime import datetime, time
 from django.conf import settings
@@ -76,19 +75,6 @@ def _qr_flowable(text):
     except Exception:
         return None
 
-def _barcode_flowable(code: str):
-    if not code:
-        return None
-    try:
-        if code.isdigit() and len(code) == 13:
-            bc = eanbc.Ean13BarcodeWidget(code, barHeight=20, barWidth=0.6)
-        else:
-            bc = code128.Code128(str(code), barHeight=20, barWidth=0.6)
-        d = Drawing(40 * mm, 20 * mm)
-        d.add(bc)
-        return d
-    except Exception:
-        return None
 
 def _fmt(v, default="—"):
     return default if v in (None, "", []) else str(v)
@@ -252,11 +238,10 @@ def build_receta_pdf(buffer, receta):
         story += [Paragraph("Medicamentos Recetados", styles["H2"])]
         data = [["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones", "Código"]]
         for m in meds:
-            bc = _barcode_flowable(getattr(m, "codigo_barras", "")) or ""
             data.append([
                 _fmt(m.nombre), _fmt(m.principio_activo), _fmt(m.dosis),
                 _fmt(m.frecuencia), _fmt(m.via_administracion),
-                _fmt(m.duracion), _fmt(m.cantidad), _fmt(m.indicaciones_especificas), bc
+                _fmt(m.duracion), _fmt(m.cantidad), _fmt(m.indicaciones_especificas), _fmt(m.codigo_barras)
             ])
         meds_tbl = Table(data, repeatRows=1, style=TableStyle([
             ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#dee2e6")),
@@ -300,7 +285,13 @@ def build_receta_pdf(buffer, receta):
         w, h = A4
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(colors.HexColor("#6c757d"))
-        canvas.drawRightString(w - 10*mm, 8*mm, f"Página {canvas.getPageNumber()}")
+        canvas.drawString(10*mm, 8*mm, f"Página {canvas.getPageNumber()}")
+        try:
+            bc = code128.Code128(str(receta.pk), barHeight=15*mm, barWidth=0.4)
+            bc_width = bc.width
+            bc.drawOn(canvas, w - bc_width - 10*mm, 10*mm)
+        except Exception:
+            pass
         canvas.restoreState()
 
     # Render

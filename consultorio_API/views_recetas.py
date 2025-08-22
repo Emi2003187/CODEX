@@ -175,7 +175,6 @@ def receta_catalogo_excel(request, receta_id):
 @transaction.atomic
 def receta_catalogo_excel_agregar(request, receta_id):
     receta = get_object_or_404(Receta, id=receta_id)
-    nombre = (request.POST.get("nombre") or "").strip()
     clave = (request.POST.get("clave") or "").strip()
     try:
         cantidad = int(request.POST.get("cantidad") or "1")
@@ -183,18 +182,23 @@ def receta_catalogo_excel_agregar(request, receta_id):
         cantidad = 1
     if cantidad < 1:
         cantidad = 1
-    if not nombre and not clave:
-        return JsonResponse({"ok": False, "error": "Nombre requerido"}, status=400)
-    cat = None
-    if clave:
-        cat = MedicamentoCatalogo.objects.filter(codigo_barras=clave).first()
+    if not clave:
+        return JsonResponse({"ok": False, "error": "Clave requerida"}, status=400)
+    cat = MedicamentoCatalogo.objects.filter(codigo_barras=clave).first()
+    if not cat:
+        return JsonResponse(
+            {"ok": False, "error": "Medicamento no encontrado en catálogo"},
+            status=404,
+        )
     mr = MedicamentoRecetado.objects.create(
         receta=receta,
-        nombre=cat.nombre if cat else nombre,
+        nombre=cat.nombre,
         cantidad=cantidad,
-        codigo_barras=cat.codigo_barras if cat else (clave or None),
-        categoria=getattr(cat, "categoria", None),
-        departamento=getattr(cat, "departamento", None),
+        codigo_barras=cat.codigo_barras,
+        existencia=cat.existencia,
+        departamento=cat.departamento,
+        precio=cat.precio,
+        categoria=cat.categoria,
     )
     return JsonResponse(
         {
@@ -203,7 +207,6 @@ def receta_catalogo_excel_agregar(request, receta_id):
             "nombre": mr.nombre,
             "cantidad": mr.cantidad,
             "codigo_barras": mr.codigo_barras or "",
-            "principio_activo": mr.principio_activo or "",
         }
     )
 

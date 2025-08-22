@@ -352,8 +352,10 @@ class MedicamentoRecetado(models.Model):
     duracion = models.CharField(max_length=50)
     cantidad = models.PositiveIntegerField(default=1)
     codigo_barras = models.CharField(max_length=32, blank=True, null=True)
-    categoria = models.CharField(max_length=100, blank=True, null=True)
+    existencia = models.PositiveIntegerField(default=0)
     departamento = models.CharField(max_length=100, blank=True, null=True)
+    precio = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    categoria = models.CharField(max_length=100, blank=True, null=True)
     indicaciones_especificas = models.TextField(blank=True, null=True)
 
     def __str__(self):

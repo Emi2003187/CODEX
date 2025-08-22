@@ -1,7 +1,16 @@
 import pytest
 from django.urls import reverse
 from django.utils import timezone
-from consultorio_API.models import Usuario, Paciente, Consulta, Consultorio, Cita, Receta, MedicamentoRecetado
+from consultorio_API.models import (
+    Usuario,
+    Paciente,
+    Consulta,
+    Consultorio,
+    Cita,
+    Receta,
+    MedicamentoRecetado,
+    MedicamentoCatalogo,
+)
 
 
 def doctor_tiene_consulta_en_progreso(medico):
@@ -37,6 +46,14 @@ def test_agregar_actualizar_eliminar_medicamento(client):
 
     client.force_login(medico)
     add_url = reverse('receta_catalogo_excel_agregar', args=[receta.id])
+    MedicamentoCatalogo.objects.create(
+        nombre="Paracetamol",
+        codigo_barras="123",
+        existencia=10,
+        departamento="Farmacia",
+        precio=5.0,
+        categoria="Analgesicos",
+    )
     resp = client.post(add_url, {'nombre': 'Paracetamol', 'clave': '123', 'cantidad': 2})
     data = resp.json()
     assert data['ok'] is True
