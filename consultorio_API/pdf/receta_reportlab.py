@@ -81,10 +81,10 @@ def _barcode_flowable(code: str):
         return None
     try:
         if code.isdigit() and len(code) == 13:
-            bc = eanbc.Ean13BarcodeWidget(code, barHeight=20, barWidth=0.6)
+            bc = eanbc.Ean13BarcodeWidget(code, barHeight=12*mm, barWidth=1.2)
         else:
-            bc = code128.Code128(str(code), barHeight=20, barWidth=0.6)
-        d = Drawing(40 * mm, 20 * mm)
+            bc = code128.Code128(str(code), barHeight=12*mm, barWidth=1.2)
+        d = Drawing(45 * mm, 15 * mm)
         d.add(bc)
         return d
     except Exception:
@@ -111,6 +111,64 @@ def build_receta_pdf(buffer, receta):
     if not valido_hasta and receta.fecha_emision:
         valido_hasta = receta.fecha_emision + timezone.timedelta(days=2)
 
+    def create_page_content():
+        content = []
+        
+        # Encabezado con logo y datos del médico
+        logo = _logo_flowable()
+        info = []
+        if medico:
+            info.append(Paragraph(f"Dr. {_fmt(medico.get_full_name())}", styles["H1"]))
+            if consultorio and getattr(consultorio, "nombre", None):
+                info.append(Paragraph(_fmt(consultorio.nombre), styles["TXT"]))
+            if getattr(medico, "cedula_profesional", None):
+                info.append(Paragraph(f"Cédula: {_fmt(medico.cedula_profesional)}", styles["XS"]))
+            if getattr(medico, "institucion_cedula", None):
+                info.append(Paragraph(f"Institución: {_fmt(medico.institucion_cedula)}", styles["XS"]))
+            telefono = getattr(medico, "telefono", None)
+            if telefono and any(ch.isdigit() for ch in str(telefono)):
+                info.append(Paragraph(f"Tel.: {_fmt(telefono)}", styles["XS"]))
+
+        header_tbl = Table(
+            [[logo, info]],
+            colWidths=[32*mm, None],
+            hAlign="LEFT",
+            style=TableStyle([
+                ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                ("LEFTPADDING", (0,0), (-1,-1), 0),
+                ("RIGHTPADDING", (0,0), (-1,-1), 6),
+                ("BOTTOMPADDING", (0,0), (-1,-1), 0),
+                ("TOPPADDING", (0,0), (-1,-1), 0),
+            ])
+        )
+        content += [
+            header_tbl,
+            Spacer(1, 2*mm),
+            HRFlowable(width="100%", thickness=0.7, color=colors.HexColor("#0d6efd")),
+            Spacer(1, 2*mm),
+            Paragraph("Receta Médica", styles["H1"]),
+            Spacer(1, 3*mm),
+        ]
+
+        # Información del Paciente
+        content += [Paragraph("Información del Paciente", styles["H2"])]
+        p_info = [
+            ["Nombre", _fmt(paciente.nombre_completo)],
+            ["Edad", f"{_fmt(paciente.edad)} años"],
+        ]
+        if consultorio and getattr(consultorio, "nombre", None):
+            p_info.append(["Consultorio", _fmt(consultorio.nombre)])
+        p_tbl = Table(p_info, colWidths=[35*mm, None], style=TableStyle([
+            ("FONTNAME", (0,0), (-1,-1), "Helvetica"),
+            ("FONTSIZE", (0,0), (-1,-1), 10),
+            ("TEXTCOLOR", (0,0), (0,-1), colors.HexColor("#6c757d")),
+            ("ALIGN", (0,0), (0,-1), "RIGHT"),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 4),
+        ]))
+        content += [p_tbl, Spacer(1, 2*mm)]
+        
+        return content
+
     # Documento
     doc = SimpleDocTemplate(
         buffer,
@@ -122,60 +180,10 @@ def build_receta_pdf(buffer, receta):
     )
     story = []
 
-    # Encabezado con logo y datos del médico
-    logo = _logo_flowable()
-    info = []
-    if medico:
-        info.append(Paragraph(f"Dr. {_fmt(medico.get_full_name())}", styles["H1"]))
-        if consultorio and getattr(consultorio, "nombre", None):
-            info.append(Paragraph(_fmt(consultorio.nombre), styles["TXT"]))
-        if getattr(medico, "cedula_profesional", None):
-            info.append(Paragraph(f"Cédula: {_fmt(medico.cedula_profesional)}", styles["XS"]))
-        if getattr(medico, "institucion_cedula", None):
-            info.append(Paragraph(f"Institución: {_fmt(medico.institucion_cedula)}", styles["XS"]))
-        telefono = getattr(medico, "telefono", None)
-        if telefono and any(ch.isdigit() for ch in str(telefono)):
-            info.append(Paragraph(f"Tel.: {_fmt(telefono)}", styles["XS"]))
+    # Agregar contenido base de la primera página
+    story.extend(create_page_content())
 
-    header_tbl = Table(
-        [[logo, info]],
-        colWidths=[32*mm, None],
-        hAlign="LEFT",
-        style=TableStyle([
-            ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-            ("LEFTPADDING", (0,0), (-1,-1), 0),
-            ("RIGHTPADDING", (0,0), (-1,-1), 6),
-            ("BOTTOMPADDING", (0,0), (-1,-1), 0),
-            ("TOPPADDING", (0,0), (-1,-1), 0),
-        ])
-    )
-    story += [
-        header_tbl,
-        Spacer(1, 2*mm),
-        HRFlowable(width="100%", thickness=0.7, color=colors.HexColor("#0d6efd")),
-        Spacer(1, 2*mm),
-        Paragraph("Receta Médica", styles["H1"]),
-        Spacer(1, 3*mm),
-    ]
-
-    # Información del Paciente
-    story += [Paragraph("Información del Paciente", styles["H2"])]
-    p_info = [
-        ["Nombre", _fmt(paciente.nombre_completo)],
-        ["Edad", f"{_fmt(paciente.edad)} años"],
-    ]
-    if consultorio and getattr(consultorio, "nombre", None):
-        p_info.append(["Consultorio", _fmt(consultorio.nombre)])
-    p_tbl = Table(p_info, colWidths=[35*mm, None], style=TableStyle([
-        ("FONTNAME", (0,0), (-1,-1), "Helvetica"),
-        ("FONTSIZE", (0,0), (-1,-1), 10),
-        ("TEXTCOLOR", (0,0), (0,-1), colors.HexColor("#6c757d")),
-        ("ALIGN", (0,0), (0,-1), "RIGHT"),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 4),
-    ]))
-    story += [p_tbl, Spacer(1, 2*mm)]
-
-    # Información de la Consulta
+    # Información de la Consulta (solo en primera página)
     story += [Paragraph("Información de la Consulta", styles["H2"])]
     def box(lbl, txt):
         return [
@@ -187,13 +195,13 @@ def build_receta_pdf(buffer, receta):
             [Table(box("Motivo de consulta", consulta.motivo_consulta), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),4)])),
              Table(box("Diagnóstico", consulta.diagnostico), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),4)]))],
             [Table(box("Tratamiento", consulta.tratamiento), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),4)])),
-             Table(box("Observaciones", consulta.observaciones), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),4)]))]
+             Table(box("Observaciones", consulta.observaciones), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),4)]))],
         ],
         colWidths=[None, None]
     )
-    story += [c_tbl, Spacer(1, 3*mm)]
+    story += [c_tbl, Spacer(1, 2*mm)]
 
-    # Signos vitales (si existen)
+    # Signos vitales (si existen, solo en primera página)
     signos = getattr(consulta, "signos_vitales", None)
     if signos:
         story += [Paragraph("Signos Vitales", styles["H2"])]
@@ -229,7 +237,7 @@ def build_receta_pdf(buffer, receta):
             Spacer(1, 2*mm),
         ]
 
-    # Receta
+    # Receta (solo en primera página)
     story += [Paragraph("Receta Médica", styles["H2"])]
     story += [
         Paragraph("<font color='#6c757d'>Indicaciones Generales</font>", styles["SM"]),
@@ -246,29 +254,82 @@ def build_receta_pdf(buffer, receta):
     ]))
     story += [r_tbl, Spacer(1, 2*mm)]
 
-    # Medicamentos recetados
     meds = list(receta.medicamentos.all()) if hasattr(receta, "medicamentos") else []
     if meds:
         story += [Paragraph("Medicamentos Recetados", styles["H2"])]
-        data = [["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones", "Código"]]
-        for m in meds:
-            bc = _barcode_flowable(getattr(m, "codigo_barras", "")) or ""
-            data.append([
-                _fmt(m.nombre), _fmt(m.principio_activo), _fmt(m.dosis),
-                _fmt(m.frecuencia), _fmt(m.via_administracion),
-                _fmt(m.duracion), _fmt(m.cantidad), _fmt(m.indicaciones_especificas), bc
-            ])
-        meds_tbl = Table(data, repeatRows=1, style=TableStyle([
-            ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#dee2e6")),
-            ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#f1f3f5")),
-            ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-            ("FONTNAME", (0,1), (-1,-1), "Helvetica"),
-            ("FONTSIZE", (0,0), (-1,-1), 9),
-            ("VALIGN", (0,0), (-1,-1), "TOP"),
-        ]))
-        story += [meds_tbl, Spacer(1, 2*mm)]
+        
+        # Calcular cuántos medicamentos caben por página (aproximadamente 6-8 por página)
+        meds_per_page = 6
+        total_pages = (len(meds) + meds_per_page - 1) // meds_per_page
+        
+        for page_num in range(total_pages):
+            if page_num > 0:
+                # Agregar salto de página y contenido base para páginas adicionales
+                story.append(PageBreak())
+                story.extend(create_page_content())
+                story += [Paragraph("Medicamentos Recetados (continuación)", styles["H2"])]
+            
+            # Medicamentos para esta página
+            start_idx = page_num * meds_per_page
+            end_idx = min(start_idx + meds_per_page, len(meds))
+            page_meds = meds[start_idx:end_idx]
+            
+            for m in page_meds:
+                # Crear bloque individual para cada medicamento
+                med_content = []
+                
+                # Nombre del medicamento
+                med_content.append([Paragraph(f"<b>{_fmt(m.nombre)}</b>", styles["TXT"])])
+                
+                # Cantidad y código de barras en la misma fila
+                bc = _barcode_flowable(getattr(m, "codigo_barras", ""))
+                
+                if bc:
+                    # Crear una sola fila con nombre, cantidad y código de barras
+                    med_row = [
+                        Paragraph(f"<b>{_fmt(m.nombre)}</b>", styles["TXT"]),
+                        Paragraph(f"Cantidad: {_fmt(m.cantidad)}", styles["TXT"]),
+                        bc
+                    ]
+                    
+                    med_table = Table(
+                        [med_row],
+                        colWidths=[80*mm, 40*mm, 50*mm],
+                        style=TableStyle([
+                            ("BOX", (0,0), (-1,-1), 1, colors.HexColor("#dee2e6")),
+                            ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f8f9fa")),
+                            ("LEFTPADDING", (0,0), (-1,-1), 8),
+                            ("RIGHTPADDING", (0,0), (-1,-1), 8),
+                            ("TOPPADDING", (0,0), (-1,-1), 6),
+                            ("BOTTOMPADDING", (0,0), (-1,-1), 6),
+                            ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                            ("ALIGN", (2,0), (2,0), "CENTER"),  # Centrar código de barras
+                        ])
+                    )
+                else:
+                    # Si no hay código de barras, solo mostrar nombre y cantidad
+                    med_row = [
+                        Paragraph(f"<b>{_fmt(m.nombre)}</b>", styles["TXT"]),
+                        Paragraph(f"Cantidad: {_fmt(m.cantidad)}", styles["TXT"])
+                    ]
+                    
+                    med_table = Table(
+                        [med_row],
+                        colWidths=[80*mm, 90*mm],
+                        style=TableStyle([
+                            ("BOX", (0,0), (-1,-1), 1, colors.HexColor("#dee2e6")),
+                            ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f8f9fa")),
+                            ("LEFTPADDING", (0,0), (-1,-1), 8),
+                            ("RIGHTPADDING", (0,0), (-1,-1), 8),
+                            ("TOPPADDING", (0,0), (-1,-1), 6),
+                            ("BOTTOMPADDING", (0,0), (-1,-1), 6),
+                            ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                        ])
+                    )
+                
+                story += [med_table, Spacer(1, 3*mm)]
 
-    # QR + folio/fecha en una fila
+    # QR + folio/fecha en una fila (solo en la última página o primera si no hay medicamentos)
     folio = f"Folio: {receta.pk}"
     emision = receta.fecha_emision or timezone.now()
 
