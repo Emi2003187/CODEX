@@ -16,21 +16,16 @@ class Command(BaseCommand):
         data = buscar_articulos(q="", page=1, per_page=1000000)
         items = data.get("items", [])
         count = 0
-        media_url = getattr(settings, "MEDIA_URL", "/media/")
         for it in items:
-            codigo = str(it.get("clave") or "").strip()
+            codigo = str(it.get("codigo_barras") or it.get("clave") or "").strip()
             if not codigo:
                 continue
             defaults = {
                 "nombre": it.get("nombre", "")[:255],
-                "existencia": it.get("existencia", 0) or 0,
-                "departamento": it.get("departamento") or None,
-                "precio": it.get("precio") or None,
-                "categoria": it.get("categoria") or None,
+                "presentacion": it.get("presentacion") or None,
+                "clave": it.get("clave") or None,
+                "imagen_url": it.get("imagen_url") or None,
             }
-            img_url = it.get("imagen_url")
-            if img_url and img_url.startswith(media_url):
-                defaults["imagen"] = img_url[len(media_url) :]
             MedicamentoCatalogo.objects.update_or_create(
                 codigo_barras=codigo, defaults=defaults
             )

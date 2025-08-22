@@ -6,9 +6,7 @@ Extractor robusto del catálogo Excel para Recetas.
 Formato esperado (por bloques, con fila en blanco entre artículos):
 
   <Nombre / Presentación>         ← línea sin “:”
-  Clave: <...>      Existencia: <...>
-  Departamento: <...>   Precio: <...>
-  Categoría: <...>
+  Clave: <...>
   (puede haber una imagen embebida cerca)
 
 Funciones clave:
@@ -154,21 +152,26 @@ def _find_name_above(grid: List[List[str]], r_from: int) -> str:
     return ""
 
 
-def _append(items: List[Dict[str, Any]],
-            nombre, clave, existencia, dep, precio, cat, img=None) -> None:
+def _append(items: List[Dict[str, Any]], nombre, clave, img=None) -> None:
+    """Añade un artículo normalizando nombre/presentación."""
     raw_clave = str(clave or "").strip()
     if not raw_clave:
         return
     clave_clean = "".join(ch for ch in raw_clave if ch.isdigit()) or raw_clave
-    items.append({
-        "nombre": str(nombre or "").strip(),
-        "clave": clave_clean,
-        "existencia": _toi(existencia),
-        "departamento": str(dep or "").strip(),
-        "precio": _tof(precio),
-        "categoria": str(cat or "").strip(),
-        "imagen_url": str(img or "").strip(),
-    })
+    nombre_raw = str(nombre or "").strip()
+    nombre_txt, presentacion = nombre_raw, ""
+    if "/" in nombre_raw:
+        parts = nombre_raw.split("/", 1)
+        nombre_txt, presentacion = parts[0].strip(), parts[1].strip()
+    items.append(
+        {
+            "nombre": nombre_txt,
+            "presentacion": presentacion,
+            "clave": clave_clean,
+            "codigo_barras": clave_clean,
+            "imagen_url": str(img or "").strip(),
+        }
+    )
 
 
 # ──────────────────────── Extracción de imágenes ────────────────────────────
@@ -348,15 +351,10 @@ def _parse_sheet(ws, sheet_img_index: List[Tuple[int, str]]) -> List[Dict[str, A
                 nombre = _find_name_above(grid, r)
                 clave = _first_nonempty_to_right(grid, r, c)
 
-                existencia = _find_label_value(grid, r, "existencia", numeric=True)
-                dep        = _find_label_value(grid, r, "departamento", numeric=False)
-                precio     = _find_label_value(grid, r, "precio", numeric=True)
-                categoria  = _find_label_value(grid, r, "categoria", numeric=False)
-
                 # Imagen más cercana por fila (±5 filas)
-                imagen     = _closest_image_for_row(sheet_img_index, r, max_delta=5)
+                imagen = _closest_image_for_row(sheet_img_index, r, max_delta=5)
 
-                _append(items, nombre, clave, existencia, dep, precio, categoria, imagen)
+                _append(items, nombre, clave, imagen)
 
     return items
 
@@ -394,11 +392,10 @@ def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> Dict[str
 
         def ok(it: Dict[str, Any]) -> bool:
             return (
-                s in _norm_text(it.get("nombre", "")) or
-                s in _norm_text(it.get("clave", "")) or
-                s in _norm_text(it.get("departamento", "")) or
-                s in _norm_text(it.get("categoria", "")) or
-                (s.replace(".", "").isdigit() and abs(it.get("precio", 0.0) - _tof(q)) < 1e-9)
+                s in _norm_text(it.get("nombre", ""))
+                or s in _norm_text(it.get("presentacion", ""))
+                or s in _norm_text(it.get("clave", ""))
+                or s in _norm_text(it.get("codigo_barras", ""))
             )
 
         all_items = [it for it in all_items if ok(it)]

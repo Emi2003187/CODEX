@@ -20,6 +20,7 @@ from .models import Receta, MedicamentoRecetado, MedicamentoCatalogo
 from .pdf.receta_reportlab import build_receta_pdf
 from django.db.models import Q
 from .catalogo_excel import buscar_articulos, catalogo_disponible
+from .utils_barcode import barcode_base64
 
 
 class _RecetaPDFBase(LoginRequiredMixin, DetailView):
@@ -34,6 +35,11 @@ class _RecetaPDFBase(LoginRequiredMixin, DetailView):
                 "La receta solo puede emitirse cuando la consulta está finalizada.",
             )
             return redirect("consulta_detalle", pk=receta.consulta.pk)
+
+        # Generar códigos de barras en base64
+        receta.barcode_base64 = barcode_base64(str(receta.pk))
+        for m in receta.medicamentos.all():
+            m.barcode_base64 = barcode_base64(m.codigo_barras or "")
 
         buf = BytesIO()
         build_receta_pdf(buf, receta)
@@ -82,6 +88,10 @@ def receta_pdf_reportlab(request, pk: int):
         )
         return redirect("consulta_detalle", pk=receta.consulta.pk)
 
+    receta.barcode_base64 = barcode_base64(str(receta.pk))
+    for m in receta.medicamentos.all():
+        m.barcode_base64 = barcode_base64(m.codigo_barras or "")
+
     buf = BytesIO()
     build_receta_pdf(buf, receta)
     buf.seek(0)
@@ -103,21 +113,16 @@ def _ensure_catalogo():
     items = data.get("items", [])
     if not items:
         return
-    media_url = getattr(settings, "MEDIA_URL", "/media/")
     for it in items:
-        codigo = str(it.get("clave") or "").strip()
+        codigo = str(it.get("codigo_barras") or it.get("clave") or "").strip()
         if not codigo:
             continue
         defaults = {
             "nombre": it.get("nombre", "")[:255],
-            "existencia": it.get("existencia", 0) or 0,
-            "departamento": it.get("departamento") or None,
-            "precio": it.get("precio") or None,
-            "categoria": it.get("categoria") or None,
+            "presentacion": it.get("presentacion") or None,
+            "clave": it.get("clave") or None,
+            "imagen_url": it.get("imagen_url") or None,
         }
-        img_url = it.get("imagen_url")
-        if img_url and img_url.startswith(media_url):
-            defaults["imagen"] = img_url[len(media_url) :]
         MedicamentoCatalogo.objects.update_or_create(
             codigo_barras=codigo, defaults=defaults
         )
@@ -135,9 +140,9 @@ def catalogo_excel_json(request):
     if q:
         qs = qs.filter(
             Q(nombre__icontains=q)
+            | Q(presentacion__icontains=q)
             | Q(codigo_barras__icontains=q)
-            | Q(departamento__icontains=q)
-            | Q(categoria__icontains=q)
+            | Q(clave__icontains=q)
         )
 
     total = qs.count()
@@ -147,12 +152,11 @@ def catalogo_excel_json(request):
         items.append(
             {
                 "nombre": m.nombre,
-                "clave": m.codigo_barras,
-                "existencia": m.existencia,
-                "departamento": m.departamento or "",
-                "precio": float(m.precio) if m.precio is not None else "",
-                "categoria": m.categoria or "",
-                "imagen_url": m.imagen.url if m.imagen else "",
+                "presentacion": m.presentacion or "",
+                "clave": m.clave or "",
+                "codigo_barras": m.codigo_barras,
+                "imagen_url": m.imagen_url or "",
+                "barcode_base64": barcode_base64(m.codigo_barras),
             }
         )
     return JsonResponse({"items": items, "total": total, "page": page, "per_page": per_page})
@@ -193,8 +197,6 @@ def receta_catalogo_excel_agregar(request, receta_id):
         nombre=cat.nombre if cat else nombre,
         cantidad=cantidad,
         codigo_barras=cat.codigo_barras if cat else (clave or None),
-        categoria=getattr(cat, "categoria", None),
-        departamento=getattr(cat, "departamento", None),
     )
     return JsonResponse(
         {
@@ -213,16 +215,18 @@ def receta_catalogo_excel_agregar(request, receta_id):
 def receta_medicamentos_json(request, receta_id):
     """Devuelve los medicamentos actuales de la receta."""
     receta = get_object_or_404(Receta, id=receta_id)
-    items = [
-        {
-            "id": mr.id,
-            "nombre": mr.nombre,
-            "principio_activo": mr.principio_activo or "",
-            "cantidad": mr.cantidad,
-            "codigo_barras": mr.codigo_barras or "",
-        }
-        for mr in receta.medicamentos.all()
-    ]
+    items = []
+    for mr in receta.medicamentos.all():
+        items.append(
+            {
+                "id": mr.id,
+                "nombre": mr.nombre,
+                "principio_activo": mr.principio_activo or "",
+                "cantidad": mr.cantidad,
+                "codigo_barras": mr.codigo_barras or "",
+                "barcode_base64": barcode_base64(mr.codigo_barras or ""),
+            }
+        )
     return JsonResponse({"items": items})
 
 

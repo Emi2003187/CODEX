@@ -306,7 +306,11 @@
                 <div class="imss-subtitle">Sistema de Consultas</div>
                 <div class="prescription-title">CONSULTORIO MÉDICO</div>
                 <div class="barcode-placeholder">
-                    {{ consulta.receta.id|stringformat:"015d" }}
+                    {% if consulta.receta.barcode_base64 %}
+                        <img src="data:image/png;base64,{{ consulta.receta.barcode_base64 }}" alt="Código de barras">
+                    {% else %}
+                        {{ consulta.receta.id|stringformat:"015d" }}
+                    {% endif %}
                 </div>
             </div>
             
@@ -428,6 +432,11 @@
                             <strong>Presentación:</strong> ________________
                         </div>
                     </div>
+                    {% if med.barcode_base64 %}
+                    <div class="medication-barcode">
+                        <img src="data:image/png;base64,{{ med.barcode_base64 }}" alt="Código">
+                    </div>
+                    {% endif %}
                     {% if med.indicaciones_especificas %}
                     <div class="medication-notes">
                         <strong>Indicaciones:</strong> {{ med.indicaciones_especificas }}

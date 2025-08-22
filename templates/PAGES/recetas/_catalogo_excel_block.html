@@ -5,7 +5,7 @@
 
   <div class="row g-2 mb-3">
     <div class="col">
-      <input type="text" id="catalogo-search" class="form-control" placeholder="Buscar por Nombre/Presentación, Clave, Departamento, Categoría o Precio">
+      <input type="text" id="catalogo-search" class="form-control" placeholder="Buscar por Nombre, Presentación, Clave o Código de barras">
     </div>
   </div>
 
@@ -14,21 +14,19 @@
       <thead>
         <tr>
           <th>Imagen</th>
-          <th>Nombre/Presentación</th>
+          <th>Nombre</th>
+          <th>Presentación</th>
           <th>Clave</th>
-          <th>Existencia</th>
-          <th>Departamento</th>
-          <th>Precio</th>
-          <th>Categoría</th>
+          <th>Código</th>
           <th style="width:80px;">Cantidad</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="catalogo-body">
         {% if excel_disponible %}
-        <tr><td colspan="9" class="text-center text-muted">Cargando...</td></tr>
+        <tr><td colspan="6" class="text-center text-muted">Cargando...</td></tr>
         {% else %}
-        <tr><td colspan="9" class="text-center text-muted">Archivo no encontrado</td></tr>
+        <tr><td colspan="6" class="text-center text-muted">Archivo no encontrado</td></tr>
         {% endif %}
       </tbody>
     </table>
@@ -97,17 +95,16 @@
   function renderRows(items){
     tbody.innerHTML = '';
     if(!items.length){
-      tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Sin resultados</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Sin resultados</td></tr>';
       return;
     }
     for(const it of items){
       const tr = document.createElement('tr');
       const imgSrc = it.imagen_url || "{% static 'img/default_user.png' %}";
       tr.innerHTML = `\n<td><img src="${imgSrc}" style="width:40px;height:40px;object-fit:contain;border:1px solid #eee;border-radius:4px;"></td>`+
-        `\n<td>${it.nombre}</td><td>${it.clave}</td><td>${it.existencia}</td><td>${it.departamento}</td><td>${it.precio}</td>`+
-        `\n<td>${it.categoria}</td>`+
+        `\n<td>${it.nombre}</td><td>${it.presentacion}</td><td>${it.clave}</td><td>${it.codigo_barras}</td>`+
         `\n<td><input type="number" min="1" value="1" class="form-control form-control-sm qty"></td>`+
-        `\n<td><button type="button" class="btn btn-sm btn-success add" data-nombre="${it.nombre}" data-clave="${it.clave}">Usar</button></td>`;
+        `\n<td><button type="button" class="btn btn-sm btn-success add" data-nombre="${it.nombre}" data-clave="${it.codigo_barras}">Usar</button></td>`;
       tbody.appendChild(tr);
     }
     attachAddEvents();

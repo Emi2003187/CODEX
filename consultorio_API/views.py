@@ -41,6 +41,7 @@ from .utils import redirect_next
 from django.utils.http import url_has_allowed_host_and_scheme
 from .pdf.receta_reportlab import build_receta_pdf
 from .models import MedicamentoCatalogo
+from .utils_barcode import barcode_base64
 
 
 def doctor_tiene_consulta_en_progreso(medico):
@@ -3833,6 +3834,10 @@ def receta_pdf_view(request, receta_id):
 
     if not request.user.has_perm("consultorio.view_receta"):
         return HttpResponseForbidden()
+
+    receta.barcode_base64 = barcode_base64(str(receta.pk))
+    for m in receta.medicamentos.all():
+        m.barcode_base64 = barcode_base64(m.codigo_barras or "")
 
     buf = BytesIO()
     build_receta_pdf(buf, receta)

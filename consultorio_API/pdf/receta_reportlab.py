@@ -14,14 +14,15 @@ from reportlab.platypus import (
 )
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.graphics.barcode import eanbc, code128
-from reportlab.graphics.shapes import Drawing
 from django.utils import timezone
 from datetime import datetime, time
 from django.conf import settings
 from io import BytesIO
 import os
 import qrcode
+import base64
+
+from consultorio_API.utils_barcode import barcode_base64
 
 # Intenta registrar una fuente que soporte acentos (DejaVu Sans).
 # Coloca el TTF en static/fonts si no está. Si no existe, ignora silenciosamente.
@@ -76,17 +77,19 @@ def _qr_flowable(text):
     except Exception:
         return None
 
-def _barcode_flowable(code: str):
-    if not code:
+def _barcode_flowable(code: str = "", b64: str = ""):
+    """Devuelve un ``Image`` con el código de barras.
+
+    Se puede proporcionar directamente ``b64`` (cadena base64) para evitar
+    recalcular el código de barras.
+    """
+    if not b64:
+        b64 = barcode_base64(code)
+    if not b64:
         return None
     try:
-        if code.isdigit() and len(code) == 13:
-            bc = eanbc.Ean13BarcodeWidget(code, barHeight=20, barWidth=0.6)
-        else:
-            bc = code128.Code128(str(code), barHeight=20, barWidth=0.6)
-        d = Drawing(40 * mm, 20 * mm)
-        d.add(bc)
-        return d
+        img_bytes = base64.b64decode(b64)
+        return Image(BytesIO(img_bytes), width=40 * mm, height=15 * mm)
     except Exception:
         return None
 
@@ -252,7 +255,9 @@ def build_receta_pdf(buffer, receta):
         story += [Paragraph("Medicamentos Recetados", styles["H2"])]
         data = [["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones", "Código"]]
         for m in meds:
-            bc = _barcode_flowable(getattr(m, "codigo_barras", "")) or ""
+            bc = _barcode_flowable(
+                getattr(m, "codigo_barras", ""), getattr(m, "barcode_base64", "")
+            ) or ""
             data.append([
                 _fmt(m.nombre), _fmt(m.principio_activo), _fmt(m.dosis),
                 _fmt(m.frecuencia), _fmt(m.via_administracion),
