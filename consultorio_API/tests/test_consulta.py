@@ -57,9 +57,13 @@ def test_agregar_actualizar_eliminar_medicamento(client):
     resp = client.post(add_url, {'nombre': 'Paracetamol', 'clave': '123', 'cantidad': 2})
     data = resp.json()
     assert data['ok'] is True
+    assert data['codigo_barras'] == '123'
+    assert data['categoria'] == 'Analgesicos'
     med_id = int(data['id'])
     med = MedicamentoRecetado.objects.get(id=med_id)
     assert med.cantidad == 2
+    assert med.codigo_barras == '123'
+    assert med.categoria == 'Analgesicos'
 
     upd_url = reverse('receta_medicamento_actualizar', args=[receta.id, med_id])
     resp2 = client.post(upd_url, {'cantidad': 5})

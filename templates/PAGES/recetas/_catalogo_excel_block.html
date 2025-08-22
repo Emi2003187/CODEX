@@ -48,8 +48,9 @@
       <thead>
         <tr>
           <th>Nombre</th>
-          <th>Principio activo</th>
           <th style="width:80px;">Cantidad</th>
+          <th>Código</th>
+          <th>Categoría</th>
           <th></th>
         </tr>
       </thead>
@@ -57,12 +58,13 @@
         {% for m in receta.medicamentos.all %}
         <tr data-id="{{ m.id }}">
           <td>{{ m.nombre }}</td>
-          <td>{{ m.principio_activo|default:"" }}</td>
           <td><input type="number" min="1" value="{{ m.cantidad }}" class="form-control form-control-sm qty"></td>
+          <td>{{ m.codigo_barras|default:"" }}</td>
+          <td>{{ m.categoria|default:"" }}</td>
           <td><button type="button" class="btn btn-sm btn-danger remove">&times;</button></td>
         </tr>
         {% empty %}
-        <tr class="empty"><td colspan="4" class="text-center text-muted">No hay medicamentos</td></tr>
+        <tr class="empty"><td colspan="5" class="text-center text-muted">No hay medicamentos</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -161,8 +163,10 @@
     if(empty) empty.remove();
     const tr = document.createElement('tr');
     tr.dataset.id = item.id;
-    tr.innerHTML = `<td>${item.nombre}</td><td>${item.principio_activo || ''}</td>`+
+    tr.innerHTML = `<td>${item.nombre}</td>`+
       `<td><input type="number" min="1" value="${item.cantidad}" class="form-control form-control-sm qty"></td>`+
+      `<td>${item.codigo_barras || ''}</td>`+
+      `<td>${item.categoria || ''}</td>`+
       `<td><button type="button" class="btn btn-sm btn-danger remove">&times;</button></td>`;
     cartBody.appendChild(tr);
     attachCartEvents();
@@ -183,7 +187,7 @@
           if(!cartBody.children.length){
             const row = document.createElement('tr');
             row.className = 'empty';
-            row.innerHTML = '<td colspan="4" class="text-center text-muted">No hay medicamentos</td>';
+            row.innerHTML = '<td colspan="5" class="text-center text-muted">No hay medicamentos</td>';
             cartBody.appendChild(row);
           }
         }

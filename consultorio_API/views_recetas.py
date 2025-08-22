@@ -207,6 +207,7 @@ def receta_catalogo_excel_agregar(request, receta_id):
             "nombre": mr.nombre,
             "cantidad": mr.cantidad,
             "codigo_barras": mr.codigo_barras or "",
+            "categoria": mr.categoria or "",
         }
     )
 
@@ -223,6 +224,7 @@ def receta_medicamentos_json(request, receta_id):
             "principio_activo": mr.principio_activo or "",
             "cantidad": mr.cantidad,
             "codigo_barras": mr.codigo_barras or "",
+            "categoria": mr.categoria or "",
         }
         for mr in receta.medicamentos.all()
     ]
