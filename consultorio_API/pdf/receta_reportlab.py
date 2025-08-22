@@ -104,7 +104,7 @@ def build_receta_pdf(buffer, receta):
         leftMargin=10*mm,
         rightMargin=10*mm,
         topMargin=10*mm,
-        bottomMargin=10*mm,
+        bottomMargin=25*mm,
     )
     story = []
 
@@ -236,21 +236,29 @@ def build_receta_pdf(buffer, receta):
     meds = list(receta.medicamentos.all()) if hasattr(receta, "medicamentos") else []
     if meds:
         story += [Paragraph("Medicamentos Recetados", styles["H2"])]
-        data = [["Nombre", "Principio activo", "Dosis", "Frecuencia", "Vía", "Duración", "Cant.", "Indicaciones", "Código"]]
+        data = [["Nombre", "Cantidad", "Código", "Existencia", "Departamento", "Precio", "Categoría"]]
         for m in meds:
             data.append([
-                _fmt(m.nombre), _fmt(m.principio_activo), _fmt(m.dosis),
-                _fmt(m.frecuencia), _fmt(m.via_administracion),
-                _fmt(m.duracion), _fmt(m.cantidad), _fmt(m.indicaciones_especificas), _fmt(m.codigo_barras)
+                _fmt(m.nombre),
+                _fmt(m.cantidad),
+                _fmt(m.codigo_barras),
+                _fmt(m.existencia),
+                _fmt(m.departamento),
+                _fmt(m.precio),
+                _fmt(m.categoria),
             ])
-        meds_tbl = Table(data, repeatRows=1, style=TableStyle([
-            ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#dee2e6")),
-            ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#f1f3f5")),
-            ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-            ("FONTNAME", (0,1), (-1,-1), "Helvetica"),
-            ("FONTSIZE", (0,0), (-1,-1), 9),
-            ("VALIGN", (0,0), (-1,-1), "TOP"),
-        ]))
+        meds_tbl = Table(
+            data,
+            repeatRows=1,
+            style=TableStyle([
+                ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#dee2e6")),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f3f5")),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]),
+        )
         story += [meds_tbl, Spacer(1, 2*mm)]
 
     # QR + folio/fecha en una fila
@@ -287,9 +295,9 @@ def build_receta_pdf(buffer, receta):
         canvas.setFillColor(colors.HexColor("#6c757d"))
         canvas.drawString(10*mm, 8*mm, f"Página {canvas.getPageNumber()}")
         try:
-            bc = code128.Code128(str(receta.pk), barHeight=15*mm, barWidth=0.4)
+            bc = code128.Code128(str(receta.pk), barHeight=15*mm, barWidth=0.35*mm)
             bc_width = bc.width
-            bc.drawOn(canvas, w - bc_width - 10*mm, 10*mm)
+            bc.drawOn(canvas, w - bc_width - 10*mm, 5*mm)
         except Exception:
             pass
         canvas.restoreState()
