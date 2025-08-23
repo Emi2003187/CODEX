@@ -192,6 +192,7 @@ def receta_catalogo_excel_agregar(request, receta_id):
         receta=receta,
         nombre=cat.nombre if cat else nombre,
         cantidad=cantidad,
+        existencia=getattr(cat, "existencia", 0),
         codigo_barras=cat.codigo_barras if cat else (clave or None),
         categoria=getattr(cat, "categoria", None),
         departamento=getattr(cat, "departamento", None),
