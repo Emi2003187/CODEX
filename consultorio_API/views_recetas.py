@@ -188,15 +188,39 @@ def receta_catalogo_excel_agregar(request, receta_id):
     cat = None
     if clave:
         cat = MedicamentoCatalogo.objects.filter(codigo_barras=clave).first()
-    mr = MedicamentoRecetado.objects.create(
-        receta=receta,
-        nombre=cat.nombre if cat else nombre,
-        cantidad=cantidad,
-        existencia=getattr(cat, "existencia", 0),
-        codigo_barras=cat.codigo_barras if cat else (clave or None),
-        categoria=getattr(cat, "categoria", None),
-        departamento=getattr(cat, "departamento", None),
-    )
+
+    cat_nombre = cat.nombre if cat else nombre
+
+    mr = None
+    if clave:
+        mr = MedicamentoRecetado.objects.filter(
+            receta=receta, codigo_barras=clave
+        ).first()
+    if not mr:
+        mr = MedicamentoRecetado.objects.filter(
+            receta=receta, nombre=cat_nombre
+        ).first()
+
+    if mr:
+        mr.cantidad += cantidad
+        if not mr.codigo_barras and clave:
+            mr.codigo_barras = clave
+        if cat:
+            mr.existencia = getattr(cat, "existencia", mr.existencia)
+            mr.categoria = getattr(cat, "categoria", mr.categoria)
+            mr.departamento = getattr(cat, "departamento", mr.departamento)
+        mr.save()
+    else:
+        mr = MedicamentoRecetado.objects.create(
+            receta=receta,
+            nombre=cat_nombre,
+            cantidad=cantidad,
+            existencia=getattr(cat, "existencia", 0),
+            codigo_barras=cat.codigo_barras if cat else (clave or None),
+            categoria=getattr(cat, "categoria", None),
+            departamento=getattr(cat, "departamento", None),
+        )
+
     return JsonResponse(
         {
             "ok": True,

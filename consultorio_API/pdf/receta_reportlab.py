@@ -14,8 +14,7 @@ from reportlab.platypus import (
 )
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.graphics.barcode import eanbc, code128
-from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.barcode import createBarcodeDrawing
 from django.utils import timezone
 from datetime import datetime, time
 from django.conf import settings
@@ -80,13 +79,14 @@ def _barcode_flowable(code: str):
     if not code:
         return None
     try:
-        if code.isdigit() and len(code) == 13:
-            bc = eanbc.Ean13BarcodeWidget(code, barHeight=12*mm, barWidth=1.2)
-        else:
-            bc = code128.Code128(str(code), barHeight=12*mm, barWidth=1.2)
-        d = Drawing(45 * mm, 15 * mm)
-        d.add(bc)
-        return d
+        barcode_type = "EAN13" if code.isdigit() and len(code) == 13 else "Code128"
+        bc = createBarcodeDrawing(
+            barcode_type, value=str(code), barHeight=12 * mm, humanReadable=False
+        )
+        if bc.width > 45 * mm:
+            scale = (45 * mm) / bc.width
+            bc.scale(scale, scale)
+        return bc
     except Exception:
         return None
 

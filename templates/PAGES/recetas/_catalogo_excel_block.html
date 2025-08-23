@@ -173,6 +173,12 @@
   function addCartRow(item){
     const empty = cartBody.querySelector('tr.empty');
     if(empty) empty.remove();
+    const existing = cartBody.querySelector(`tr[data-id="${item.id}"]`);
+    if(existing){
+      const qty = existing.querySelector('input.qty');
+      qty.value = item.cantidad;
+      return;
+    }
     const tr = document.createElement('tr');
     tr.dataset.id = item.id;
     tr.innerHTML = `<td>${item.nombre}</td><td>${item.principio_activo || ''}</td>`+
