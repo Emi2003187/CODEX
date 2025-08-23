@@ -75,7 +75,21 @@
   const urlAdd = "{% url 'receta_catalogo_excel_agregar' receta.id %}";
   const urlUpdateBase = "{% url 'receta_medicamento_actualizar' receta.id 0 %}";
   const urlDeleteBase = "{% url 'receta_medicamento_eliminar' receta.id 0 %}";
-  const csrftoken = '{{ csrf_token }}';
+  function getCookie(name){
+    let cookieValue = null;
+    if(document.cookie && document.cookie !== ''){
+      const cookies = document.cookie.split(';');
+      for(let i=0;i<cookies.length;i++){
+        const cookie = cookies[i].trim();
+        if(cookie.substring(0, name.length + 1) === (name + '=')){
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
   const tbody = document.getElementById('catalogo-body');
   const pag = document.getElementById('catalogo-pagination');
   const searchInput = document.getElementById('catalogo-search');
@@ -159,6 +173,12 @@
   function addCartRow(item){
     const empty = cartBody.querySelector('tr.empty');
     if(empty) empty.remove();
+    const existing = cartBody.querySelector(`tr[data-id="${item.id}"]`);
+    if(existing){
+      const qty = existing.querySelector('input.qty');
+      qty.value = item.cantidad;
+      return;
+    }
     const tr = document.createElement('tr');
     tr.dataset.id = item.id;
     tr.innerHTML = `<td>${item.nombre}</td><td>${item.principio_activo || ''}</td>`+
