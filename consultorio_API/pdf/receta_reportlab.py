@@ -40,12 +40,12 @@ def _style_sheet():
     else:
         base = styles["Normal"].fontName
 
-    styles.add(ParagraphStyle(name="H1", fontName=base, fontSize=16, leading=20, spaceAfter=8, textColor=colors.HexColor("#0d6efd")))
-    styles.add(ParagraphStyle(name="H2", fontName=base, fontSize=13, leading=16, spaceAfter=6, textColor=colors.HexColor("#0d6efd")))
-    styles.add(ParagraphStyle(name="LBL", fontName=base, fontSize=9, leading=11, textColor=colors.HexColor("#6c757d")))
-    styles.add(ParagraphStyle(name="TXT", fontName=base, fontSize=10, leading=13))
-    styles.add(ParagraphStyle(name="SM", fontName=base, fontSize=9, leading=12))
-    styles.add(ParagraphStyle(name="XS", fontName=base, fontSize=8, leading=10, textColor=colors.HexColor("#6c757d")))
+    styles.add(ParagraphStyle(name="H1", fontName=base, fontSize=12, leading=14, spaceAfter=4, textColor=colors.HexColor("#0d6efd")))
+    styles.add(ParagraphStyle(name="H2", fontName=base, fontSize=10, leading=12, spaceAfter=3, textColor=colors.HexColor("#0d6efd")))
+    styles.add(ParagraphStyle(name="LBL", fontName=base, fontSize=7, leading=8, textColor=colors.HexColor("#6c757d")))
+    styles.add(ParagraphStyle(name="TXT", fontName=base, fontSize=8, leading=10))
+    styles.add(ParagraphStyle(name="SM", fontName=base, fontSize=7, leading=9))
+    styles.add(ParagraphStyle(name="XS", fontName=base, fontSize=6, leading=8, textColor=colors.HexColor("#6c757d")))
     return styles
 
 def _logo_flowable(usuario=None):
@@ -57,7 +57,7 @@ def _logo_flowable(usuario=None):
     path = os.path.join(settings.BASE_DIR, "static", "img", "logo_receta.jpg")
     if os.path.exists(path):
         try:
-            return Image(path, width=28*mm, height=28*mm, hAlign="LEFT")
+            return Image(path, width=20*mm, height=20*mm, hAlign="LEFT")
         except Exception:
             pass
     return None
@@ -71,7 +71,7 @@ def _qr_flowable(text):
         buf = BytesIO()
         img.save(buf, format="PNG")
         buf.seek(0)
-        return Image(buf, width=24*mm, height=24*mm, hAlign="RIGHT")
+        return Image(buf, width=18*mm, height=18*mm, hAlign="RIGHT")
     except Exception:
         return None
 
@@ -81,10 +81,10 @@ def _barcode_flowable(code: str):
     try:
         barcode_type = "EAN13" if code.isdigit() and len(code) == 13 else "Code128"
         bc = createBarcodeDrawing(
-            barcode_type, value=str(code), barHeight=12 * mm, humanReadable=False
+            barcode_type, value=str(code), barHeight=8 * mm, humanReadable=False
         )
-        if bc.width > 45 * mm:
-            scale = (45 * mm) / bc.width
+        if bc.width > 35 * mm:
+            scale = (35 * mm) / bc.width
             bc.scale(scale, scale)
         return bc
     except Exception:
@@ -131,23 +131,23 @@ def build_receta_pdf(buffer, receta):
 
         header_tbl = Table(
             [[logo, info]],
-            colWidths=[32*mm, None],
+            colWidths=[24*mm, None],
             hAlign="LEFT",
             style=TableStyle([
                 ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                 ("LEFTPADDING", (0,0), (-1,-1), 0),
-                ("RIGHTPADDING", (0,0), (-1,-1), 6),
+                ("RIGHTPADDING", (0,0), (-1,-1), 3),
                 ("BOTTOMPADDING", (0,0), (-1,-1), 0),
                 ("TOPPADDING", (0,0), (-1,-1), 0),
             ])
         )
         content += [
             header_tbl,
-            Spacer(1, 2*mm),
+            Spacer(1, 1*mm),  # Reducir espaciado
             HRFlowable(width="100%", thickness=0.7, color=colors.HexColor("#0d6efd")),
-            Spacer(1, 2*mm),
+            Spacer(1, 1*mm),  # Reducir espaciado
             Paragraph("Receta Médica", styles["H1"]),
-            Spacer(1, 3*mm),
+            Spacer(1, 1*mm),  # Reducir espaciado
         ]
 
         # Información del Paciente
@@ -158,25 +158,25 @@ def build_receta_pdf(buffer, receta):
         ]
         if consultorio and getattr(consultorio, "nombre", None):
             p_info.append(["Consultorio", _fmt(consultorio.nombre)])
-        p_tbl = Table(p_info, colWidths=[35*mm, None], style=TableStyle([
+        p_tbl = Table(p_info, colWidths=[25*mm, None], style=TableStyle([
             ("FONTNAME", (0,0), (-1,-1), "Helvetica"),
-            ("FONTSIZE", (0,0), (-1,-1), 10),
+            ("FONTSIZE", (0,0), (-1,-1), 8),  # Reducir tamaño de fuente
             ("TEXTCOLOR", (0,0), (0,-1), colors.HexColor("#6c757d")),
             ("ALIGN", (0,0), (0,-1), "RIGHT"),
-            ("BOTTOMPADDING", (0,0), (-1,-1), 4),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 2),  # Reducir padding
         ]))
-        content += [p_tbl, Spacer(1, 2*mm)]
+        content += [p_tbl, Spacer(1, 1*mm)]  # Reducir espaciado
         
         return content
 
-    # Documento
+    # Documento con márgenes más pequeños
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        leftMargin=10*mm,
-        rightMargin=10*mm,
-        topMargin=10*mm,
-        bottomMargin=10*mm,
+        leftMargin=8*mm,   # Reducir márgenes
+        rightMargin=8*mm,  # Reducir márgenes
+        topMargin=8*mm,    # Reducir márgenes
+        bottomMargin=8*mm, # Reducir márgenes
     )
     story = []
 
@@ -192,14 +192,14 @@ def build_receta_pdf(buffer, receta):
         ]
     c_tbl = Table(
         [
-            [Table(box("Motivo de consulta", consulta.motivo_consulta), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),4)])),
-             Table(box("Diagnóstico", consulta.diagnostico), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),4)]))],
-            [Table(box("Tratamiento", consulta.tratamiento), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),4)])),
-             Table(box("Observaciones", consulta.observaciones), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),4)]))],
+            [Table(box("Motivo de consulta", consulta.motivo_consulta), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),2)])),
+             Table(box("Diagnóstico", consulta.diagnostico), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),2)]))],
+            [Table(box("Tratamiento", consulta.tratamiento), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),2)])),
+             Table(box("Observaciones", consulta.observaciones), style=TableStyle([("BOX",(0,0),(-1,-1),0.3,colors.HexColor("#dee2e6")), ("INNERPADDING",(0,0),(-1,-1),2)]))],
         ],
         colWidths=[None, None]
     )
-    story += [c_tbl, Spacer(1, 2*mm)]
+    story += [c_tbl, Spacer(1, 1*mm)]  # Reducir espaciado
 
     # Signos vitales (si existen, solo en primera página)
     signos = getattr(consulta, "signos_vitales", None)
@@ -218,23 +218,23 @@ def build_receta_pdf(buffer, receta):
             ["Peso (kg)", _fmt(signos.peso), "Talla (m)", _fmt(signos.talla)],
             ["Circ. Abdominal (cm)", _fmt(signos.circunferencia_abdominal), "IMC", _fmt(round(imc_val, 2) if imc_val else None)],
         ]
-        sv_tbl = Table(sv, colWidths=[45*mm, 40*mm, 50*mm, None], style=TableStyle([
+        sv_tbl = Table(sv, colWidths=[35*mm, 30*mm, 40*mm, None], style=TableStyle([
             ("GRID", (0,0), (-1,-1), 0.25, colors.HexColor("#e9ecef")),
             ("BACKGROUND", (0,0), (-1,0), colors.whitesmoke),
             ("TEXTCOLOR", (0,0), (-1,-1), colors.black),
             ("FONTNAME", (0,0), (-1,-1), "Helvetica"),
-            ("FONTSIZE", (0,0), (-1,-1), 9),
+            ("FONTSIZE", (0,0), (-1,-1), 7),  # Reducir tamaño de fuente
             ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
         ]))
-        story += [sv_tbl, Spacer(1, 2*mm)]
+        story += [sv_tbl, Spacer(1, 1*mm)]  # Reducir espaciado
         # Alergias y Síntomas
         story += [
             Paragraph("<font color='#6c757d'>Alergias</font>", styles["SM"]),
             Paragraph(_fmt(signos.alergias), styles["TXT"]),
-            Spacer(1, 1*mm),
+            Spacer(1, 0.5*mm),  # Reducir espaciado
             Paragraph("<font color='#6c757d'>Síntomas</font>", styles["SM"]),
             Paragraph(_fmt(signos.sintomas), styles["TXT"]),
-            Spacer(1, 2*mm),
+            Spacer(1, 1*mm),  # Reducir espaciado
         ]
 
     # Receta (solo en primera página)
@@ -242,24 +242,23 @@ def build_receta_pdf(buffer, receta):
     story += [
         Paragraph("<font color='#6c757d'>Indicaciones Generales</font>", styles["SM"]),
         Paragraph(_fmt(receta.indicaciones_generales), styles["TXT"]),
-        Spacer(1, 2*mm),
+        Spacer(1, 1*mm),  # Reducir espaciado
     ]
 
     r_meta = [
         ["Válido hasta", _fmt(valido_hasta.strftime("%d/%m/%Y") if valido_hasta else None), "Notas", _fmt(receta.notas)],
     ]
-    r_tbl = Table(r_meta, colWidths=[30*mm, 35*mm, 20*mm, None], style=TableStyle([
+    r_tbl = Table(r_meta, colWidths=[25*mm, 30*mm, 15*mm, None], style=TableStyle([
         ("VALIGN", (0,0), (-1,-1), "TOP"),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 4),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 2),  # Reducir padding
     ]))
-    story += [r_tbl, Spacer(1, 2*mm)]
+    story += [r_tbl, Spacer(1, 1*mm)]  # Reducir espaciado
 
     meds = list(receta.medicamentos.all()) if hasattr(receta, "medicamentos") else []
     if meds:
         story += [Paragraph("Medicamentos Recetados", styles["H2"])]
         
-        # Calcular cuántos medicamentos caben por página (aproximadamente 6-8 por página)
-        meds_per_page = 6
+        meds_per_page = 12
         total_pages = (len(meds) + meds_per_page - 1) // meds_per_page
         
         for page_num in range(total_pages):
@@ -276,16 +275,9 @@ def build_receta_pdf(buffer, receta):
             
             for m in page_meds:
                 # Crear bloque individual para cada medicamento
-                med_content = []
-                
-                # Nombre del medicamento
-                med_content.append([Paragraph(f"<b>{_fmt(m.nombre)}</b>", styles["TXT"])])
-                
-                # Cantidad y código de barras en la misma fila
                 bc = _barcode_flowable(getattr(m, "codigo_barras", ""))
                 
                 if bc:
-                    # Crear una sola fila con nombre, cantidad y código de barras
                     med_row = [
                         Paragraph(f"<b>{_fmt(m.nombre)}</b>", styles["TXT"]),
                         Paragraph(f"Cantidad: {_fmt(m.cantidad)}", styles["TXT"]),
@@ -294,14 +286,14 @@ def build_receta_pdf(buffer, receta):
                     
                     med_table = Table(
                         [med_row],
-                        colWidths=[80*mm, 40*mm, 50*mm],
+                        colWidths=[70*mm, 35*mm, 40*mm],
                         style=TableStyle([
                             ("BOX", (0,0), (-1,-1), 1, colors.HexColor("#dee2e6")),
                             ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f8f9fa")),
-                            ("LEFTPADDING", (0,0), (-1,-1), 8),
-                            ("RIGHTPADDING", (0,0), (-1,-1), 8),
-                            ("TOPPADDING", (0,0), (-1,-1), 6),
-                            ("BOTTOMPADDING", (0,0), (-1,-1), 6),
+                            ("LEFTPADDING", (0,0), (-1,-1), 4),   # Reducir padding
+                            ("RIGHTPADDING", (0,0), (-1,-1), 4),  # Reducir padding
+                            ("TOPPADDING", (0,0), (-1,-1), 3),    # Reducir padding
+                            ("BOTTOMPADDING", (0,0), (-1,-1), 3), # Reducir padding
                             ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                             ("ALIGN", (2,0), (2,0), "CENTER"),  # Centrar código de barras
                         ])
@@ -315,19 +307,19 @@ def build_receta_pdf(buffer, receta):
                     
                     med_table = Table(
                         [med_row],
-                        colWidths=[80*mm, 90*mm],
+                        colWidths=[70*mm, 75*mm],
                         style=TableStyle([
                             ("BOX", (0,0), (-1,-1), 1, colors.HexColor("#dee2e6")),
                             ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f8f9fa")),
-                            ("LEFTPADDING", (0,0), (-1,-1), 8),
-                            ("RIGHTPADDING", (0,0), (-1,-1), 8),
-                            ("TOPPADDING", (0,0), (-1,-1), 6),
-                            ("BOTTOMPADDING", (0,0), (-1,-1), 6),
+                            ("LEFTPADDING", (0,0), (-1,-1), 4),   # Reducir padding
+                            ("RIGHTPADDING", (0,0), (-1,-1), 4),  # Reducir padding
+                            ("TOPPADDING", (0,0), (-1,-1), 3),    # Reducir padding
+                            ("BOTTOMPADDING", (0,0), (-1,-1), 3), # Reducir padding
                             ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                         ])
                     )
                 
-                story += [med_table, Spacer(1, 3*mm)]
+                story += [med_table, Spacer(1, 1*mm)]  # Reducir espaciado entre medicamentos
 
     # QR + folio/fecha en una fila (solo en la última página o primera si no hay medicamentos)
     folio = f"Folio: {receta.pk}"
@@ -345,7 +337,7 @@ def build_receta_pdf(buffer, receta):
     qr = _qr_flowable(f"{folio} | {fecha_emision}")
     meta_tbl = Table(
         [[qr, Paragraph(f"{folio}<br/>{fecha_emision}", styles['XS'])]],
-        colWidths=[28*mm, None],
+        colWidths=[22*mm, None],
         style=TableStyle([
             ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
             ("ALIGN", (0,0), (0,0), "LEFT"),
@@ -353,7 +345,7 @@ def build_receta_pdf(buffer, receta):
             ("RIGHTPADDING", (0,0), (-1,-1), 0),
         ])
     )
-    story += [Spacer(1, 2*mm), meta_tbl]
+    story += [Spacer(1, 1*mm), meta_tbl]  # Reducir espaciado
 
     # Callback pie de página
     def _footer(canvas, doc):
@@ -361,7 +353,7 @@ def build_receta_pdf(buffer, receta):
         w, h = A4
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(colors.HexColor("#6c757d"))
-        canvas.drawRightString(w - 10*mm, 8*mm, f"Página {canvas.getPageNumber()}")
+        canvas.drawRightString(w - 8*mm, 6*mm, f"Página {canvas.getPageNumber()}")  # Ajustar posición
         canvas.restoreState()
 
     # Render
