@@ -200,4 +200,9 @@ urlpatterns += [
         views_recetas.receta_medicamento_eliminar,
         name="receta_medicamento_eliminar",
     ),
+    path(
+        "recetas/catalogo-excel/limpiar-cache/",
+        views_recetas.catalogo_excel_limpiar_cache,
+        name="catalogo_excel_limpiar_cache",
+    ),
 ]

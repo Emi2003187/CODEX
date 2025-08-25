@@ -1,6 +1,74 @@
 {% extends "base.html" %}
-{% load static %}
-
 {% block content %}
-{% include "PAGES/recetas/_catalogo_excel_block.html" with receta=receta excel_disponible=excel_disponible %}
+<div class="container mt-4">
+  <h3>Catálogo de Medicamentos</h3>
+
+  <!-- Barra de búsqueda -->
+  <input type="text" id="search" class="form-control mb-3" placeholder="Buscar medicamento...">
+
+  <!-- Loading -->
+  <div id="loading" style="display:none; text-align:center; margin:20px;">
+      <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p>Cargando medicamentos, por favor espere...</p>
+  </div>
+
+  <!-- Tabla de medicamentos -->
+  <table class="table table-bordered" id="tabla-meds">
+      <thead>
+          <tr>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Existencia</th>
+              <th>Departamento</th>
+              <th>Precio</th>
+              <th>Categoría</th>
+          </tr>
+      </thead>
+      <tbody></tbody>
+  </table>
+</div>
+
+<script>
+function cargarCatalogo(query="") {
+    document.getElementById("loading").style.display = "block";
+    fetch("{% url 'catalogo_excel_json' %}?q=" + encodeURIComponent(query) + "&page=1&per_page=20")
+        .then(resp => resp.json())
+        .then(data => {
+            document.getElementById("loading").style.display = "none";
+            let tbody = document.querySelector("#tabla-meds tbody");
+            tbody.innerHTML = "";
+            data.items.forEach(m => {
+                let row = `<tr>
+                    <td>${m.clave}</td>
+                    <td>${m.nombre}</td>
+                    <td>${m.existencia}</td>
+                    <td>${m.departamento}</td>
+                    <td>${m.precio}</td>
+                    <td>${m.categoria}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        })
+        .catch(err => {
+            document.getElementById("loading").style.display = "none";
+            alert("Error al cargar medicamentos");
+        });
+}
+
+// Buscar en tiempo real
+const searchInput = document.getElementById("search");
+searchInput.addEventListener("input", e => {
+    cargarCatalogo(e.target.value);
+});
+
+// Cargar al abrir
+window.onload = () => cargarCatalogo();
+
+// Limpiar caché al salir
+window.addEventListener("beforeunload", () => {
+    navigator.sendBeacon("{% url 'catalogo_excel_limpiar_cache' %}");
+});
+</script>
 {% endblock %}
