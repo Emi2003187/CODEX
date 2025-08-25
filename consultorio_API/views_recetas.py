@@ -131,7 +131,17 @@ def catalogo_excel_json(request):
     page = int(request.GET.get("page") or 1)
     per_page = int(request.GET.get("per_page") or 15)
 
-    qs = MedicamentoCatalogo.objects.all()
+    qs = (
+        MedicamentoCatalogo.objects.all().only(
+            "codigo_barras",
+            "nombre",
+            "existencia",
+            "departamento",
+            "precio",
+            "categoria",
+            "imagen",
+        )
+    )
     if q:
         qs = qs.filter(
             Q(nombre__icontains=q)
@@ -155,7 +165,9 @@ def catalogo_excel_json(request):
                 "imagen_url": m.imagen.url if m.imagen else "",
             }
         )
-    return JsonResponse({"items": items, "total": total, "page": page, "per_page": per_page})
+    return JsonResponse(
+        {"items": items, "total": total, "page": page, "per_page": per_page}
+    )
 
 
 @login_required
