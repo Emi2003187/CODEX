@@ -65,5 +65,10 @@ searchInput.addEventListener("input", e => {
 
 // Cargar al abrir
 window.onload = () => cargarCatalogo();
+
+// Limpiar caché al salir
+window.addEventListener("beforeunload", () => {
+    navigator.sendBeacon("{% url 'catalogo_excel_limpiar_cache' %}");
+});
 </script>
 {% endblock %}

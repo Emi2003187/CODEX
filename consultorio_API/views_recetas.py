@@ -16,7 +16,12 @@ from django.utils.text import slugify
 
 from .models import Receta, MedicamentoRecetado
 from .pdf.receta_reportlab import build_receta_pdf
-from .catalogo_excel import buscar_articulos, catalogo_disponible
+from .catalogo_excel import (
+    buscar_articulos,
+    catalogo_disponible,
+    limpiar_cache_catalogo,
+)
+from django.views.decorators.csrf import csrf_exempt
 
 
 class _RecetaPDFBase(LoginRequiredMixin, DetailView):
@@ -101,6 +106,15 @@ def catalogo_excel_json(request):
         it.pop("imagen_url", None)
 
     return JsonResponse(data)
+
+
+@csrf_exempt
+@login_required
+@require_POST
+def catalogo_excel_limpiar_cache(request):
+    """Limpia la caché del catálogo de medicamentos."""
+    limpiar_cache_catalogo()
+    return JsonResponse({"ok": True})
 
 
 @login_required
