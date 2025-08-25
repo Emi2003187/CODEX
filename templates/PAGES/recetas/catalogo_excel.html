@@ -4,6 +4,7 @@
   <h3>Catálogo de Medicamentos</h3>
 
   <!-- Barra de búsqueda -->
+
   <div class="input-group mb-3">
     <input type="text" id="search" class="form-control" placeholder="Buscar medicamento...">
     <button class="btn btn-outline-secondary" type="button" id="reload-btn">Recargar</button>
@@ -66,12 +67,13 @@ searchInput.addEventListener("input", e => {
     cargarCatalogo(e.target.value);
 });
 
-// Botón para recargar catálogo desde el Excel
+
 document.getElementById("reload-btn").addEventListener("click", () => {
     document.getElementById("loading").style.display = "block";
     fetch("{% url 'catalogo_excel_limpiar_cache' %}", {method: "POST"})
         .finally(() => cargarCatalogo(searchInput.value));
 });
+
 
 // Cargar al abrir
 window.onload = () => cargarCatalogo();
