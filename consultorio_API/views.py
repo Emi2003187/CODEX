@@ -40,7 +40,7 @@ from .forms import *
 from .utils import redirect_next
 from django.utils.http import url_has_allowed_host_and_scheme
 from .pdf.receta_reportlab import build_receta_pdf
-from .catalogo_excel import catalogo_disponible, limpiar_cache_catalogo
+from .models import MedicamentoCatalogo
 
 
 def doctor_tiene_consulta_en_progreso(medico):
@@ -2692,7 +2692,7 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
                 "consulta_form": consulta_form,
                 "receta_form": receta_form,
                 "next": self.next_url,
-                "excel_disponible": catalogo_disponible(),
+                "excel_disponible": MedicamentoCatalogo.objects.exists(),
             },
         )
 
@@ -2726,8 +2726,6 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
             receta.medico = request.user
             receta.save()
 
-            limpiar_cache_catalogo()
-
             if action == "finish":
                 return redirect(self.next_url)
 
@@ -2742,7 +2740,7 @@ class ConsultaAtencionView(LoginRequiredMixin, View):
                 "consulta_form": consulta_form,
                 "receta_form": receta_form,
                 "next": self.next_url,
-                "excel_disponible": catalogo_disponible(),
+                "excel_disponible": MedicamentoCatalogo.objects.exists(),
             },
         )
 
@@ -2805,7 +2803,7 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
                 "signos_form": signos_form,
                 "receta_form": receta_form,
                 "receta": receta_form.instance,
-                "excel_disponible": catalogo_disponible(),
+                "excel_disponible": MedicamentoCatalogo.objects.exists(),
                 "return_to": self._get_return_to(),
             }
         )
@@ -2823,7 +2821,6 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
             consulta.medico = self.request.user
         
         consulta.save()
-        limpiar_cache_catalogo()
         messages.success(self.request, 'Consulta actualizada exitosamente.')
         return super().form_valid(form)
 
@@ -2854,8 +2851,6 @@ class ConsultaUpdateView(NextRedirectMixin, LoginRequiredMixin, ConsultaPermisoM
             receta.consulta = consulta
             receta.medico = request.user
             receta.save()
-
-            limpiar_cache_catalogo()
 
             messages.success(request, 'Consulta actualizada exitosamente.')
             return redirect(self.get_success_url())

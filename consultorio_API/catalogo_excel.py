@@ -32,7 +32,6 @@ from zipfile import ZipFile
 from xml.etree import ElementTree as ET
 
 from django.conf import settings
-from django.core.cache import cache
 
 try:
     from openpyxl import load_workbook  # type: ignore
@@ -363,41 +362,31 @@ def _parse_sheet(ws, sheet_img_index: List[Tuple[int, str]]) -> List[Dict[str, A
 
 
 # ─────────────────────────── API pública ────────────────────────────────────
-CATALOGO_CACHE_KEY = "catalogo_excel_items"
-
-
 def catalogo_disponible() -> bool:
     return EXCEL_PATH.exists() and load_workbook is not None
-
-
-def _load_all_items() -> List[Dict[str, Any]]:
-    """Lee el Excel una vez y lo guarda en caché."""
-    items = cache.get(CATALOGO_CACHE_KEY)
-    if items is not None:
-        return items
-
-    img_index_by_sheet = _extract_images_index(EXCEL_PATH)
-    wb = load_workbook(EXCEL_PATH, data_only=True)
-
-    items = []
-    for ws in wb.worksheets:
-        sheet_imgs = img_index_by_sheet.get(ws.title, [])
-        try:
-            parsed = _parse_sheet(ws, sheet_imgs)
-            if parsed:
-                items.extend(parsed)
-        except Exception:
-            continue
-
-    cache.set(CATALOGO_CACHE_KEY, items, None)
-    return items
 
 
 def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> Dict[str, Any]:
     if not catalogo_disponible():
         return {"items": [], "total": 0, "page": 1, "per_page": per_page}
 
-    all_items = _load_all_items()
+    # Índice de imágenes por (hoja → [(row0, url), ...])
+    img_index_by_sheet = _extract_images_index(EXCEL_PATH)
+
+    wb = load_workbook(EXCEL_PATH, data_only=True)
+
+    all_items: List[Dict[str, Any]] = []
+    for ws in wb.worksheets:
+        sheet_imgs = img_index_by_sheet.get(ws.title, [])
+        try:
+            parsed = _parse_sheet(ws, sheet_imgs)
+            if parsed:
+                all_items.extend(parsed)
+        except Exception:
+            continue
+
+    if not all_items:
+        return {"items": [], "total": 0, "page": 1, "per_page": per_page}
 
     # Filtro
     if q:
@@ -405,14 +394,11 @@ def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> Dict[str
 
         def ok(it: Dict[str, Any]) -> bool:
             return (
-                s in _norm_text(it.get("nombre", ""))
-                or s in _norm_text(it.get("clave", ""))
-                or s in _norm_text(it.get("departamento", ""))
-                or s in _norm_text(it.get("categoria", ""))
-                or (
-                    s.replace(".", "").isdigit()
-                    and abs(it.get("precio", 0.0) - _tof(q)) < 1e-9
-                )
+                s in _norm_text(it.get("nombre", "")) or
+                s in _norm_text(it.get("clave", "")) or
+                s in _norm_text(it.get("departamento", "")) or
+                s in _norm_text(it.get("categoria", "")) or
+                (s.replace(".", "").isdigit() and abs(it.get("precio", 0.0) - _tof(q)) < 1e-9)
             )
 
         all_items = [it for it in all_items if ok(it)]
@@ -423,22 +409,11 @@ def buscar_articulos(q: str = "", page: int = 1, per_page: int = 15) -> Dict[str
     start = (page - 1) * per_page
     end = start + per_page
 
-    return {
-        "items": all_items[start:end],
-        "total": total,
-        "page": page,
-        "per_page": per_page,
-    }
-
-
-def limpiar_cache_catalogo() -> None:
-    """Elimina la caché del catálogo para forzar su recarga."""
-    cache.delete(CATALOGO_CACHE_KEY)
+    return {"items": all_items[start:end], "total": total, "page": page, "per_page": per_page}
 
 
 __all__ = [
     "EXCEL_PATH",
     "catalogo_disponible",
     "buscar_articulos",
-    "limpiar_cache_catalogo",
 ]
