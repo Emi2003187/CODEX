@@ -5,7 +5,6 @@ from django.http import (
     FileResponse,
     HttpResponseForbidden,
     JsonResponse,
-    HttpResponseBadRequest,
 )
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.generic import DetailView
@@ -14,12 +13,15 @@ from django.db import transaction
 from io import BytesIO
 from django.utils import timezone
 from django.utils.text import slugify
-from django.conf import settings
 
-from .models import Receta, MedicamentoRecetado, MedicamentoCatalogo
+from .models import Receta, MedicamentoRecetado
 from .pdf.receta_reportlab import build_receta_pdf
-from django.db.models import Q
-from .catalogo_excel import buscar_articulos, catalogo_disponible
+from .catalogo_excel import (
+    buscar_articulos,
+    catalogo_disponible,
+    limpiar_cache_catalogo,
+)
+from django.views.decorators.csrf import csrf_exempt
 
 
 class _RecetaPDFBase(LoginRequiredMixin, DetailView):
@@ -90,83 +92,39 @@ def receta_pdf_reportlab(request, pk: int):
     return FileResponse(buf, as_attachment=False, filename=filename, content_type="application/pdf")
 
 
-# --- Catálogo Excel -------------------------------------------------------
-
-
-def _ensure_catalogo():
-    """Populate `MedicamentoCatalogo` from Excel if it's empty."""
-    if MedicamentoCatalogo.objects.exists():
-        return
-    if not catalogo_disponible():
-        return
-    data = buscar_articulos(q="", page=1, per_page=1000000)
-    items = data.get("items", [])
-    if not items:
-        return
-    media_url = getattr(settings, "MEDIA_URL", "/media/")
-    for it in items:
-        codigo = str(it.get("clave") or "").strip()
-        if not codigo:
-            continue
-        defaults = {
-            "nombre": it.get("nombre", "")[:255],
-            "existencia": it.get("existencia", 0) or 0,
-            "departamento": it.get("departamento") or None,
-            "precio": it.get("precio") or None,
-            "categoria": it.get("categoria") or None,
-        }
-        img_url = it.get("imagen_url")
-        if img_url and img_url.startswith(media_url):
-            defaults["imagen"] = img_url[len(media_url) :]
-        MedicamentoCatalogo.objects.update_or_create(
-            codigo_barras=codigo, defaults=defaults
-        )
-
-
 @login_required
 @require_GET
 def catalogo_excel_json(request):
-    _ensure_catalogo()
     q = (request.GET.get("q") or "").strip()
     page = int(request.GET.get("page") or 1)
     per_page = int(request.GET.get("per_page") or 15)
 
-    qs = MedicamentoCatalogo.objects.all()
-    if q:
-        qs = qs.filter(
-            Q(nombre__icontains=q)
-            | Q(codigo_barras__icontains=q)
-            | Q(departamento__icontains=q)
-            | Q(categoria__icontains=q)
-        )
+    data = buscar_articulos(q=q, page=page, per_page=per_page)
+    for it in data.get("items", []):
+        if it.get("imagen_url"):
+            it["imagen"] = it["imagen_url"]
+        it.pop("imagen_url", None)
 
-    total = qs.count()
-    start = (page - 1) * per_page
-    items = []
-    for m in qs[start : start + per_page]:
-        items.append(
-            {
-                "nombre": m.nombre,
-                "clave": m.codigo_barras,
-                "existencia": m.existencia,
-                "departamento": m.departamento or "",
-                "precio": float(m.precio) if m.precio is not None else "",
-                "categoria": m.categoria or "",
-                "imagen_url": m.imagen.url if m.imagen else "",
-            }
-        )
-    return JsonResponse({"items": items, "total": total, "page": page, "per_page": per_page})
+    return JsonResponse(data)
+
+
+@csrf_exempt
+@login_required
+@require_POST
+def catalogo_excel_limpiar_cache(request):
+    """Limpia la caché del catálogo de medicamentos."""
+    limpiar_cache_catalogo()
+    return JsonResponse({"ok": True})
 
 
 @login_required
 @require_GET
 def receta_catalogo_excel(request, receta_id):
     receta = get_object_or_404(Receta, id=receta_id)
-    _ensure_catalogo()
     return render(
         request,
         "PAGES/recetas/catalogo_excel.html",
-        {"receta": receta, "excel_disponible": MedicamentoCatalogo.objects.exists()},
+        {"receta": receta, "excel_disponible": catalogo_disponible()},
     )
 
 
@@ -186,10 +144,13 @@ def receta_catalogo_excel_agregar(request, receta_id):
     if not nombre and not clave:
         return JsonResponse({"ok": False, "error": "Nombre requerido"}, status=400)
     cat = None
-    if clave:
-        cat = MedicamentoCatalogo.objects.filter(codigo_barras=clave).first()
+    if clave or nombre:
+        data = buscar_articulos(q=clave or nombre, page=1, per_page=1)
+        items = data.get("items", [])
+        if items:
+            cat = items[0]
 
-    cat_nombre = cat.nombre if cat else nombre
+    cat_nombre = cat.get("nombre") if cat else nombre
 
     mr = None
     if clave:
@@ -206,19 +167,19 @@ def receta_catalogo_excel_agregar(request, receta_id):
         if not mr.codigo_barras and clave:
             mr.codigo_barras = clave
         if cat:
-            mr.existencia = getattr(cat, "existencia", mr.existencia)
-            mr.categoria = getattr(cat, "categoria", mr.categoria)
-            mr.departamento = getattr(cat, "departamento", mr.departamento)
+            mr.existencia = cat.get("existencia", mr.existencia)
+            mr.categoria = cat.get("categoria", mr.categoria)
+            mr.departamento = cat.get("departamento", mr.departamento)
         mr.save()
     else:
         mr = MedicamentoRecetado.objects.create(
             receta=receta,
             nombre=cat_nombre,
             cantidad=cantidad,
-            existencia=getattr(cat, "existencia", 0),
-            codigo_barras=cat.codigo_barras if cat else (clave or None),
-            categoria=getattr(cat, "categoria", None),
-            departamento=getattr(cat, "departamento", None),
+            existencia=cat.get("existencia", 0) if cat else 0,
+            codigo_barras=cat.get("clave") if cat else (clave or None),
+            categoria=cat.get("categoria") if cat else None,
+            departamento=cat.get("departamento") if cat else None,
         )
 
     return JsonResponse(
