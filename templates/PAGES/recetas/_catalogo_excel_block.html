@@ -101,11 +101,18 @@
 
   async function loadItems(){
     if(!excelDisponible) return;
+    document.getElementById('loading').style.display = 'block';
     const params = new URLSearchParams({q: currentQuery, page: currentPage, per_page: perPage});
-    const res = await fetch(`${urlJson}?${params.toString()}`);
-    const js = await res.json();
-    renderRows(js.items || []);
-    renderPagination(js.total || 0);
+    try{
+      const res = await fetch(`${urlJson}?${params.toString()}`);
+      const js = await res.json();
+      renderRows(js.items || []);
+      renderPagination(js.total || 0);
+    }catch(err){
+      alert('Error al cargar medicamentos');
+    }finally{
+      document.getElementById('loading').style.display = 'none';
+    }
   }
 
   function renderRows(items){
