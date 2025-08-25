@@ -95,6 +95,10 @@ def catalogo_excel_json(request):
     per_page = int(request.GET.get("per_page") or 15)
 
     data = buscar_articulos(q=q, page=page, per_page=per_page)
+    for it in data.get("items", []):
+        if it.get("imagen_url"):
+            it["imagen"] = it["imagen_url"]
+        it.pop("imagen_url", None)
 
     return JsonResponse(data)
 
