@@ -135,6 +135,11 @@ def receta_catalogo_excel_agregar(request, receta_id):
     receta = get_object_or_404(Receta, id=receta_id)
     nombre = (request.POST.get("nombre") or "").strip()
     clave = (request.POST.get("clave") or "").strip()
+    dosis = (request.POST.get("dosis") or "").strip()
+    frecuencia = (request.POST.get("frecuencia") or "").strip()
+    via_administracion = (request.POST.get("via_administracion") or "").strip()
+    duracion = (request.POST.get("duracion") or "").strip()
+    indicaciones_especificas = (request.POST.get("indicaciones_especificas") or "").strip()
     try:
         cantidad = int(request.POST.get("cantidad") or "1")
     except Exception:
@@ -164,6 +169,16 @@ def receta_catalogo_excel_agregar(request, receta_id):
 
     if mr:
         mr.cantidad += cantidad
+        if dosis:
+            mr.dosis = dosis
+        if frecuencia:
+            mr.frecuencia = frecuencia
+        if via_administracion:
+            mr.via_administracion = via_administracion
+        if duracion:
+            mr.duracion = duracion
+        if indicaciones_especificas:
+            mr.indicaciones_especificas = indicaciones_especificas
         if not mr.codigo_barras and clave:
             mr.codigo_barras = clave
         if cat:
@@ -176,6 +191,11 @@ def receta_catalogo_excel_agregar(request, receta_id):
             receta=receta,
             nombre=cat_nombre,
             cantidad=cantidad,
+            dosis=dosis,
+            frecuencia=frecuencia,
+            via_administracion=via_administracion or None,
+            duracion=duracion,
+            indicaciones_especificas=indicaciones_especificas or None,
             existencia=cat.get("existencia", 0) if cat else 0,
             codigo_barras=cat.get("clave") if cat else (clave or None),
             categoria=cat.get("categoria") if cat else None,
@@ -190,6 +210,11 @@ def receta_catalogo_excel_agregar(request, receta_id):
             "cantidad": mr.cantidad,
             "codigo_barras": mr.codigo_barras or "",
             "principio_activo": mr.principio_activo or "",
+            "dosis": mr.dosis,
+            "frecuencia": mr.frecuencia,
+            "via_administracion": mr.via_administracion or "",
+            "duracion": mr.duracion,
+            "indicaciones_especificas": mr.indicaciones_especificas or "",
         }
     )
 
@@ -206,6 +231,11 @@ def receta_medicamentos_json(request, receta_id):
             "principio_activo": mr.principio_activo or "",
             "cantidad": mr.cantidad,
             "codigo_barras": mr.codigo_barras or "",
+            "dosis": mr.dosis,
+            "frecuencia": mr.frecuencia,
+            "via_administracion": mr.via_administracion or "",
+            "duracion": mr.duracion,
+            "indicaciones_especificas": mr.indicaciones_especificas or "",
         }
         for mr in receta.medicamentos.all()
     ]
