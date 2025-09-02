@@ -7,6 +7,16 @@
     <div class="col">
       <input type="text" id="catalogo-search" class="form-control" placeholder="Buscar por Nombre/Presentación, Clave, Departamento, Categoría o Precio">
     </div>
+    <div class="col-auto">
+      <button type="button" id="catalogo-reload" class="btn btn-outline-secondary">Recargar</button>
+    </div>
+  </div>
+
+  <div id="loading" style="display:none; text-align:center; margin:20px;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p>Cargando medicamentos, por favor espere...</p>
   </div>
 
   <div id="loading" style="display:none; text-align:center; margin:20px;">
@@ -82,6 +92,7 @@
   const urlAdd = "{% url 'receta_catalogo_excel_agregar' receta.id %}";
   const urlUpdateBase = "{% url 'receta_medicamento_actualizar' receta.id 0 %}";
   const urlDeleteBase = "{% url 'receta_medicamento_eliminar' receta.id 0 %}";
+  const urlClean = "{% url 'catalogo_excel_limpiar_cache' %}";
   function getCookie(name){
     let cookieValue = null;
     if(document.cookie && document.cookie !== ''){
@@ -100,6 +111,7 @@
   const tbody = document.getElementById('catalogo-body');
   const pag = document.getElementById('catalogo-pagination');
   const searchInput = document.getElementById('catalogo-search');
+  const reloadBtn = document.getElementById('catalogo-reload');
   const cartBody = document.getElementById('carrito-body');
   const perPage = 15;
   const excelDisponible = {{ excel_disponible|yesno:'true,false' }};
@@ -257,6 +269,13 @@
     currentPage = 1;
     loadItems();
   }, 300));
+
+  reloadBtn.addEventListener('click', async () => {
+    document.getElementById('loading').style.display = 'block';
+    await fetch(urlClean, {method: 'POST'});
+    currentPage = 1;
+    loadItems();
+  });
 
   if(excelDisponible){
     loadItems();

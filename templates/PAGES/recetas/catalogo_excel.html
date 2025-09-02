@@ -4,7 +4,11 @@
   <h3>Catálogo de Medicamentos</h3>
 
   <!-- Barra de búsqueda -->
-  <input type="text" id="search" class="form-control mb-3" placeholder="Buscar medicamento...">
+
+  <div class="input-group mb-3">
+    <input type="text" id="search" class="form-control" placeholder="Buscar medicamento...">
+    <button class="btn btn-outline-secondary" type="button" id="reload-btn">Recargar</button>
+  </div>
 
   <!-- Loading -->
   <div id="loading" style="display:none; text-align:center; margin:20px;">
@@ -62,6 +66,14 @@ const searchInput = document.getElementById("search");
 searchInput.addEventListener("input", e => {
     cargarCatalogo(e.target.value);
 });
+
+
+document.getElementById("reload-btn").addEventListener("click", () => {
+    document.getElementById("loading").style.display = "block";
+    fetch("{% url 'catalogo_excel_limpiar_cache' %}", {method: "POST"})
+        .finally(() => cargarCatalogo(searchInput.value));
+});
+
 
 // Cargar al abrir
 window.onload = () => cargarCatalogo();
