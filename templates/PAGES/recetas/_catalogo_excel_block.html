@@ -66,6 +66,10 @@
         <tr>
           <th>Nombre</th>
           <th>Principio activo</th>
+          <th>Dosis</th>
+          <th>Frecuencia</th>
+          <th>Vía adm.</th>
+          <th>Duración</th>
           <th style="width:80px;">Cantidad</th>
           <th></th>
         </tr>
@@ -75,11 +79,15 @@
         <tr data-id="{{ m.id }}">
           <td>{{ m.nombre }}</td>
           <td>{{ m.principio_activo|default:"" }}</td>
+          <td><input type="text" value="{{ m.dosis }}" class="form-control form-control-sm dosis"></td>
+          <td><input type="text" value="{{ m.frecuencia }}" class="form-control form-control-sm frecuencia"></td>
+          <td><input type="text" value="{{ m.via_administracion|default:"" }}" class="form-control form-control-sm via"></td>
+          <td><input type="text" value="{{ m.duracion }}" class="form-control form-control-sm duracion"></td>
           <td><input type="number" min="1" value="{{ m.cantidad }}" class="form-control form-control-sm qty"></td>
           <td><button type="button" class="btn btn-sm btn-danger remove">&times;</button></td>
         </tr>
         {% empty %}
-        <tr class="empty"><td colspan="4" class="text-center text-muted">No hay medicamentos</td></tr>
+        <tr class="empty"><td colspan="8" class="text-center text-muted">No hay medicamentos</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -206,6 +214,10 @@
     if(empty) empty.remove();
     const existing = cartBody.querySelector(`tr[data-id="${item.id}"]`);
     if(existing){
+      existing.querySelector('input.dosis').value = item.dosis || '';
+      existing.querySelector('input.frecuencia').value = item.frecuencia || '';
+      existing.querySelector('input.via').value = item.via_administracion || '';
+      existing.querySelector('input.duracion').value = item.duracion || '';
       const qty = existing.querySelector('input.qty');
       qty.value = item.cantidad;
       return;
@@ -213,6 +225,10 @@
     const tr = document.createElement('tr');
     tr.dataset.id = item.id;
     tr.innerHTML = `<td>${item.nombre}</td><td>${item.principio_activo || ''}</td>`+
+      `<td><input type="text" value="${item.dosis || ''}" class="form-control form-control-sm dosis"></td>`+
+      `<td><input type="text" value="${item.frecuencia || ''}" class="form-control form-control-sm frecuencia"></td>`+
+      `<td><input type="text" value="${item.via_administracion || ''}" class="form-control form-control-sm via"></td>`+
+      `<td><input type="text" value="${item.duracion || ''}" class="form-control form-control-sm duracion"></td>`+
       `<td><input type="number" min="1" value="${item.cantidad}" class="form-control form-control-sm qty"></td>`+
       `<td><button type="button" class="btn btn-sm btn-danger remove">&times;</button></td>`;
     cartBody.appendChild(tr);
@@ -234,23 +250,30 @@
           if(!cartBody.children.length){
             const row = document.createElement('tr');
             row.className = 'empty';
-            row.innerHTML = '<td colspan="4" class="text-center text-muted">No hay medicamentos</td>';
+            row.innerHTML = '<td colspan="8" class="text-center text-muted">No hay medicamentos</td>';
             cartBody.appendChild(row);
           }
         }
       };
     });
 
-    cartBody.querySelectorAll('input.qty').forEach(inp => {
+    cartBody.querySelectorAll('input').forEach(inp => {
       inp.onchange = async () => {
         const tr = inp.closest('tr');
         const id = tr.dataset.id;
-        let cantidad = Math.max(1, parseInt(inp.value || '1', 10));
-        inp.value = cantidad;
+        let cantidad = Math.max(1, parseInt(tr.querySelector('.qty').value || '1', 10));
+        tr.querySelector('.qty').value = cantidad;
+        const data = new URLSearchParams({
+          cantidad,
+          dosis: tr.querySelector('.dosis').value,
+          frecuencia: tr.querySelector('.frecuencia').value,
+          via_administracion: tr.querySelector('.via').value,
+          duracion: tr.querySelector('.duracion').value,
+        });
         await fetch(urlUpdateBase.replace('0', id), {
           method: 'POST',
           headers: {'X-CSRFToken': csrftoken, 'Content-Type': 'application/x-www-form-urlencoded'},
-          body: new URLSearchParams({cantidad})
+          body: data
         });
       };
     });

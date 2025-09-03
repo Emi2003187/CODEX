@@ -246,9 +246,10 @@ def receta_medicamentos_json(request, receta_id):
 @require_POST
 @transaction.atomic
 def receta_medicamento_actualizar(request, receta_id, med_id):
-    """Actualiza la cantidad de un medicamento en la receta."""
+    """Actualiza los campos de un medicamento en la receta."""
     receta = get_object_or_404(Receta, id=receta_id)
     med = get_object_or_404(MedicamentoRecetado, id=med_id, receta=receta)
+
     try:
         cantidad = int(request.POST.get("cantidad") or "1")
     except Exception:
@@ -256,8 +257,35 @@ def receta_medicamento_actualizar(request, receta_id, med_id):
     if cantidad < 1:
         cantidad = 1
     med.cantidad = cantidad
+
+    dosis = request.POST.get("dosis")
+    if dosis is not None:
+        med.dosis = dosis
+
+    frecuencia = request.POST.get("frecuencia")
+    if frecuencia is not None:
+        med.frecuencia = frecuencia
+
+    via_administracion = request.POST.get("via_administracion")
+    if via_administracion is not None:
+        med.via_administracion = via_administracion or None
+
+    duracion = request.POST.get("duracion")
+    if duracion is not None:
+        med.duracion = duracion
+
     med.save()
-    return JsonResponse({"ok": True, "id": med.id, "cantidad": med.cantidad})
+    return JsonResponse(
+        {
+            "ok": True,
+            "id": med.id,
+            "cantidad": med.cantidad,
+            "dosis": med.dosis,
+            "frecuencia": med.frecuencia,
+            "via_administracion": med.via_administracion or "",
+            "duracion": med.duracion,
+        }
+    )
 
 
 @login_required
