@@ -274,52 +274,61 @@ def build_receta_pdf(buffer, receta):
             page_meds = meds[start_idx:end_idx]
             
             for m in page_meds:
-                # Crear bloque individual para cada medicamento
+                # Bloque individual para cada medicamento
                 bc = _barcode_flowable(getattr(m, "codigo_barras", ""))
-                
-                if bc:
-                    med_row = [
-                        Paragraph(f"<b>{_fmt(m.nombre)}</b>", styles["TXT"]),
-                        Paragraph(f"Cantidad: {_fmt(m.cantidad)}", styles["TXT"]),
-                        bc
-                    ]
-                    
-                    med_table = Table(
-                        [med_row],
-                        colWidths=[70*mm, 35*mm, 40*mm],
-                        style=TableStyle([
-                            ("BOX", (0,0), (-1,-1), 1, colors.HexColor("#dee2e6")),
-                            ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f8f9fa")),
-                            ("LEFTPADDING", (0,0), (-1,-1), 4),   # Reducir padding
-                            ("RIGHTPADDING", (0,0), (-1,-1), 4),  # Reducir padding
-                            ("TOPPADDING", (0,0), (-1,-1), 3),    # Reducir padding
-                            ("BOTTOMPADDING", (0,0), (-1,-1), 3), # Reducir padding
-                            ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                            ("ALIGN", (2,0), (2,0), "CENTER"),  # Centrar código de barras
-                        ])
-                    )
-                else:
-                    # Si no hay código de barras, solo mostrar nombre y cantidad
-                    med_row = [
-                        Paragraph(f"<b>{_fmt(m.nombre)}</b>", styles["TXT"]),
-                        Paragraph(f"Cantidad: {_fmt(m.cantidad)}", styles["TXT"])
-                    ]
-                    
-                    med_table = Table(
-                        [med_row],
-                        colWidths=[70*mm, 75*mm],
-                        style=TableStyle([
-                            ("BOX", (0,0), (-1,-1), 1, colors.HexColor("#dee2e6")),
-                            ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f8f9fa")),
-                            ("LEFTPADDING", (0,0), (-1,-1), 4),   # Reducir padding
-                            ("RIGHTPADDING", (0,0), (-1,-1), 4),  # Reducir padding
-                            ("TOPPADDING", (0,0), (-1,-1), 3),    # Reducir padding
-                            ("BOTTOMPADDING", (0,0), (-1,-1), 3), # Reducir padding
-                            ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                        ])
-                    )
-                
-                story += [med_table, Spacer(1, 1*mm)]  # Reducir espaciado entre medicamentos
+
+                # Anchos para el layout del medicamento
+                left_w, right_w = 120 * mm, 40 * mm
+
+                # Recuadro con indicaciones del medicamento
+                indicaciones = []
+                for label, attr in [
+                    ("Dosis", "dosis"),
+                    ("Frecuencia", "frecuencia"),
+                    ("Vía de administración", "via_administracion"),
+                    ("Indicaciones", "indicaciones_especificas"),
+                ]:
+                    val = getattr(m, attr, None)
+                    if val:
+                        indicaciones.append(Paragraph(f"{label}: {_fmt(val)}", styles["SM"]))
+
+                if not indicaciones:
+                    indicaciones.append(Paragraph("", styles["SM"]))
+
+                ind_table = Table(
+                    [[p] for p in indicaciones],
+                    colWidths=[left_w + right_w],
+                    style=TableStyle([
+                        ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f8f9fa")),
+                        ("BOX", (0,0), (-1,-1), 0.5, colors.HexColor("#dee2e6")),
+                        ("LEFTPADDING", (0,0), (-1,-1), 4),
+                        ("RIGHTPADDING", (0,0), (-1,-1), 4),
+                        ("TOPPADDING", (0,0), (-1,-1), 2),
+                        ("BOTTOMPADDING", (0,0), (-1,-1), 2),
+                    ])
+                )
+
+                rows = [
+                    [Paragraph(f"<b>{_fmt(m.nombre)}</b>", styles["TXT"]), bc or ""],
+                    [Paragraph(f"Cantidad: {_fmt(m.cantidad)}", styles["TXT"]), ""],
+                    [ind_table, ""],
+                ]
+
+                med_table = Table(
+                    rows,
+                    colWidths=[left_w, right_w],
+                    style=TableStyle([
+                        ("SPAN", (0,2), (1,2)),
+                        ("VALIGN", (0,0), (-1,-1), "TOP"),
+                        ("ALIGN", (1,0), (1,0), "RIGHT"),
+                        ("LEFTPADDING", (0,0), (-1,-1), 2),
+                        ("RIGHTPADDING", (0,0), (-1,-1), 2),
+                        ("TOPPADDING", (0,0), (-1,-1), 2),
+                        ("BOTTOMPADDING", (0,0), (-1,-1), 2),
+                    ])
+                )
+
+                story += [med_table, Spacer(1, 2*mm)]
 
     # QR + folio/fecha en una fila (solo en la última página o primera si no hay medicamentos)
     folio = f"Folio: {receta.pk}"

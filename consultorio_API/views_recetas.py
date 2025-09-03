@@ -135,6 +135,10 @@ def receta_catalogo_excel_agregar(request, receta_id):
     receta = get_object_or_404(Receta, id=receta_id)
     nombre = (request.POST.get("nombre") or "").strip()
     clave = (request.POST.get("clave") or "").strip()
+    dosis = (request.POST.get("dosis") or "").strip()
+    frecuencia = (request.POST.get("frecuencia") or "").strip()
+    via_administracion = (request.POST.get("via_administracion") or "").strip()
+    indicaciones_especificas = (request.POST.get("indicaciones_especificas") or "").strip()
     try:
         cantidad = int(request.POST.get("cantidad") or "1")
     except Exception:
@@ -164,6 +168,14 @@ def receta_catalogo_excel_agregar(request, receta_id):
 
     if mr:
         mr.cantidad += cantidad
+        if dosis:
+            mr.dosis = dosis
+        if frecuencia:
+            mr.frecuencia = frecuencia
+        if via_administracion:
+            mr.via_administracion = via_administracion
+        if indicaciones_especificas:
+            mr.indicaciones_especificas = indicaciones_especificas
         if not mr.codigo_barras and clave:
             mr.codigo_barras = clave
         if cat:
@@ -176,6 +188,10 @@ def receta_catalogo_excel_agregar(request, receta_id):
             receta=receta,
             nombre=cat_nombre,
             cantidad=cantidad,
+            dosis=dosis,
+            frecuencia=frecuencia,
+            via_administracion=via_administracion or None,
+            indicaciones_especificas=indicaciones_especificas or None,
             existencia=cat.get("existencia", 0) if cat else 0,
             codigo_barras=cat.get("clave") if cat else (clave or None),
             categoria=cat.get("categoria") if cat else None,
@@ -190,6 +206,10 @@ def receta_catalogo_excel_agregar(request, receta_id):
             "cantidad": mr.cantidad,
             "codigo_barras": mr.codigo_barras or "",
             "principio_activo": mr.principio_activo or "",
+            "dosis": mr.dosis,
+            "frecuencia": mr.frecuencia,
+            "via_administracion": mr.via_administracion or "",
+            "indicaciones_especificas": mr.indicaciones_especificas or "",
         }
     )
 
@@ -206,6 +226,10 @@ def receta_medicamentos_json(request, receta_id):
             "principio_activo": mr.principio_activo or "",
             "cantidad": mr.cantidad,
             "codigo_barras": mr.codigo_barras or "",
+            "dosis": mr.dosis,
+            "frecuencia": mr.frecuencia,
+            "via_administracion": mr.via_administracion or "",
+            "indicaciones_especificas": mr.indicaciones_especificas or "",
         }
         for mr in receta.medicamentos.all()
     ]
@@ -216,9 +240,10 @@ def receta_medicamentos_json(request, receta_id):
 @require_POST
 @transaction.atomic
 def receta_medicamento_actualizar(request, receta_id, med_id):
-    """Actualiza la cantidad de un medicamento en la receta."""
+    """Actualiza los campos de un medicamento en la receta."""
     receta = get_object_or_404(Receta, id=receta_id)
     med = get_object_or_404(MedicamentoRecetado, id=med_id, receta=receta)
+
     try:
         cantidad = int(request.POST.get("cantidad") or "1")
     except Exception:
@@ -226,8 +251,35 @@ def receta_medicamento_actualizar(request, receta_id, med_id):
     if cantidad < 1:
         cantidad = 1
     med.cantidad = cantidad
+
+    dosis = request.POST.get("dosis")
+    if dosis is not None:
+        med.dosis = dosis
+
+    frecuencia = request.POST.get("frecuencia")
+    if frecuencia is not None:
+        med.frecuencia = frecuencia
+
+    via_administracion = request.POST.get("via_administracion")
+    if via_administracion is not None:
+        med.via_administracion = via_administracion or None
+
+    indicaciones = request.POST.get("indicaciones_especificas")
+    if indicaciones is not None:
+        med.indicaciones_especificas = indicaciones or None
+
     med.save()
-    return JsonResponse({"ok": True, "id": med.id, "cantidad": med.cantidad})
+    return JsonResponse(
+        {
+            "ok": True,
+            "id": med.id,
+            "cantidad": med.cantidad,
+            "dosis": med.dosis,
+            "frecuencia": med.frecuencia,
+            "via_administracion": med.via_administracion or "",
+            "indicaciones_especificas": med.indicaciones_especificas or "",
+        }
+    )
 
 
 @login_required
