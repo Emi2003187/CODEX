@@ -286,15 +286,11 @@ def build_receta_pdf(buffer, receta):
                     ("Dosis", "dosis"),
                     ("Frecuencia", "frecuencia"),
                     ("Vía de administración", "via_administracion"),
-                    ("Duración", "duracion"),
+                    ("Indicaciones", "indicaciones_especificas"),
                 ]:
                     val = getattr(m, attr, None)
                     if val:
                         indicaciones.append(Paragraph(f"{label}: {_fmt(val)}", styles["SM"]))
-
-                extra = getattr(m, "indicaciones_especificas", None)
-                if extra:
-                    indicaciones.append(Paragraph(f"Indicaciones específicas: {_fmt(extra)}", styles["SM"]))
 
                 if not indicaciones:
                     indicaciones.append(Paragraph("", styles["SM"]))

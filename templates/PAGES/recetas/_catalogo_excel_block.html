@@ -69,7 +69,7 @@
           <th>Dosis</th>
           <th>Frecuencia</th>
           <th>Vía adm.</th>
-          <th>Duración</th>
+          <th>Indicaciones</th>
           <th style="width:80px;">Cantidad</th>
           <th></th>
         </tr>
@@ -82,7 +82,7 @@
           <td><textarea rows="2" class="form-control form-control-sm dosis">{{ m.dosis }}</textarea></td>
           <td><textarea rows="2" class="form-control form-control-sm frecuencia">{{ m.frecuencia }}</textarea></td>
           <td><textarea rows="2" class="form-control form-control-sm via">{{ m.via_administracion|default:"" }}</textarea></td>
-          <td><textarea rows="2" class="form-control form-control-sm duracion">{{ m.duracion }}</textarea></td>
+          <td><textarea rows="2" class="form-control form-control-sm indicaciones">{{ m.indicaciones_especificas|default:"" }}</textarea></td>
           <td><input type="number" min="1" value="{{ m.cantidad }}" class="form-control form-control-sm qty"></td>
           <td><button type="button" class="btn btn-sm btn-danger remove">&times;</button></td>
         </tr>
@@ -217,7 +217,7 @@
       existing.querySelector('.dosis').value = item.dosis || '';
       existing.querySelector('.frecuencia').value = item.frecuencia || '';
       existing.querySelector('.via').value = item.via_administracion || '';
-      existing.querySelector('.duracion').value = item.duracion || '';
+      existing.querySelector('.indicaciones').value = item.indicaciones_especificas || '';
       const qty = existing.querySelector('input.qty');
       qty.value = item.cantidad;
       return;
@@ -228,7 +228,7 @@
       `<td><textarea rows="2" class="form-control form-control-sm dosis">${item.dosis || ''}</textarea></td>`+
       `<td><textarea rows="2" class="form-control form-control-sm frecuencia">${item.frecuencia || ''}</textarea></td>`+
       `<td><textarea rows="2" class="form-control form-control-sm via">${item.via_administracion || ''}</textarea></td>`+
-      `<td><textarea rows="2" class="form-control form-control-sm duracion">${item.duracion || ''}</textarea></td>`+
+      `<td><textarea rows="2" class="form-control form-control-sm indicaciones">${item.indicaciones_especificas || ''}</textarea></td>`+
       `<td><input type="number" min="1" value="${item.cantidad}" class="form-control form-control-sm qty"></td>`+
       `<td><button type="button" class="btn btn-sm btn-danger remove">&times;</button></td>`;
     cartBody.appendChild(tr);
@@ -257,7 +257,7 @@
       };
     });
 
-    cartBody.querySelectorAll('input').forEach(inp => {
+    cartBody.querySelectorAll('input, textarea').forEach(inp => {
       inp.onchange = async () => {
         const tr = inp.closest('tr');
         const id = tr.dataset.id;
@@ -268,7 +268,7 @@
           dosis: tr.querySelector('.dosis').value,
           frecuencia: tr.querySelector('.frecuencia').value,
           via_administracion: tr.querySelector('.via').value,
-          duracion: tr.querySelector('.duracion').value,
+          indicaciones_especificas: tr.querySelector('.indicaciones').value,
         });
         await fetch(urlUpdateBase.replace('0', id), {
           method: 'POST',
