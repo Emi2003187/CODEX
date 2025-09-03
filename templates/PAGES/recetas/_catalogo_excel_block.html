@@ -79,10 +79,10 @@
         <tr data-id="{{ m.id }}">
           <td>{{ m.nombre }}</td>
           <td>{{ m.principio_activo|default:"" }}</td>
-          <td><input type="text" value="{{ m.dosis }}" class="form-control form-control-sm dosis"></td>
-          <td><input type="text" value="{{ m.frecuencia }}" class="form-control form-control-sm frecuencia"></td>
-          <td><input type="text" value="{{ m.via_administracion|default:"" }}" class="form-control form-control-sm via"></td>
-          <td><input type="text" value="{{ m.duracion }}" class="form-control form-control-sm duracion"></td>
+          <td><textarea rows="2" class="form-control form-control-sm dosis">{{ m.dosis }}</textarea></td>
+          <td><textarea rows="2" class="form-control form-control-sm frecuencia">{{ m.frecuencia }}</textarea></td>
+          <td><textarea rows="2" class="form-control form-control-sm via">{{ m.via_administracion|default:"" }}</textarea></td>
+          <td><textarea rows="2" class="form-control form-control-sm duracion">{{ m.duracion }}</textarea></td>
           <td><input type="number" min="1" value="{{ m.cantidad }}" class="form-control form-control-sm qty"></td>
           <td><button type="button" class="btn btn-sm btn-danger remove">&times;</button></td>
         </tr>
@@ -214,10 +214,10 @@
     if(empty) empty.remove();
     const existing = cartBody.querySelector(`tr[data-id="${item.id}"]`);
     if(existing){
-      existing.querySelector('input.dosis').value = item.dosis || '';
-      existing.querySelector('input.frecuencia').value = item.frecuencia || '';
-      existing.querySelector('input.via').value = item.via_administracion || '';
-      existing.querySelector('input.duracion').value = item.duracion || '';
+      existing.querySelector('.dosis').value = item.dosis || '';
+      existing.querySelector('.frecuencia').value = item.frecuencia || '';
+      existing.querySelector('.via').value = item.via_administracion || '';
+      existing.querySelector('.duracion').value = item.duracion || '';
       const qty = existing.querySelector('input.qty');
       qty.value = item.cantidad;
       return;
@@ -225,10 +225,10 @@
     const tr = document.createElement('tr');
     tr.dataset.id = item.id;
     tr.innerHTML = `<td>${item.nombre}</td><td>${item.principio_activo || ''}</td>`+
-      `<td><input type="text" value="${item.dosis || ''}" class="form-control form-control-sm dosis"></td>`+
-      `<td><input type="text" value="${item.frecuencia || ''}" class="form-control form-control-sm frecuencia"></td>`+
-      `<td><input type="text" value="${item.via_administracion || ''}" class="form-control form-control-sm via"></td>`+
-      `<td><input type="text" value="${item.duracion || ''}" class="form-control form-control-sm duracion"></td>`+
+      `<td><textarea rows="2" class="form-control form-control-sm dosis">${item.dosis || ''}</textarea></td>`+
+      `<td><textarea rows="2" class="form-control form-control-sm frecuencia">${item.frecuencia || ''}</textarea></td>`+
+      `<td><textarea rows="2" class="form-control form-control-sm via">${item.via_administracion || ''}</textarea></td>`+
+      `<td><textarea rows="2" class="form-control form-control-sm duracion">${item.duracion || ''}</textarea></td>`+
       `<td><input type="number" min="1" value="${item.cantidad}" class="form-control form-control-sm qty"></td>`+
       `<td><button type="button" class="btn btn-sm btn-danger remove">&times;</button></td>`;
     cartBody.appendChild(tr);

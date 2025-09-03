@@ -277,6 +277,9 @@ def build_receta_pdf(buffer, receta):
                 # Bloque individual para cada medicamento
                 bc = _barcode_flowable(getattr(m, "codigo_barras", ""))
 
+                # Anchos para el layout del medicamento
+                left_w, right_w = 120 * mm, 40 * mm
+
                 # Recuadro con indicaciones del medicamento
                 indicaciones = []
                 for label, attr in [
@@ -298,7 +301,7 @@ def build_receta_pdf(buffer, receta):
 
                 ind_table = Table(
                     [[p] for p in indicaciones],
-                    colWidths=[None],
+                    colWidths=[left_w + right_w],
                     style=TableStyle([
                         ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f8f9fa")),
                         ("BOX", (0,0), (-1,-1), 0.5, colors.HexColor("#dee2e6")),
@@ -317,7 +320,7 @@ def build_receta_pdf(buffer, receta):
 
                 med_table = Table(
                     rows,
-                    colWidths=[120*mm, 40*mm],
+                    colWidths=[left_w, right_w],
                     style=TableStyle([
                         ("SPAN", (0,2), (1,2)),
                         ("VALIGN", (0,0), (-1,-1), "TOP"),
