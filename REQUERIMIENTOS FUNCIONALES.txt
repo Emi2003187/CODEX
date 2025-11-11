@@ -1,0 +1,87 @@
+REQUERIMIENTOS FUNCIONALES
+APLICACIÓN DE CONSULTORIO MÉDICO
+1. Módulo de Pacientes
+1.1 El sistema debe permitir registrar nuevos pacientes con los siguientes datos
+obligatorios:
+• Nombre completo
+• Fecha de nacimiento
+• Sexo
+• Teléfono
+• Correo electrónico
+• Dirección
+• Historial clínico básico(citas anteriores y guardar los datos ingresados)
+• Consultorio asignado (por defecto, el consultorio con el que se registró el usuario)
+1.2 El sistema debe permitir consultar la lista de pacientes registrados y sus datos
+principales.
+1.3 El sistema debe permitir editar la información de un paciente.
+1.4 El sistema debe permitir eliminar un paciente, con restricciones si tiene consultas
+asociadas.
+1.5 El sistema debe permitir buscar pacientes por:
+• Nombre
+• Número de expediente
+• Consultorio asignado
+• Número de teléfono
+• Correo electrónico
+
+
+2. Módulo de Consultas Médicas
+2.1 El sistema debe permitir crear una nueva consulta médica para un paciente
+seleccionado.
+2.2 Una consulta debe pasar por dos etapas, diferenciadas por rol de usuario:
+ Etapa 1 – Asistente
+• Registrar signos vitales:
+o T.A (Tensión Arterial)
+o F.C (Frecuencia Cardíaca)
+o F.R (Frecuencia Respiratoria)
+o Temp. (Temperatura)
+o Peso
+o Talla
+o Circunferencia abdominal
+o IMC (Índice de Masa Corporal)
+o Alergias del paciente
+• Registrar síntomas o padecimientos actuales
+• Estos datos no son obligatorios, podrían quedarse en blanco, también podrían ser
+modificados por el medico ya iniciada la consulta.
+ El usuario asistente solo puede ingresar esta información. No puede editar recetas ni
+agregar tratamientos.
+ Etapa 2 – Médico
+• Consulta y modifica la información previamente ingresada por el asistente
+• Agregar tratamiento o prescribir medicamentos
+• Agregar observaciones finales
+2.3 El sistema debe permitir visualizar el historial de consultas por paciente.
+2.4 El sistema debe permitir editar una consulta en progreso solo por el médico (el
+asistente no puede modificarla una vez registrada).
+NOTA: al crear una consulta para el mismo dia, se debe de poner espera para generar una
+cola virtual.
+2- vista para personal del consultorio donde se pueda visualizar como calendario las citas
+que se van generando para el dia actual y posteriores.
+3. Módulo de Recetas Médicas
+3.1 El sistema debe permitir generar recetas médicas dentro de una consulta médica.
+3.2 La receta incluirá los siguientes campos:
+• Nombre del paciente y médico responsable
+• Cedula profesional del doctor y que institución la emite
+• direccion
+• Fecha de emisión
+• Lista de medicamentos (nombre, dosis, frecuencia, duración)
+• Indicaciones adicionales
+• Alergias del paciente
+o Si no tiene: marcar como "NEGATIVO"
+o Si tiene: se debe describir a qué sustancias o medicamentos es alérgico
+• Signos vitales registrados por el asistente (T.A, F.C, F.R, Temp., Peso, Talla,
+circunferencia abdominal, IMC)
+3.3 El sistema debe permitir visualizar e imprimir/exportar la receta como PDF.
+3.4 El sistema debe permitir consultar recetas pasadas asociadas a un paciente.
+3.5 Solo los usuarios con rol de médico o administrador pueden agregar o modificar
+medicamentos.
+3.6 La receta es el punto de interacción entre asistente (signos vitales) y médico
+(tratamiento).
+4. Módulo de Acceso y Seguridad
+4.1 El sistema debe permitir inicio de sesión seguro para médicos, asistentes y personal
+autorizado.
+4.2 El sistema debe gestionar roles de usuario:
+• Administrador: Acceso total a todos los módulos y configuraciones.
+• Médico: Acceso completo a consultas, pacientes y recetas.
+• asistente: Acceso únicamente a ingreso de signos vitales y síntomas en una
+consulta. No puede editar medicamentos ni recetas.
+4.3 El sistema debe registrar auditorías de acceso y de acciones importantes por cada
+usuario.
