@@ -14,7 +14,8 @@ from io import BytesIO
 from django.utils import timezone
 from django.utils.text import slugify
 
-from .models import Receta, MedicamentoRecetado
+from .forms import ExcelUploadForm
+from .models import Receta, MedicamentoRecetado, MedicamentoCatalogo
 from .pdf.receta_reportlab import build_receta_pdf
 from .catalogo_excel import (
     buscar_articulos,
@@ -90,6 +91,77 @@ def receta_pdf_reportlab(request, pk: int):
     fecha = receta.fecha_emision or timezone.now()
     filename = f"{receta.pk}_{slugify(receta.consulta.paciente.nombre_completo)}_{fecha.strftime('%Y%m%d')}.pdf"
     return FileResponse(buf, as_attachment=False, filename=filename, content_type="application/pdf")
+
+
+@login_required
+def cargar_excel_medicamentos(request):
+    if request.user.rol != "admin":
+        messages.error(request, "Solo un administrador puede acceder a este módulo.")
+        return redirect("home")
+
+    if request.method == "POST":
+        form = ExcelUploadForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            archivo = request.FILES["archivo"]
+
+            import pandas as pd
+            df = pd.read_excel(archivo)
+
+            actualizados = 0
+            no_encontrados = []
+
+            for _, row in df.iterrows():
+                codigo = str(row.get("clave") or row.get("codigo_barras") or "").strip()
+                if not codigo:
+                    continue
+
+                try:
+                    med = MedicamentoCatalogo.objects.get(codigo_barras=codigo)
+                except MedicamentoCatalogo.DoesNotExist:
+                    no_encontrados.append(codigo)
+                    continue
+
+                existencia = row.get("existencia")
+                precio = row.get("precio")
+                departamento = row.get("departamento")
+                categoria = row.get("categoria")
+                nombre = row.get("nombre")
+
+                if existencia is not None:
+                    med.existencia = int(existencia)
+
+                if precio is not None:
+                    med.precio = precio
+
+                if departamento:
+                    med.departamento = departamento
+
+                if categoria:
+                    med.categoria = categoria
+
+                if nombre:
+                    med.nombre = nombre
+
+                med.save()
+                actualizados += 1
+
+            messages.success(request, f"Actualizados: {actualizados}")
+            if no_encontrados:
+                messages.warning(request, f"Códigos no encontrados: {', '.join(no_encontrados)}")
+
+            return redirect("cargar_excel_medicamentos")
+    else:
+        form = ExcelUploadForm()
+
+    return render(
+        request,
+        "PAGES/medicamentos/cargar_excel.html",
+        {
+            "form": form,
+            "usuario": request.user,
+        }
+    )
 
 
 @login_required

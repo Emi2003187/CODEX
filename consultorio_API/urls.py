@@ -15,7 +15,13 @@ from .views_consultas import (
 from django.contrib.auth.views import LogoutView
 from .views import CitaCreateView, Receta
 from consultorio_API import views, viewscitas
-from consultorio_API.views_recetas import RecetaPreviewView, RxRecetaView, RecetaA5View, receta_pdf_reportlab
+from consultorio_API.views_recetas import (
+    RecetaPreviewView,
+    RxRecetaView,
+    RecetaA5View,
+    cargar_excel_medicamentos,
+    receta_pdf_reportlab,
+)
 from . import views_recetas
 
 urlpatterns = [
@@ -95,6 +101,7 @@ urlpatterns = [
     path('pacientes/<int:paciente_id>/medicamento/nuevo/', views.medicamento_nuevo, name='medicamento_nuevo'),
     path('medicamentos/<int:pk>/editar/', views.MedicamentoUpdateView.as_view(), name='medicamento_editar'),
     path('medicamentos/<int:pk>/eliminar/', views.MedicamentoDeleteView.as_view(), name='medicamento_eliminar'),
+    path("medicamentos/cargar-excel/", cargar_excel_medicamentos, name="cargar_excel_medicamentos"),
     path('consultas/<int:consulta_id>/receta/nueva/', views.receta_nueva, name='receta_nueva'),
     
     # SIGNOS VITALES
