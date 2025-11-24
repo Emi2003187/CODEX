@@ -14,6 +14,7 @@ from django.db import transaction
 from io import BytesIO
 from django.utils import timezone
 from django.utils.text import slugify
+import unicodedata
 import json
 
 from .forms import ExcelUploadForm
@@ -114,55 +115,64 @@ def cargar_excel_medicamentos(request):
             import pandas as pd
             df = pd.read_excel(archivo)
 
+            def normalize_label(label: str) -> str:
+                base = unicodedata.normalize("NFKD", str(label))
+                base = "".join(c for c in base if not unicodedata.combining(c))
+                return base.strip().lower().replace(" ", "_")
+
+            df.rename(columns={col: normalize_label(col) for col in df.columns}, inplace=True)
+
             def pick_value(current_row, names: list[str]):
                 for name in names:
-                    value = current_row.get(name)
-                    if pd.notna(value):
-                        return value
+                    if name in current_row:
+                        value = current_row.get(name)
+                        if pd.notna(value):
+                            return value
                 return None
 
             def normalize_text(value):
                 if value is None or (isinstance(value, float) and pd.isna(value)):
-                    return None
+                    return ""
+                return str(value).strip()
+
+            def normalize_codigo(value):
+                if value is None or (isinstance(value, float) and pd.isna(value)):
+                    return ""
+                if isinstance(value, float) and value.is_integer():
+                    return str(int(value))
                 return str(value).strip()
 
             actualizados = 0
             total_rows = len(df.index)
 
-            for idx, (_, row) in enumerate(df.iterrows(), start=1):
-                codigo_val = pick_value(row, ["clave", "codigo_barras", "código_barras"])
-                codigo = str(codigo_val or "").strip()
+            for idx, row in enumerate(df.to_dict(orient="records"), start=1):
+                codigo = normalize_codigo(
+                    pick_value(
+                        row,
+                        [
+                            "clave",
+                            "codigo_barras",
+                            "codigo",
+                            "codigo_de_barras",
+                        ],
+                    )
+                )
                 if not codigo:
                     continue
 
-                med, created = MedicamentoCatalogo.objects.get_or_create(
-                    codigo_barras=codigo
-                )
+                med, _ = MedicamentoCatalogo.objects.get_or_create(codigo_barras=codigo)
 
-                existencia = pick_value(row, ["existencia", "Existencia"])
-                precio = pick_value(row, ["precio", "Precio"])
-                departamento = normalize_text(
-                    pick_value(row, ["departamento", "Departamento"])
-                )
-                categoria = normalize_text(
-                    pick_value(row, ["categoria", "Categoría", "Categoria"])
-                )
-                nombre = normalize_text(pick_value(row, ["nombre", "Nombre"]))
+                existencia = pick_value(row, ["existencia"])
+                precio = pick_value(row, ["precio"])
+                departamento = normalize_text(pick_value(row, ["departamento"]))
+                categoria = normalize_text(pick_value(row, ["categoria"]))
+                nombre = normalize_text(pick_value(row, ["nombre"]))
 
-                if existencia is not None:
-                    med.existencia = int(existencia)
-
-                if precio is not None:
-                    med.precio = precio
-
-                if departamento is not None:
-                    med.departamento = departamento
-
-                if categoria is not None:
-                    med.categoria = categoria
-
-                if nombre is not None:
-                    med.nombre = nombre
+                med.existencia = int(existencia) if existencia is not None else 0
+                med.precio = precio if precio is not None else 0
+                med.departamento = departamento
+                med.categoria = categoria
+                med.nombre = nombre
 
                 med.save()
                 actualizados += 1
