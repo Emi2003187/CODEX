@@ -1,31 +1,37 @@
 
+import json
+import os
+import tempfile
+import uuid
+from decimal import Decimal, InvalidOperation
+from io import BytesIO
+
+from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.http import (
     FileResponse,
     HttpResponseForbidden,
     JsonResponse,
 )
-from django.shortcuts import redirect, render, get_object_or_404
-from django.views.generic import DetailView
-from django.views.decorators.http import require_GET, require_POST
-from django.db import transaction
-from io import BytesIO
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.text import slugify
-import unicodedata
-import json
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
+from django.views.generic import DetailView
+from openpyxl import load_workbook
+from openpyxl.utils import coordinate_to_tuple
 
-from .forms import ExcelUploadForm
-from .models import Receta, MedicamentoRecetado, MedicamentoCatalogo
-from .pdf.receta_reportlab import build_receta_pdf
 from .catalogo_excel import (
     buscar_articulos,
     catalogo_disponible,
     limpiar_cache_catalogo,
 )
-from django.views.decorators.csrf import csrf_exempt
+from .forms import ExcelUploadForm
+from .models import MedicamentoCatalogo, MedicamentoRecetado, Receta
 
 
 class _RecetaPDFBase(LoginRequiredMixin, DetailView):
@@ -112,79 +118,26 @@ def cargar_excel_medicamentos(request):
         if form.is_valid():
             archivo = request.FILES["archivo"]
 
-            import pandas as pd
-            df = pd.read_excel(archivo)
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(archivo.name)[1]) as tmp:
+                for chunk in archivo.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
 
-            def normalize_label(label: str) -> str:
-                base = unicodedata.normalize("NFKD", str(label))
-                base = "".join(c for c in base if not unicodedata.combining(c))
-                return base.strip().lower().replace(" ", "_")
+            datos = parsear_catalogo_excel(tmp_path)
+            actualizados = actualizar_inventario(datos)
+            total_rows = len(datos)
 
-            df.rename(columns={col: normalize_label(col) for col in df.columns}, inplace=True)
-
-            def pick_value(current_row, names: list[str]):
-                for name in names:
-                    if name in current_row:
-                        value = current_row.get(name)
-                        if pd.notna(value):
-                            return value
-                return None
-
-            def normalize_text(value):
-                if value is None or (isinstance(value, float) and pd.isna(value)):
-                    return ""
-                return str(value).strip()
-
-            def normalize_codigo(value):
-                if value is None or (isinstance(value, float) and pd.isna(value)):
-                    return ""
-                if isinstance(value, float) and value.is_integer():
-                    return str(int(value))
-                return str(value).strip()
-
-            actualizados = 0
-            total_rows = len(df.index)
-
-            for idx, row in enumerate(df.to_dict(orient="records"), start=1):
-                codigo = normalize_codigo(
-                    pick_value(
-                        row,
-                        [
-                            "clave",
-                            "codigo_barras",
-                            "codigo",
-                            "codigo_de_barras",
-                        ],
-                    )
-                )
-                if not codigo:
-                    continue
-
-                med, _ = MedicamentoCatalogo.objects.get_or_create(codigo_barras=codigo)
-
-                existencia = pick_value(row, ["existencia"])
-                precio = pick_value(row, ["precio"])
-                departamento = normalize_text(pick_value(row, ["departamento"]))
-                categoria = normalize_text(pick_value(row, ["categoria"]))
-                nombre = normalize_text(pick_value(row, ["nombre"]))
-
-                med.existencia = int(existencia) if existencia is not None else 0
-                med.precio = precio if precio is not None else 0
-                med.departamento = departamento
-                med.categoria = categoria
-                med.nombre = nombre
-
-                med.save()
-                actualizados += 1
-
-                if total_rows:
-                    percent = int((idx / total_rows) * 100)
-                    progress_points.append(min(percent, 100))
+            if total_rows:
+                progress_points = [int((i / total_rows) * 100) for i in range(1, total_rows + 1)]
+                if progress_points[-1] < 100:
+                    progress_points.append(100)
 
             messages.success(request, f"Actualizados: {actualizados}")
 
-            if total_rows and (not progress_points or progress_points[-1] < 100):
-                progress_points.append(100)
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
     else:
         form = ExcelUploadForm()
 
@@ -199,6 +152,126 @@ def cargar_excel_medicamentos(request):
             "progress_points": json.dumps(progress_points),
         }
     )
+
+
+def _valor_celda(ws, row, col):
+    cell = ws.cell(row=row, column=col)
+    return cell.value
+
+
+def _anchor_row_col(image):
+    anchor = getattr(image, "anchor", None)
+    if isinstance(anchor, str):
+        row, col = coordinate_to_tuple(anchor)
+        return row, col
+    anchor_obj = getattr(anchor, "_from", None) or getattr(anchor, "from", None)
+    if anchor_obj and hasattr(anchor_obj, "row") and hasattr(anchor_obj, "col"):
+        return anchor_obj.row + 1, anchor_obj.col + 1
+    return None, None
+
+
+def _guardar_imagen(img, nombre):
+    data = img._data()
+    filename = f"{slugify(nombre or 'medicamento')}-{uuid.uuid4().hex}.png"
+    relative_path = os.path.join("medicamentos", filename)
+    full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    with open(full_path, "wb") as f:
+        f.write(data)
+    return relative_path
+
+
+def parsear_catalogo_excel(ruta_excel):
+    wb = load_workbook(ruta_excel, data_only=True)
+    ws = wb.active
+
+    imagenes_por_fila = {}
+    for img in getattr(ws, "_images", []):
+        row, _ = _anchor_row_col(img)
+        if row:
+            imagenes_por_fila.setdefault(row, img)
+
+    productos = []
+    fila = 1
+    max_filas = ws.max_row or 0
+
+    while fila <= max_filas:
+        nombre = _valor_celda(ws, fila, 1)
+        if not nombre or not str(nombre).strip():
+            fila += 1
+            continue
+
+        codigo = _valor_celda(ws, fila + 1, 3)
+        existencia = _valor_celda(ws, fila + 1, 7)
+        departamento = _valor_celda(ws, fila + 2, 3)
+        precio = _valor_celda(ws, fila + 2, 7)
+        categoria = _valor_celda(ws, fila + 3, 3)
+
+        imagen_rel = None
+        for posible_fila in range(fila, fila + 5):
+            if posible_fila in imagenes_por_fila:
+                imagen_rel = _guardar_imagen(imagenes_por_fila[posible_fila], nombre)
+                break
+
+        productos.append(
+            {
+                "nombre": str(nombre).strip(),
+                "codigo_barras": str(codigo).strip() if codigo else "",
+                "existencia": existencia,
+                "departamento": departamento or "",
+                "categoria": categoria or "",
+                "precio": precio,
+                "imagen": imagen_rel,
+            }
+        )
+
+        fila += 4
+
+    return productos
+
+
+def actualizar_inventario(datos):
+    productos_creados = 0
+    with transaction.atomic():
+        MedicamentoCatalogo.objects.all().delete()
+        nuevos = []
+
+        for item in datos:
+            nombre = (item.get("nombre") or "").strip() or "Producto sin nombre"
+            codigo = (item.get("codigo_barras") or "").strip() or f"codigo-{uuid.uuid4().hex[:8]}"
+            try:
+                existencia = int(item.get("existencia") or 0)
+            except (TypeError, ValueError):
+                existencia = 0
+
+            try:
+                precio_valor = item.get("precio")
+                precio = Decimal(str(precio_valor)) if precio_valor not in [None, ""] else Decimal("0")
+            except (InvalidOperation, TypeError, ValueError):
+                precio = Decimal("0")
+
+            departamento = (item.get("departamento") or "").strip()
+            categoria = (item.get("categoria") or "").strip()
+            imagen = item.get("imagen")
+
+            med = MedicamentoCatalogo(
+                nombre=nombre,
+                codigo_barras=codigo,
+                existencia=existencia,
+                departamento=departamento,
+                categoria=categoria,
+                precio=precio,
+            )
+
+            if imagen:
+                med.imagen = imagen
+
+            nuevos.append(med)
+
+        MedicamentoCatalogo.objects.bulk_create(nuevos)
+        productos_creados = len(nuevos)
+
+    return productos_creados
 
 
 @login_required
