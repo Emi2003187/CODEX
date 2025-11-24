@@ -14,7 +14,11 @@ from io import BytesIO
 from django.utils import timezone
 from django.utils.text import slugify
 
-from .models import Receta, MedicamentoRecetado
+from decimal import Decimal
+
+import pandas as pd
+
+from .models import MedicamentoCatalogo, Receta, MedicamentoRecetado
 from .pdf.receta_reportlab import build_receta_pdf
 from .catalogo_excel import (
     buscar_articulos,
@@ -22,6 +26,7 @@ from .catalogo_excel import (
     limpiar_cache_catalogo,
 )
 from django.views.decorators.csrf import csrf_exempt
+from .forms import ExcelUploadForm
 
 
 class _RecetaPDFBase(LoginRequiredMixin, DetailView):
@@ -291,3 +296,94 @@ def receta_medicamento_eliminar(request, receta_id, med_id):
     med = get_object_or_404(MedicamentoRecetado, id=med_id, receta=receta)
     med.delete()
     return JsonResponse({"ok": True})
+
+
+@login_required
+def cargar_excel_medicamentos(request):
+    if getattr(request.user, "rol", None) != "admin":
+        messages.error(request, "Solo los administradores pueden actualizar el inventario.")
+        return redirect("dashboard_admin")
+
+    form = ExcelUploadForm(request.POST or None, request.FILES or None)
+
+    if request.method == "POST" and form.is_valid():
+        archivo = form.cleaned_data["archivo"]
+        extension = archivo.name.rsplit(".", 1)[-1].lower()
+
+        try:
+            if extension == "csv":
+                df = pd.read_csv(archivo)
+            else:
+                df = pd.read_excel(archivo)
+        except Exception as exc:
+            messages.error(request, f"No se pudo leer el archivo: {exc}")
+            return redirect("cargar_excel_medicamentos")
+
+        if df.empty:
+            messages.warning(request, "El archivo no contiene registros para procesar.")
+            return redirect("cargar_excel_medicamentos")
+
+        df.columns = [str(col).strip().lower() for col in df.columns]
+        if "codigo_barras" not in df.columns:
+            messages.error(request, "El archivo debe incluir la columna 'codigo_barras'.")
+            return redirect("cargar_excel_medicamentos")
+
+        actualizados = 0
+        no_encontrados: list[str] = []
+
+        for _, row in df.iterrows():
+            codigo = str(row.get("codigo_barras") or "").strip()
+            if not codigo:
+                continue
+
+            medicamento = MedicamentoCatalogo.objects.filter(codigo_barras=codigo).first()
+            if not medicamento:
+                no_encontrados.append(codigo)
+                continue
+
+            cambios = False
+
+            if "existencia" in df.columns and pd.notna(row.get("existencia")):
+                try:
+                    medicamento.existencia = int(row.get("existencia"))
+                    cambios = True
+                except (TypeError, ValueError):
+                    pass
+
+            if "precio" in df.columns and pd.notna(row.get("precio")):
+                try:
+                    medicamento.precio = Decimal(str(row.get("precio")))
+                    cambios = True
+                except (TypeError, ValueError, ArithmeticError):
+                    pass
+
+            if "nombre" in df.columns and pd.notna(row.get("nombre")):
+                nombre = str(row.get("nombre")).strip()
+                if nombre:
+                    medicamento.nombre = nombre
+                    cambios = True
+
+            if cambios:
+                medicamento.save()
+                actualizados += 1
+
+        if actualizados:
+            messages.success(
+                request,
+                f"Inventario actualizado para {actualizados} medicamento(s).",
+            )
+        else:
+            messages.warning(request, "No se realizaron actualizaciones en el inventario.")
+
+        if no_encontrados:
+            codigos = ", ".join(no_encontrados[:10])
+            mensaje = f"No se encontraron {len(no_encontrados)} código(s): {codigos}"
+            messages.warning(request, mensaje)
+
+        return redirect("cargar_excel_medicamentos")
+
+    return render(
+        request,
+        "PAGES/medicamentos/cargar_excel.html",
+        {"form": form},
+    )

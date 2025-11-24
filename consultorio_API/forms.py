@@ -4,6 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from .models import *
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.validators import FileExtensionValidator
 from django.utils import timezone
 from django.conf import settings
 
@@ -83,6 +84,14 @@ class EditarUsuarioForm(forms.ModelForm):
 class LoginForm(AuthenticationForm):
     username = forms.CharField(label="Usuario", max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
     password = forms.CharField(label="Contraseña", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+
+class ExcelUploadForm(forms.Form):
+    archivo = forms.FileField(
+        label="Archivo Excel",
+        validators=[FileExtensionValidator(["xlsx", "xls", "csv"])],
+        widget=forms.FileInput(attrs={"class": "form-control"}),
+    )
 # ═══════════════════════════════════════════════════════════════
 # 📋 FORMULARIOS DE CITAS - SISTEMA POR CONSULTORIO
 # ═══════════════════════════════════════════════════════════════
