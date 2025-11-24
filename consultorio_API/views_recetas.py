@@ -114,13 +114,21 @@ def cargar_excel_medicamentos(request):
             import pandas as pd
             df = pd.read_excel(archivo)
 
+            def pick_value(current_row, names: list[str]):
+                for name in names:
+                    value = current_row.get(name)
+                    if pd.notna(value):
+                        return value
+                return None
+
             actualizados = 0
             no_encontrados = []
 
             total_rows = len(df.index)
 
             for idx, (_, row) in enumerate(df.iterrows(), start=1):
-                codigo = str(row.get("clave") or row.get("codigo_barras") or "").strip()
+                codigo_val = pick_value(row, ["clave", "codigo_barras", "código_barras"])
+                codigo = str(codigo_val or "").strip()
                 if not codigo:
                     continue
 
@@ -130,11 +138,11 @@ def cargar_excel_medicamentos(request):
                     no_encontrados.append(codigo)
                     continue
 
-                existencia = row.get("existencia")
-                precio = row.get("precio")
-                departamento = row.get("departamento")
-                categoria = row.get("categoria")
-                nombre = row.get("nombre")
+                existencia = pick_value(row, ["existencia", "Existencia"])
+                precio = pick_value(row, ["precio", "Precio"])
+                departamento = pick_value(row, ["departamento", "Departamento"])
+                categoria = pick_value(row, ["categoria", "Categoría", "Categoria"])
+                nombre = pick_value(row, ["nombre", "Nombre"])
 
                 if existencia is not None:
                     med.existencia = int(existencia)
