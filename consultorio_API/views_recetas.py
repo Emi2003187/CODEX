@@ -121,9 +121,12 @@ def cargar_excel_medicamentos(request):
                         return value
                 return None
 
-            actualizados = 0
-            no_encontrados = []
+            def normalize_text(value):
+                if value is None or (isinstance(value, float) and pd.isna(value)):
+                    return None
+                return str(value).strip()
 
+            actualizados = 0
             total_rows = len(df.index)
 
             for idx, (_, row) in enumerate(df.iterrows(), start=1):
@@ -132,17 +135,19 @@ def cargar_excel_medicamentos(request):
                 if not codigo:
                     continue
 
-                try:
-                    med = MedicamentoCatalogo.objects.get(codigo_barras=codigo)
-                except MedicamentoCatalogo.DoesNotExist:
-                    no_encontrados.append(codigo)
-                    continue
+                med, created = MedicamentoCatalogo.objects.get_or_create(
+                    codigo_barras=codigo
+                )
 
                 existencia = pick_value(row, ["existencia", "Existencia"])
                 precio = pick_value(row, ["precio", "Precio"])
-                departamento = pick_value(row, ["departamento", "Departamento"])
-                categoria = pick_value(row, ["categoria", "Categoría", "Categoria"])
-                nombre = pick_value(row, ["nombre", "Nombre"])
+                departamento = normalize_text(
+                    pick_value(row, ["departamento", "Departamento"])
+                )
+                categoria = normalize_text(
+                    pick_value(row, ["categoria", "Categoría", "Categoria"])
+                )
+                nombre = normalize_text(pick_value(row, ["nombre", "Nombre"]))
 
                 if existencia is not None:
                     med.existencia = int(existencia)
@@ -150,13 +155,13 @@ def cargar_excel_medicamentos(request):
                 if precio is not None:
                     med.precio = precio
 
-                if departamento:
+                if departamento is not None:
                     med.departamento = departamento
 
-                if categoria:
+                if categoria is not None:
                     med.categoria = categoria
 
-                if nombre:
+                if nombre is not None:
                     med.nombre = nombre
 
                 med.save()
@@ -167,8 +172,9 @@ def cargar_excel_medicamentos(request):
                     progress_points.append(min(percent, 100))
 
             messages.success(request, f"Actualizados: {actualizados}")
-            if no_encontrados:
-                messages.warning(request, f"Códigos no encontrados: {', '.join(no_encontrados)}")
+
+            if total_rows and (not progress_points or progress_points[-1] < 100):
+                progress_points.append(100)
     else:
         form = ExcelUploadForm()
 
