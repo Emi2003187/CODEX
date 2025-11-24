@@ -10,10 +10,26 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name="medicamentorecetado",
-            name="existencia",
-            field=models.PositiveIntegerField(default=0),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    sql=(
+                        "ALTER TABLE consultorio_API_medicamentorecetado "
+                        "ADD COLUMN IF NOT EXISTS existencia integer UNSIGNED DEFAULT 0"
+                    ),
+                    reverse_sql=(
+                        "ALTER TABLE consultorio_API_medicamentorecetado "
+                        "DROP COLUMN IF EXISTS existencia"
+                    ),
+                )
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name="medicamentorecetado",
+                    name="existencia",
+                    field=models.PositiveIntegerField(default=0),
+                )
+            ],
         ),
         migrations.AlterField(
             model_name="medicamentocatalogo",
