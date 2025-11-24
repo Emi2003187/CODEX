@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Catálogo de Medicamentos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="text-primary fw-bold mb-1">Catálogo de Medicamentos</h2>
+      <p class="text-muted mb-0">Gestiona el inventario directamente desde la base de datos.</p>
+    </div>
+    <a href="{% url 'medicamento_crear' %}" class="btn btn-primary shadow-sm">
+      <i class="bi bi-plus-circle"></i> Nuevo medicamento
+    </a>
+  </div>
+
+  <form method="get" class="mb-3">
+    <div class="input-group shadow-sm">
+      <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+      <input type="text" name="q" value="{{ termino }}" class="form-control"
+        placeholder="Buscar por nombre, código, categoría o departamento">
+      <button class="btn btn-outline-primary" type="submit">Buscar</button>
+    </div>
+  </form>
+
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body">
+      {% if medicamentos %}
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Código de barras</th>
+              <th>Departamento</th>
+              <th>Categoría</th>
+              <th class="text-center">Existencia</th>
+              <th class="text-end">Precio</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for med in medicamentos %}
+            <tr>
+              <td class="fw-semibold">{{ med.nombre }}</td>
+              <td>{{ med.codigo_barras }}</td>
+              <td>{{ med.departamento|default:'-' }}</td>
+              <td>{{ med.categoria|default:'-' }}</td>
+              <td class="text-center">{{ med.existencia }}</td>
+              <td class="text-end">{{ med.precio|default:'—' }}</td>
+              <td class="text-center">
+                <a href="{% url 'medicamento_editar' med.pk %}" class="btn btn-sm btn-outline-primary me-1">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'medicamento_eliminar' med.pk %}" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-info mb-0">No se encontraron medicamentos con el criterio indicado.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

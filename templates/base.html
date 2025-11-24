@@ -518,6 +518,10 @@
                     <i class="bi bi-people"></i>
                     <span class="menu-item-text">Usuarios</span>
                 </a>
+                <a href="{% url 'medicamentos_lista' %}" class="menu-item {% if 'medicamentos_' in request.resolver_match.url_name or request.resolver_match.url_name == 'medicamentos_lista' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Medicamentos">
+                    <i class="bi bi-capsule"></i>
+                    <span class="menu-item-text">Medicamentos</span>
+                </a>
                 <!--<a href="{% url 'horarios_lista' %}" class="menu-item {% if 'horarios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Horarios">
                     <i class="bi bi-clock"></i>
                     <span class="menu-item-text">Horarios Médicos</span>

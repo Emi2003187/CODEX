@@ -22,6 +22,12 @@ from consultorio_API.views_recetas import (
     cargar_excel_medicamentos,
     receta_pdf_reportlab,
 )
+from consultorio_API.views_medicamentos import (
+    medicamentos_lista,
+    medicamento_crear,
+    medicamento_editar,
+    medicamento_eliminar,
+)
 from . import views_recetas
 
 urlpatterns = [
@@ -99,9 +105,13 @@ urlpatterns = [
     path('antecedentes/<int:pk>/editar/', views.AntecedenteUpdateView.as_view(), name='antecedente_editar'),
     path('antecedentes/<int:pk>/eliminar/', views.AntecedenteDeleteView.as_view(), name='antecedente_eliminar'),
     path('pacientes/<int:paciente_id>/medicamento/nuevo/', views.medicamento_nuevo, name='medicamento_nuevo'),
-    path('medicamentos/<int:pk>/editar/', views.MedicamentoUpdateView.as_view(), name='medicamento_editar'),
-    path('medicamentos/<int:pk>/eliminar/', views.MedicamentoDeleteView.as_view(), name='medicamento_eliminar'),
+    path('pacientes/medicamentos/<int:pk>/editar/', views.MedicamentoUpdateView.as_view(), name='medicamento_actual_editar'),
+    path('pacientes/medicamentos/<int:pk>/eliminar/', views.MedicamentoDeleteView.as_view(), name='medicamento_actual_eliminar'),
     path("medicamentos/cargar-excel/", cargar_excel_medicamentos, name="cargar_excel_medicamentos"),
+    path("medicamentos/", medicamentos_lista, name="medicamentos_lista"),
+    path("medicamentos/crear/", medicamento_crear, name="medicamento_crear"),
+    path("medicamentos/<int:pk>/editar/", medicamento_editar, name="medicamento_editar"),
+    path("medicamentos/<int:pk>/eliminar/", medicamento_eliminar, name="medicamento_eliminar"),
     path('consultas/<int:consulta_id>/receta/nueva/', views.receta_nueva, name='receta_nueva'),
     
     # SIGNOS VITALES

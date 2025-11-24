@@ -8,7 +8,20 @@
         </div>
 
         <div class="card-body">
+            {% if actualizados is not None %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>¡Inventario actualizado con éxito!</strong> Se han cargado {{ actualizados }} registros.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
             <p class="text-muted">Sube un archivo Excel con columnas: clave/codigo_barras, nombre, existencia, precio, departamento, categoría.</p>
+
+            <div class="progress my-3">
+              <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                   role="progressbar" style="width: 0%;">
+              </div>
+            </div>
 
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
@@ -21,4 +34,23 @@
         </div>
     </div>
 </div>
+
+<script>
+function updateProgress(percent) {
+  document.getElementById("progressBar").style.width = percent + "%";
+}
+
+{% if progress_points %}
+const progressPoints = {{ progress_points|safe }};
+let progressIndex = 0;
+function runProgress() {
+  if (progressIndex < progressPoints.length) {
+    updateProgress(progressPoints[progressIndex]);
+    progressIndex += 1;
+    setTimeout(runProgress, 200);
+  }
+}
+document.addEventListener('DOMContentLoaded', runProgress);
+{% endif %}
+</script>
 {% endblock %}

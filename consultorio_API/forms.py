@@ -92,6 +92,38 @@ class ExcelUploadForm(forms.Form):
         validators=[FileExtensionValidator(['xlsx', 'xls', 'csv'])],
         widget=forms.FileInput(attrs={'class': 'form-control'})
     )
+
+
+class MedicamentoCatalogoForm(forms.ModelForm):
+    class Meta:
+        model = MedicamentoCatalogo
+        fields = [
+            "nombre",
+            "codigo_barras",
+            "existencia",
+            "precio",
+            "departamento",
+            "categoria",
+            "imagen",
+        ]
+        widgets = {
+            "nombre": forms.TextInput(attrs={"class": "form-control"}),
+            "codigo_barras": forms.TextInput(attrs={"class": "form-control"}),
+            "existencia": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
+            "precio": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": 0}),
+            "departamento": forms.TextInput(attrs={"class": "form-control"}),
+            "categoria": forms.TextInput(attrs={"class": "form-control"}),
+            "imagen": forms.ClearableFileInput(attrs={"class": "form-control"}),
+        }
+        labels = {
+            "nombre": "Nombre",
+            "codigo_barras": "Código de barras",
+            "existencia": "Existencia",
+            "precio": "Precio",
+            "departamento": "Departamento",
+            "categoria": "Categoría",
+            "imagen": "Imagen",
+        }
 # ═══════════════════════════════════════════════════════════════
 # 📋 FORMULARIOS DE CITAS - SISTEMA POR CONSULTORIO
 # ═══════════════════════════════════════════════════════════════

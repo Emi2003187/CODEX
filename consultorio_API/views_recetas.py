@@ -1,3 +1,4 @@
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -13,6 +14,7 @@ from django.db import transaction
 from io import BytesIO
 from django.utils import timezone
 from django.utils.text import slugify
+import json
 
 from .forms import ExcelUploadForm
 from .models import Receta, MedicamentoRecetado, MedicamentoCatalogo
@@ -99,6 +101,10 @@ def cargar_excel_medicamentos(request):
         messages.error(request, "Solo un administrador puede acceder a este módulo.")
         return redirect("home")
 
+    actualizados = None
+    progress_points = []
+    total_rows = 0
+
     if request.method == "POST":
         form = ExcelUploadForm(request.POST, request.FILES)
 
@@ -111,7 +117,9 @@ def cargar_excel_medicamentos(request):
             actualizados = 0
             no_encontrados = []
 
-            for _, row in df.iterrows():
+            total_rows = len(df.index)
+
+            for idx, (_, row) in enumerate(df.iterrows(), start=1):
                 codigo = str(row.get("clave") or row.get("codigo_barras") or "").strip()
                 if not codigo:
                     continue
@@ -146,11 +154,13 @@ def cargar_excel_medicamentos(request):
                 med.save()
                 actualizados += 1
 
+                if total_rows:
+                    percent = int((idx / total_rows) * 100)
+                    progress_points.append(min(percent, 100))
+
             messages.success(request, f"Actualizados: {actualizados}")
             if no_encontrados:
                 messages.warning(request, f"Códigos no encontrados: {', '.join(no_encontrados)}")
-
-            return redirect("cargar_excel_medicamentos")
     else:
         form = ExcelUploadForm()
 
@@ -160,6 +170,9 @@ def cargar_excel_medicamentos(request):
         {
             "form": form,
             "usuario": request.user,
+            "actualizados": actualizados,
+            "total_rows": total_rows,
+            "progress_points": json.dumps(progress_points),
         }
     )
 
