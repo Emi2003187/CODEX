@@ -200,7 +200,7 @@ def medicamentos_lista(request):
     return render(
         request,
         "medicamentos/lista.html",
-        {"page_obj": page_obj, "termino": termino},
+        {"page_obj": page_obj, "termino": termino, "usuario": request.user},
     )
 
 
@@ -215,7 +215,11 @@ def medicamentos_crear(request):
     else:
         form = MedicamentoCatalogoForm()
 
-    return render(request, "medicamentos/formulario.html", {"form": form, "accion": "Crear"})
+    return render(
+        request,
+        "medicamentos/formulario.html",
+        {"form": form, "accion": "Crear", "usuario": request.user},
+    )
 
 
 @login_required
@@ -233,7 +237,12 @@ def medicamentos_editar(request, pk: int):
     return render(
         request,
         "medicamentos/formulario.html",
-        {"form": form, "accion": "Editar", "medicamento": medicamento},
+        {
+            "form": form,
+            "accion": "Editar",
+            "medicamento": medicamento,
+            "usuario": request.user,
+        },
     )
 
 
@@ -244,7 +253,11 @@ def medicamentos_eliminar(request, pk: int):
         medicamento.delete()
         messages.success(request, "Medicamento eliminado correctamente.")
         return redirect("medicamentos_lista")
-    return render(request, "medicamentos/confirmar_eliminar.html", {"medicamento": medicamento})
+    return render(
+        request,
+        "medicamentos/confirmar_eliminar.html",
+        {"medicamento": medicamento, "usuario": request.user},
+    )
 
 
 class MedicamentoExcelUploadView(LoginRequiredMixin, View):
@@ -260,6 +273,7 @@ class MedicamentoExcelUploadView(LoginRequiredMixin, View):
                 "actualizados": None,
                 "errores": None,
                 "total": None,
+                "usuario": request.user,
             },
         )
 
@@ -271,6 +285,7 @@ class MedicamentoExcelUploadView(LoginRequiredMixin, View):
             "actualizados": None,
             "errores": None,
             "total": None,
+            "usuario": request.user,
         }
         if form.is_valid():
             archivo = form.cleaned_data["archivo"]
