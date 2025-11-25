@@ -512,39 +512,39 @@
 
             <!-- Gestión de Usuarios (Solo Admin) -->
             {% if usuario.rol == "admin" %}
-            <div class="menu-section">
-                <div class="menu-section-title">Administración</div>
-                <a href="{% url 'usuarios_lista' %}" class="menu-item {% if 'usuarios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Usuarios">
-                    <i class="bi bi-people"></i>
-                    <span class="menu-item-text">Usuarios</span>
-                </a>
-                <!--<a href="{% url 'horarios_lista' %}" class="menu-item {% if 'horarios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Horarios">
-                    <i class="bi bi-clock"></i>
-                    <span class="menu-item-text">Horarios Médicos</span>
-                </a>-->
-                <a href="{% url 'consultorios_lista' %}" class="menu-item {% if 'consultorios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultorios">
-                    <i class="bi bi-hospital"></i>
-                    <span class="menu-item-text">Consultorios</span>
-                </a>
-                <a href="{% url 'medicamentos_lista' %}"
-                   class="menu-item
-                   {% if request.resolver_match.url_name == 'medicamentos_lista'
-                         or request.resolver_match.url_name == 'medicamento_crear'
-                         or request.resolver_match.url_name == 'medicamento_editar'
-                         or request.resolver_match.url_name == 'medicamento_eliminar' %}
-                         active
-                   {% endif %}"
-                   data-bs-toggle="tooltip"
-                   data-bs-placement="right"
-                   title="Medicamentos">
-                       <i class="bi bi-capsule"></i>
-                       <span class="menu-item-text">Medicamentos</span>
-                </a>
-                <a href="{% url 'importar_catalogo' %}" class="menu-item {% if request.resolver_match.url_name == 'importar_catalogo' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Importar Catálogo">
-                    <i class="bi bi-upload"></i>
-                    <span class="menu-item-text">Importar Catálogo</span>
-                </a>
-            </div>
+                <div class="menu-section">
+                    <div class="menu-section-title">Administración</div>
+                    <a href="{% url 'usuarios_lista' %}" class="menu-item {% if 'usuarios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Usuarios">
+                        <i class="bi bi-people"></i>
+                        <span class="menu-item-text">Usuarios</span>
+                    </a>
+                    <!--<a href="{% url 'horarios_lista' %}" class="menu-item {% if 'horarios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Horarios">
+                        <i class="bi bi-clock"></i>
+                        <span class="menu-item-text">Horarios Médicos</span>
+                    </a>-->
+                    <a href="{% url 'consultorios_lista' %}" class="menu-item {% if 'consultorios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultorios">
+                        <i class="bi bi-hospital"></i>
+                        <span class="menu-item-text">Consultorios</span>
+                    </a>
+                    <a href="{% url 'medicamentos_lista' %}"
+                       class="menu-item
+                       {% if request.resolver_match.url_name == 'medicamentos_lista'
+                             or request.resolver_match.url_name == 'medicamento_crear'
+                             or request.resolver_match.url_name == 'medicamento_editar'
+                             or request.resolver_match.url_name == 'medicamento_eliminar' %}
+                             active
+                       {% endif %}"
+                       data-bs-toggle="tooltip"
+                       data-bs-placement="right"
+                       title="Medicamentos">
+                           <i class="bi bi-capsule"></i>
+                           <span class="menu-item-text">Medicamentos</span>
+                    </a>
+                    <a href="{% url 'importar_catalogo' %}" class="menu-item {% if request.resolver_match.url_name == 'importar_catalogo' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Importar Catálogo">
+                        <i class="bi bi-upload"></i>
+                        <span class="menu-item-text">Importar Catálogo</span>
+                    </a>
+                </div>
             {% endif %}
 
             <!-- Gestión Clínica -->
