@@ -1,23 +1,21 @@
-{% extends "base.html" %}
-{% block title %}Eliminar Medicamento{% endblock %}
+{% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <h2 class="text-danger mb-4">Eliminar Medicamento</h2>
-      <div class="card p-4 shadow-sm">
-        <p>¿Estás seguro de eliminar este medicamento?</p>
-        <p class="fw-semibold">{{ object.nombre }} - {{ object.dosis }}</p>
-        <form method="post">
-          {% csrf_token %}
-          <div class="d-flex justify-content-between">
-            <a href="{{ next }}" class="btn btn-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-danger">Eliminar</button>
-          </div>
-        </form>
-      </div>
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0"><i class="bi bi-trash"></i> Eliminar Medicamento</h4>
+        </div>
+        <div class="card-body">
+            <p>¿Estás seguro de eliminar <strong>{{ medicamento.nombre }}</strong> del catálogo?</p>
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'medicamentos_lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}

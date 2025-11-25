@@ -4,6 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from .models import *
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.validators import FileExtensionValidator
 from django.utils import timezone
 from django.conf import settings
 
@@ -1717,3 +1718,37 @@ MedicamentoRecetadoFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
 )
+
+
+class CatalogoExcelForm(forms.Form):
+    archivo = forms.FileField(
+        label="Archivo de catálogo",
+        validators=[FileExtensionValidator(allowed_extensions=["xlsx"])],
+        widget=forms.ClearableFileInput(attrs={
+            "class": "form-control",
+            "accept": ".xlsx",
+        }),
+    )
+
+
+class MedicamentoCatalogoForm(forms.ModelForm):
+    class Meta:
+        model = MedicamentoCatalogo
+        fields = [
+            "nombre",
+            "codigo_barras",
+            "existencia",
+            "departamento",
+            "categoria",
+            "precio",
+            "imagen",
+        ]
+        widgets = {
+            "nombre": forms.TextInput(attrs={"class": "form-control"}),
+            "codigo_barras": forms.TextInput(attrs={"class": "form-control"}),
+            "existencia": forms.NumberInput(attrs={"class": "form-control"}),
+            "departamento": forms.TextInput(attrs={"class": "form-control"}),
+            "categoria": forms.TextInput(attrs={"class": "form-control"}),
+            "precio": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "imagen": forms.ClearableFileInput(attrs={"class": "form-control", "accept": "image/*"}),
+        }

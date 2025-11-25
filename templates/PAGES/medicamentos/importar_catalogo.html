@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-upload"></i> Importar Catálogo de Medicamentos</h4>
+        </div>
+
+        <div class="card-body">
+            {% if actualizados %}
+            <div class="alert alert-success alert-dismissible fade show">
+                <strong>¡Inventario actualizado!</strong> Se cargaron {{ actualizados }} registros.
+                <button class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <div class="progress my-3">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%;"></div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.archivo.label_tag }}
+                {{ form.archivo }}
+                <button class="btn btn-primary mt-2">Importar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateProgress(p) {
+    document.getElementById('progressBar').style.width = p + "%";
+}
+{% if progress_points %}
+const p = {{ progress_points|safe }};
+let i = 0;
+function animate() {
+    if (i < p.length) {
+        updateProgress(p[i]);
+        i++;
+        setTimeout(animate, 200);
+    }
+}
+document.addEventListener("DOMContentLoaded", animate);
+{% endif %}
+</script>
+{% endblock %}
