@@ -1,13 +1,13 @@
-import os
-import tempfile
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import CatalogoExcelForm, MedicamentoCatalogoForm
 from .models import MedicamentoCatalogo
-from .parsers import parsear_catalogo_excel
+from consultorio_API.catalogo_excel import _load_all_items, limpiar_cache_catalogo
 
 
 ADMIN_ROL = "admin"
@@ -22,7 +22,14 @@ def _verificar_admin(request):
 def actualizar_catalogo_completo(lista):
     MedicamentoCatalogo.objects.all().delete()
     for item in lista:
-        MedicamentoCatalogo.objects.create(**item)
+        MedicamentoCatalogo.objects.create(
+            nombre=item.get("nombre", ""),
+            existencia=item.get("existencia", 0),
+            departamento=item.get("departamento"),
+            categoria=item.get("categoria"),
+            precio=item.get("precio"),
+            imagen=item.get("imagen_url"),
+        )
 
 
 @login_required
@@ -37,19 +44,18 @@ def importar_catalogo(request):
         form = CatalogoExcelForm(request.POST, request.FILES)
         if form.is_valid():
             archivo = form.cleaned_data["archivo"]
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
+            base_dir = Path(getattr(settings, "BASE_DIR", "."))
+            destino = base_dir / "Catalogo de Artículos.xlsx"
+
+            with open(destino, "wb+") as temp_file:
                 for chunk in archivo.chunks():
                     temp_file.write(chunk)
-                temp_path = temp_file.name
 
-            try:
-                datos = parsear_catalogo_excel(temp_path)
-                actualizar_catalogo_completo(datos)
-                actualizados = len(datos)
-                progress_points = [0, 20, 40, 60, 80, 100]
-            finally:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
+            limpiar_cache_catalogo()
+            datos = _load_all_items()
+            actualizar_catalogo_completo(datos)
+            actualizados = len(datos)
+            progress_points = [0, 20, 40, 60, 80, 100]
     else:
         form = CatalogoExcelForm()
 
