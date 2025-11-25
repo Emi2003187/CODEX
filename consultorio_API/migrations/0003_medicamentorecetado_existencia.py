@@ -9,10 +9,32 @@ class Migration(migrations.Migration):
         ("consultorio_API", "0002_update_medicamentocatalogo_clave"),
     ]
 
+    def _add_existencia_if_missing(apps, schema_editor):
+        model = apps.get_model("consultorio_API", "MedicamentoRecetado")
+        table = model._meta.db_table
+        with schema_editor.connection.cursor() as cursor:
+            columns = {
+                column.name
+                for column in schema_editor.connection.introspection.get_table_description(
+                    cursor, table
+                )
+            }
+        if "existencia" in columns:
+            return
+
+        field = models.PositiveIntegerField(default=0)
+        field.set_attributes_from_name("existencia")
+        schema_editor.add_field(model, field)
+
     operations = [
-        migrations.AddField(
-            model_name="medicamentorecetado",
-            name="existencia",
-            field=models.PositiveIntegerField(default=0),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[migrations.RunPython(_add_existencia_if_missing, migrations.RunPython.noop)],
+            state_operations=[
+                migrations.AddField(
+                    model_name="medicamentorecetado",
+                    name="existencia",
+                    field=models.PositiveIntegerField(default=0),
+                ),
+            ],
         ),
     ]
