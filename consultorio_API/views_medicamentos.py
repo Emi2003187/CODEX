@@ -41,10 +41,34 @@ def _clean_line(row: List[object]) -> str:
     return " ".join(parts).strip()
 
 
-def _strip_label_value(text: str) -> str:
-    if ":" in text:
-        return text.split(":", 1)[1].strip()
-    return text.strip()
+def _strip_label_value(text: str, key: str | None = None) -> str:
+    """Remove the label prefix from a line and return the raw value.
+
+    The Excel export sometimes introduces extra spaces or omits the colon after
+    the label, e.g. ``"Precio   $ 15.00"``. This helper trims the label keyword
+    (if provided) and any leading punctuation/whitespace so value parsing
+    remains robust.
+    """
+
+    cleaned = text.strip()
+    if key:
+        variants = [key]
+        if key == "categoria":
+            variants.append("categoría")
+
+        expanded_variants = []
+        for v in variants:
+            expanded_variants.extend([v, f"{v}:", f"{v} :", f"{v} : "])
+
+        lower_cleaned = cleaned.lower()
+        for variant in expanded_variants:
+            if lower_cleaned.startswith(variant):
+                cleaned = cleaned[len(variant) :].strip()
+                break
+
+    if ":" in cleaned:
+        cleaned = cleaned.split(":", 1)[1].strip()
+    return cleaned
 
 
 def _parse_int(value: str | None) -> int | None:
@@ -86,17 +110,20 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
 
     def match_label(text: str) -> str | None:
         lower = text.lower().strip()
-        if lower.startswith("clave:"):
+        normalized = lower.replace("  ", " ")
+        if normalized.startswith("clave"):
             return "clave"
-        if lower.startswith("departamento:"):
+        if normalized.startswith("departamento"):
             return "departamento"
-        if lower.startswith("categoría:") or lower.startswith("categoria:"):
+        if normalized.startswith("categoría") or normalized.startswith("categoria"):
             return "categoria"
-        if lower.startswith("existencia:"):
+        if normalized.startswith("existencia"):
             return "existencia"
-        if lower.startswith("precio:"):
+        if normalized.startswith("precio"):
             return "precio"
         return None
+
+    skip_prefixes = {"catalogo de articulos", "catálogo de artículos", "farmacia nova"}
 
     while i < len(rows):
         line = _clean_line(rows[i])
@@ -105,6 +132,12 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
             continue
 
         if match_label(line):
+            i += 1
+            continue
+
+        # Ignorar encabezados o separadores comunes
+        lowered = line.lower()
+        if any(lowered.startswith(prefix) for prefix in skip_prefixes):
             i += 1
             continue
 
@@ -119,7 +152,7 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
 
         found_detail = False
         j = i + 1
-        max_seek = min(len(rows), i + 11)
+        max_seek = min(len(rows), i + 25)
         next_candidate_index = None
 
         while j < max_seek:
@@ -131,7 +164,7 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
             detalle_key = match_label(detalle_text)
             if detalle_key:
                 found_detail = True
-                info[detalle_key] = _strip_label_value(detalle_text)
+                info[detalle_key] = _strip_label_value(detalle_text, detalle_key)
                 j += 1
                 continue
 
