@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -29,6 +30,8 @@ class MedicamentoParsed:
     categoria: str | None
     existencia: int
     precio: Decimal | None
+    imagen_data: bytes | None = None
+    imagen_ext: str | None = None
 
 
 def _clean_line(row: List[object]) -> str:
@@ -125,14 +128,48 @@ def _parse_decimal(value: str | None) -> Decimal | None:
         return None
 
 
-def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], List[dict]]:
-    """Parsea una hoja en el formato visual del catálogo.
+def _extract_sheet_images(ws) -> Dict[int, List[Tuple[bytes, str | None]]]:
+    """Devuelve un mapeo row_index -> lista de (bytes, extensión)."""
 
-    Es tolerante a filas vacías, imágenes incrustadas y separadores adicionales.
-    Busca un nombre (línea que no inicia con etiqueta) y, a partir de ahí, consume
-    las siguientes filas hasta reunir las etiquetas esperadas o topar con el
-    siguiente nombre.
-    """
+    images_by_row: Dict[int, List[Tuple[bytes, str | None]]] = {}
+
+    for img in getattr(ws, "_images", []):  # pragma: no cover - dependiente de archivo
+        try:
+            anchor = getattr(img, "anchor", None)
+            if hasattr(anchor, "_from"):
+                row_idx = anchor._from.row
+            elif hasattr(anchor, "row"):
+                row_idx = anchor.row
+            else:
+                continue
+
+            data = img._data() if hasattr(img, "_data") else None
+            if not data:
+                continue
+
+            ext = getattr(img, "format", None)
+            images_by_row.setdefault(row_idx, []).append((data, ext))
+        except Exception:
+            continue
+
+    return images_by_row
+
+
+def _pop_image_for_block(images_by_row: Dict[int, List[Tuple[bytes, str | None]]], start: int, end: int):
+    if not images_by_row:
+        return None, None
+
+    for row_idx in range(start, end + 1):
+        if row_idx in images_by_row and images_by_row[row_idx]:
+            data, ext = images_by_row[row_idx].pop(0)
+            if not images_by_row[row_idx]:
+                images_by_row.pop(row_idx, None)
+            return data, ext
+    return None, None
+
+
+def _parse_sheet(rows: List[List[object]], images_by_row: Dict[int, List[Tuple[bytes, str | None]]] | None = None) -> Tuple[List[MedicamentoParsed], List[dict]]:
+    """Parsea una hoja en el formato visual del catálogo."""
 
     items: List[MedicamentoParsed] = []
     errors: List[dict] = []
@@ -150,7 +187,6 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
             i += 1
             continue
 
-        # Ignorar encabezados o separadores comunes
         lowered = line.lower()
         if any(lowered.startswith(prefix) for prefix in skip_prefixes):
             i += 1
@@ -210,6 +246,9 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
             i = next_candidate_index if next_candidate_index is not None else j
             continue
 
+        block_end = (next_candidate_index - 1) if next_candidate_index is not None else (j - 1)
+        img_data, img_ext = _pop_image_for_block(images_by_row or {}, i, block_end)
+
         items.append(
             MedicamentoParsed(
                 nombre=nombre,
@@ -218,6 +257,8 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
                 categoria=str(info["categoria"] or "").strip() or None,
                 existencia=existencia_val,
                 precio=precio_val,
+                imagen_data=img_data,
+                imagen_ext=img_ext,
             )
         )
 
@@ -243,7 +284,8 @@ def parse_medications_file(file_bytes: bytes, filename: str) -> Tuple[List[Medic
         errors: List[dict] = []
         for ws in wb.worksheets:
             sheet_rows = [list(row) for row in ws.iter_rows(values_only=True)]
-            sheet_items, sheet_errors = _parse_sheet(sheet_rows)
+            images_by_row = _extract_sheet_images(ws)
+            sheet_items, sheet_errors = _parse_sheet(sheet_rows, images_by_row)
             items.extend(sheet_items)
             for err in sheet_errors:
                 err["hoja"] = ws.title
@@ -384,6 +426,11 @@ class MedicamentoExcelUploadView(LoginRequiredMixin, View):
                     "existencia": item.existencia,
                     "precio": item.precio,
                 }
+                if item.imagen_data:
+                    ext = (item.imagen_ext or "png").lower().replace(".", "")
+                    filename = f"{item.clave}.{ext}"
+                    defaults["imagen"] = ContentFile(item.imagen_data, name=filename)
+
                 obj, created = MedicamentoCatalogo.objects.update_or_create(
                     clave=item.clave, defaults=defaults
                 )
