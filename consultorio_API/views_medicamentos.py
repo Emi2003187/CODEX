@@ -99,6 +99,9 @@ def _parse_int(value: str | None) -> int | None:
     if value is None:
         return None
     cleaned = value.replace(",", "").replace(" ", "").strip()
+    lowered = cleaned.lower()
+    if lowered in {"n/a", "na", "n.d", "nd", "na."}:
+        return 0
     if not cleaned:
         return None
     try:
@@ -111,6 +114,9 @@ def _parse_decimal(value: str | None) -> Decimal | None:
     if value is None:
         return None
     cleaned = value.replace("$", "").replace(",", "").replace(" ", "").strip()
+    lowered = cleaned.lower()
+    if lowered in {"n/a", "na", "n.d", "nd", "na."}:
+        return Decimal(0)
     if not cleaned:
         return None
     try:
