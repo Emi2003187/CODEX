@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4">
+            <h4 class="mb-0"><i class="bi bi-upload"></i> Importar Catálogo</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">Importa el catálogo completo desde el archivo Excel visual (/mnt/data/Catalogo de Artículos.xlsx). Puedes subir un archivo alternativo si lo deseas.</p>
+
+            {% if actualizados is not None %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>¡Inventario actualizado con éxito!</strong> Se han procesado {{ actualizados }} productos.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            {% if errores %}
+            <div class="alert alert-danger" role="alert">
+                <ul class="mb-0">
+                {% for err in errores %}
+                    <li>{{ err }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" class="row g-3 align-items-end">
+                {% csrf_token %}
+                <div class="col-md-8">
+                    {{ form.archivo.label_tag }}
+                    {{ form.archivo }}
+                    <div class="form-text">Opcional: deja vacío para usar el archivo predeterminado.</div>
+                </div>
+                <div class="col-md-4 d-flex justify-content-end">
+                    <button class="btn btn-primary w-100" type="submit">
+                        <i class="bi bi-arrow-repeat"></i> Ejecutar importación
+                    </button>
+                </div>
+            </form>
+
+            <div class="progress my-3">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+const points = {{ progress_points|default:'[]'|safe }};
+function animateProgress(values) {
+  if (!values.length) return;
+  const bar = document.getElementById('progressBar');
+  let idx = 0;
+  const tick = () => {
+    bar.style.width = `${values[idx]}%`;
+    idx += 1;
+    if (idx < values.length) {
+      setTimeout(tick, 80);
+    }
+  };
+  tick();
+}
+document.addEventListener('DOMContentLoaded', () => animateProgress(points));
+</script>
+{% endblock %}

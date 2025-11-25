@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Nuevo Medicamento{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-header bg-primary text-white rounded-top-4">
+      <h4 class="mb-0"><i class="bi bi-capsule"></i> Registrar medicamento</h4>
+    </div>
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %}
+        <div class="col-md-6">
+          <label class="form-label">{{ form.nombre.label }}</label>
+          {{ form.nombre }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ form.codigo_barras.label }}</label>
+          {{ form.codigo_barras }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">{{ form.existencia.label }}</label>
+          {{ form.existencia }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">{{ form.precio.label }}</label>
+          {{ form.precio }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">{{ form.imagen.label }}</label>
+          {{ form.imagen }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ form.departamento.label }}</label>
+          {{ form.departamento }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ form.categoria.label }}</label>
+          {{ form.categoria }}
+        </div>
+        <div class="col-12 d-flex justify-content-between mt-3">
+          <a href="{% url 'medicamentos_lista' %}" class="btn btn-outline-secondary">Volver</a>
+          <button class="btn btn-primary" type="submit">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

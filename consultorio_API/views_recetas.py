@@ -1,27 +1,31 @@
+
+import json
+import os
+import tempfile
+from io import BytesIO
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.http import (
     FileResponse,
     HttpResponseForbidden,
     JsonResponse,
 )
-from django.shortcuts import redirect, render, get_object_or_404
-from django.views.generic import DetailView
-from django.views.decorators.http import require_GET, require_POST
-from django.db import transaction
-from io import BytesIO
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.text import slugify
-
-from .models import Receta, MedicamentoRecetado
-from .pdf.receta_reportlab import build_receta_pdf
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
+from django.views.generic import DetailView
 from .catalogo_excel import (
     buscar_articulos,
     catalogo_disponible,
     limpiar_cache_catalogo,
 )
-from django.views.decorators.csrf import csrf_exempt
+from .catalogo_import import actualizar_inventario, parsear_catalogo_excel
+from .forms import ExcelUploadForm
+from .models import MedicamentoCatalogo, MedicamentoRecetado, Receta
 
 
 class _RecetaPDFBase(LoginRequiredMixin, DetailView):
@@ -90,6 +94,60 @@ def receta_pdf_reportlab(request, pk: int):
     fecha = receta.fecha_emision or timezone.now()
     filename = f"{receta.pk}_{slugify(receta.consulta.paciente.nombre_completo)}_{fecha.strftime('%Y%m%d')}.pdf"
     return FileResponse(buf, as_attachment=False, filename=filename, content_type="application/pdf")
+
+
+@login_required
+def cargar_excel_medicamentos(request):
+    if request.user.rol != "admin":
+        messages.error(request, "Solo un administrador puede acceder a este módulo.")
+        return redirect("home")
+
+    actualizados = None
+    progress_points = []
+    total_rows = 0
+
+    if request.method == "POST":
+        form = ExcelUploadForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            archivo = request.FILES["archivo"]
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(archivo.name)[1]) as tmp:
+                for chunk in archivo.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
+
+            datos = parsear_catalogo_excel(tmp_path)
+            actualizados = actualizar_inventario(datos)
+            total_rows = len(datos)
+
+            if total_rows:
+                progress_points = [int((i / total_rows) * 100) for i in range(1, total_rows + 1)]
+                if progress_points[-1] < 100:
+                    progress_points.append(100)
+
+            messages.success(request, f"Actualizados: {actualizados}")
+
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+    else:
+        form = ExcelUploadForm()
+
+    return render(
+        request,
+        "PAGES/medicamentos/cargar_excel.html",
+        {
+            "form": form,
+            "usuario": request.user,
+            "actualizados": actualizados,
+            "total_rows": total_rows,
+            "progress_points": json.dumps(progress_points),
+        }
+    )
+
+
 
 
 @login_required

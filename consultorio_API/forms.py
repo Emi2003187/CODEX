@@ -4,6 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from .models import *
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.validators import FileExtensionValidator
 from django.utils import timezone
 from django.conf import settings
 
@@ -83,6 +84,46 @@ class EditarUsuarioForm(forms.ModelForm):
 class LoginForm(AuthenticationForm):
     username = forms.CharField(label="Usuario", max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
     password = forms.CharField(label="Contraseña", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+
+class ExcelUploadForm(forms.Form):
+    archivo = forms.FileField(
+        label="Archivo Excel",
+        validators=[FileExtensionValidator(['xlsx', 'xls', 'csv'])],
+        widget=forms.FileInput(attrs={'class': 'form-control'})
+    )
+
+
+class MedicamentoCatalogoForm(forms.ModelForm):
+    class Meta:
+        model = MedicamentoCatalogo
+        fields = [
+            "nombre",
+            "codigo_barras",
+            "existencia",
+            "precio",
+            "departamento",
+            "categoria",
+            "imagen",
+        ]
+        widgets = {
+            "nombre": forms.TextInput(attrs={"class": "form-control"}),
+            "codigo_barras": forms.TextInput(attrs={"class": "form-control"}),
+            "existencia": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
+            "precio": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": 0}),
+            "departamento": forms.TextInput(attrs={"class": "form-control"}),
+            "categoria": forms.TextInput(attrs={"class": "form-control"}),
+            "imagen": forms.ClearableFileInput(attrs={"class": "form-control"}),
+        }
+        labels = {
+            "nombre": "Nombre",
+            "codigo_barras": "Código de barras",
+            "existencia": "Existencia",
+            "precio": "Precio",
+            "departamento": "Departamento",
+            "categoria": "Categoría",
+            "imagen": "Imagen",
+        }
 # ═══════════════════════════════════════════════════════════════
 # 📋 FORMULARIOS DE CITAS - SISTEMA POR CONSULTORIO
 # ═══════════════════════════════════════════════════════════════

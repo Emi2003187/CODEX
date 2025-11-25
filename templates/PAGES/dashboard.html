@@ -282,6 +282,24 @@
             
             {% if usuario.rol == "admin" %}
             <div class="col-md-2 col-6">
+              <a href="{% url 'medicamentos_lista' %}" class="btn btn-outline-dark quick-action-btn w-100">
+                <i class="bi bi-capsule fs-3 mb-1"></i>
+                <small>Catálogo Medicamentos</small>
+              </a>
+            </div>
+            <div class="col-md-2 col-6">
+              <a href="{% url 'cargar_excel_medicamentos' %}" class="btn btn-outline-dark quick-action-btn w-100">
+                <i class="bi bi-upload fs-3 mb-1"></i>
+                <small>Cargar Inventario</small>
+              </a>
+            </div>
+            <div class="col-md-2 col-6">
+              <a href="{% url 'importar_catalogo' %}" class="btn btn-outline-dark quick-action-btn w-100">
+                <i class="bi bi-upload fs-3 mb-1"></i>
+                <small>Importar Catálogo</small>
+              </a>
+            </div>
+            <div class="col-md-2 col-6">
               <a href="{% url 'horarios_lista' %}" class="btn btn-outline-dark quick-action-btn w-100">
                 <i class="bi bi-clock fs-3 mb-1"></i>
                 <small>Horarios</small>

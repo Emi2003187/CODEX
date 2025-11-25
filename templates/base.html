@@ -518,6 +518,10 @@
                     <i class="bi bi-people"></i>
                     <span class="menu-item-text">Usuarios</span>
                 </a>
+                <a href="{% url 'medicamentos_lista' %}" class="menu-item {% if 'medicamentos_' in request.resolver_match.url_name or request.resolver_match.url_name == 'medicamentos_lista' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Medicamentos">
+                    <i class="bi bi-capsule"></i>
+                    <span class="menu-item-text">Medicamentos</span>
+                </a>
                 <!--<a href="{% url 'horarios_lista' %}" class="menu-item {% if 'horarios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Horarios">
                     <i class="bi bi-clock"></i>
                     <span class="menu-item-text">Horarios Médicos</span>
@@ -525,6 +529,14 @@
                 <a href="{% url 'consultorios_lista' %}" class="menu-item {% if 'consultorios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Consultorios">
                     <i class="bi bi-hospital"></i>
                     <span class="menu-item-text">Consultorios</span>
+                </a>
+                <a href="{% url 'cargar_excel_medicamentos' %}" class="menu-item {% if request.resolver_match.url_name == 'cargar_excel_medicamentos' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Cargar Inventario">
+                    <i class="bi bi-upload"></i>
+                    <span class="menu-item-text">Cargar Inventario</span>
+                </a>
+                <a href="{% url 'importar_catalogo' %}" class="menu-item {% if request.resolver_match.url_name == 'importar_catalogo' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Importar Catálogo">
+                    <i class="bi bi-upload"></i>
+                    <span class="menu-item-text">Importar Catálogo</span>
                 </a>
             </div>
             {% endif %}

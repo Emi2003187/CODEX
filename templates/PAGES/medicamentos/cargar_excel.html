@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4">
+            <h4 class="mb-0"><i class="bi bi-upload"></i> Cargar Excel de Medicamentos</h4>
+        </div>
+
+        <div class="card-body">
+            {% if actualizados is not None %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>¡Inventario actualizado con éxito!</strong> Se han cargado {{ actualizados }} registros.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <p class="text-muted">Sube un archivo Excel con columnas: clave/codigo_barras, nombre, existencia, precio, departamento, categoría.</p>
+
+            <div class="progress my-3">
+              <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                   role="progressbar" style="width: 0%;">
+              </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.archivo.label_tag }}
+                    {{ form.archivo }}
+                </div>
+                <button class="btn btn-primary">Actualizar Inventario</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateProgress(percent) {
+  document.getElementById("progressBar").style.width = percent + "%";
+}
+
+{% if progress_points %}
+const progressPoints = {{ progress_points|safe }};
+let progressIndex = 0;
+function runProgress() {
+  if (progressIndex < progressPoints.length) {
+    updateProgress(progressPoints[progressIndex]);
+    progressIndex += 1;
+    setTimeout(runProgress, 200);
+  }
+}
+document.addEventListener('DOMContentLoaded', runProgress);
+{% endif %}
+</script>
+{% endblock %}

@@ -405,12 +405,12 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow">
                           <li>
-                            <a class="dropdown-item" href="{% url 'medicamento_editar' med.pk %}?next={{ request.path }}">
+                            <a class="dropdown-item" href="{% url 'medicamento_actual_editar' med.pk %}?next={{ request.path }}">
                               <i class="bi bi-pencil-square me-2 text-warning"></i>Editar
                             </a>
                           </li>
                           <li>
-                            <form method="post" action="{% url 'medicamento_eliminar' med.pk %}" onsubmit="return confirm('¿Eliminar medicamento?');">
+                            <form method="post" action="{% url 'medicamento_actual_eliminar' med.pk %}" onsubmit="return confirm('¿Eliminar medicamento?');">
                               {% csrf_token %}
                               <input type="hidden" name="next" value="{{ request.path }}">
                               <button class="dropdown-item text-danger" type="submit">
