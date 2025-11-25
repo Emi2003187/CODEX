@@ -32,7 +32,7 @@ class Command(BaseCommand):
             if img_url and img_url.startswith(media_url):
                 defaults["imagen"] = img_url[len(media_url) :]
             MedicamentoCatalogo.objects.update_or_create(
-                clave=codigo, defaults=defaults
+                codigo_barras=codigo, defaults=defaults
             )
             count += 1
         self.stdout.write(self.style.SUCCESS(f"Procesados {count} registros"))
