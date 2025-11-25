@@ -203,7 +203,11 @@ class MedicamentoExcelUploadView(LoginRequiredMixin, View):
 
     def get(self, request):
         form = ExcelUploadForm()
-        return render(request, self.template_name, {"form": form})
+        return render(
+            request,
+            self.template_name,
+            {"form": form, "usuario": request.user},
+        )
 
     def post(self, request):
         form = ExcelUploadForm(request.POST, request.FILES)
@@ -228,7 +232,11 @@ class MedicamentoExcelUploadView(LoginRequiredMixin, View):
         else:
             messages.error(request, "Cargue un archivo válido (.xlsx, .xls o .csv).")
 
-        return render(request, self.template_name, {"form": form, "reporte": reporte})
+        return render(
+            request,
+            self.template_name,
+            {"form": form, "reporte": reporte, "usuario": request.user},
+        )
 
 
 @login_required
@@ -249,6 +257,7 @@ def medicamentos_lista(request):
         "page_obj": page_obj,
         "medicamentos": page_obj,
         "q": q,
+        "usuario": request.user,
     }
     return render(request, "medicamentos/lista.html", context)
 
@@ -263,7 +272,11 @@ def medicamentos_crear(request):
             return redirect("medicamentos_lista")
     else:
         form = MedicamentoCatalogoForm()
-    return render(request, "medicamentos/crear.html", {"form": form})
+    return render(
+        request,
+        "medicamentos/crear.html",
+        {"form": form, "usuario": request.user},
+    )
 
 
 @login_required
@@ -280,7 +293,7 @@ def medicamentos_editar(request, pk: int):
     return render(
         request,
         "medicamentos/editar.html",
-        {"form": form, "medicamento": medicamento},
+        {"form": form, "medicamento": medicamento, "usuario": request.user},
     )
 
 
@@ -294,5 +307,5 @@ def medicamentos_eliminar(request, pk: int):
     return render(
         request,
         "medicamentos/eliminar.html",
-        {"medicamento": medicamento},
+        {"medicamento": medicamento, "usuario": request.user},
     )
