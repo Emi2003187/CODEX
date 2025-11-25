@@ -28,7 +28,9 @@ def copiar_codigo(apps, schema_editor):
     if "codigo_barras" not in existing_columns:
         return
 
-    for med in MedicamentoCatalogo.objects.all():
+    # Limit selected columns to avoid touching non-existent fields on databases
+    # that already dropped codigo_barras.
+    for med in MedicamentoCatalogo.objects.only("pk", "clave", "codigo_barras"):
         med.clave = med.codigo_barras
         med.save(update_fields=["clave"])
 
@@ -44,7 +46,11 @@ def normalizar_clave(apps, schema_editor):
     has_codigo = "codigo_barras" in existing_columns
     used = set()
 
-    for med in MedicamentoCatalogo.objects.all().order_by("pk"):
+    queryset = MedicamentoCatalogo.objects.order_by("pk").only("pk", "clave")
+    if has_codigo:
+        queryset = queryset.only("pk", "clave", "codigo_barras")
+
+    for med in queryset:
         raw_value = med.clave
         if not raw_value and has_codigo:
             raw_value = med.codigo_barras
