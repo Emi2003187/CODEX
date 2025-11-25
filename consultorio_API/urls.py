@@ -17,6 +17,13 @@ from .views import CitaCreateView, Receta
 from consultorio_API import views, viewscitas
 from consultorio_API.views_recetas import RecetaPreviewView, RxRecetaView, RecetaA5View, receta_pdf_reportlab
 from . import views_recetas
+from .views_medicamentos import (
+    MedicamentoExcelUploadView,
+    medicamentos_crear,
+    medicamentos_editar,
+    medicamentos_eliminar,
+    medicamentos_lista,
+)
 
 urlpatterns = [
     path('', views.home_redirect, name='home'),
@@ -87,7 +94,15 @@ urlpatterns = [
     path('ajax/signos-vitales/<int:consulta_id>/', views.ajax_signos_vitales, name='ajax_signos_vitales'),
     path('ajax/cita-detalle/<uuid:cita_id>/', viewscitas.ajax_cita_detalle, name='ajax_cita_detalle'),
 
-    
+
+    # MEDICAMENTOS - CATÁLOGO
+    path('medicamentos/', medicamentos_lista, name='medicamentos_lista'),
+    path('medicamentos/crear/', medicamentos_crear, name='medicamentos_crear'),
+    path('medicamentos/editar/<int:pk>/', medicamentos_editar, name='medicamentos_editar'),
+    path('medicamentos/eliminar/<int:pk>/', medicamentos_eliminar, name='medicamentos_eliminar'),
+    path('medicamentos/cargar-excel/', MedicamentoExcelUploadView.as_view(), name='medicamentos_cargar_excel'),
+
+
     # ANTECEDENTES Y MEDICAMENTOS
     path('pacientes/<int:paciente_id>/antecedente/nuevo/', views.antecedente_nuevo, name='antecedente_nuevo'),
     path('antecedentes/<int:pk>/editar/', views.AntecedenteUpdateView.as_view(), name='antecedente_editar'),
