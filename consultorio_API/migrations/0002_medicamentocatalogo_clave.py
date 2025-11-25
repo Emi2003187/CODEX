@@ -19,9 +19,34 @@ def add_clave_column(apps, schema_editor):
 
 def copiar_codigo(apps, schema_editor):
     MedicamentoCatalogo = apps.get_model("consultorio_API", "MedicamentoCatalogo")
+    table_name = MedicamentoCatalogo._meta.db_table
+    with schema_editor.connection.cursor() as cursor:
+        existing_columns = {
+            column.name for column in schema_editor.connection.introspection.get_table_description(cursor, table_name)
+        }
+
+    if "codigo_barras" not in existing_columns:
+        return
+
     for med in MedicamentoCatalogo.objects.all():
         med.clave = med.codigo_barras
         med.save(update_fields=["clave"])
+
+
+def drop_codigo_if_exists(apps, schema_editor):
+    MedicamentoCatalogo = apps.get_model("consultorio_API", "MedicamentoCatalogo")
+    table_name = MedicamentoCatalogo._meta.db_table
+    with schema_editor.connection.cursor() as cursor:
+        existing_columns = {
+            column.name for column in schema_editor.connection.introspection.get_table_description(cursor, table_name)
+        }
+
+    if "codigo_barras" not in existing_columns:
+        return
+
+    field = models.CharField(max_length=50, unique=True)
+    field.set_attributes_from_name("codigo_barras")
+    schema_editor.remove_field(MedicamentoCatalogo, field)
 
 
 class Migration(migrations.Migration):
@@ -49,8 +74,15 @@ class Migration(migrations.Migration):
             name="clave",
             field=models.CharField(max_length=100, unique=True),
         ),
-        migrations.RemoveField(
-            model_name="medicamentocatalogo",
-            name="codigo_barras",
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(drop_codigo_if_exists, migrations.RunPython.noop),
+            ],
+            state_operations=[
+                migrations.RemoveField(
+                    model_name="medicamentocatalogo",
+                    name="codigo_barras",
+                ),
+            ],
         ),
     ]
