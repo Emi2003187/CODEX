@@ -2,13 +2,10 @@ from __future__ import annotations
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from .models import *
-from pathlib import Path
-
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.utils import timezone
 from django.conf import settings
-from django.core.validators import FileExtensionValidator
 
 
 # ───── Python / typing ──────────────────────────────────────────────────
@@ -23,7 +20,7 @@ from django.utils.translation import gettext_lazy as _
 from django.db.models import Min, Q
 
 # ───── Modelos / utilidades internas ───────────────────────────────────
-from .models import Cita, Consultorio, MedicamentoCatalogo, Paciente, Usuario
+from .models import Cita, Consultorio, Paciente, Usuario
 from .utils_horarios import obtener_horarios_disponibles_para_select
 
 
@@ -1221,51 +1218,6 @@ class MedicamentoRecetadoForm(forms.ModelForm):
             'cantidad': 'Cantidad',
             'indicaciones_especificas': 'Indicaciones Específicas',
         }
-
-
-# ═══════════════════════════════════════════════════════════════
-# 💊 FORMULARIOS DE CATÁLOGO DE MEDICAMENTOS
-# ═══════════════════════════════════════════════════════════════
-
-
-class MedicamentoCatalogoForm(forms.ModelForm):
-    class Meta:
-        model = MedicamentoCatalogo
-        fields = [
-            "nombre",
-            "clave",
-            "departamento",
-            "categoria",
-            "existencia",
-            "precio",
-            "imagen",
-        ]
-        widgets = {
-            "nombre": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre del artículo"}),
-            "clave": forms.TextInput(attrs={"class": "form-control", "placeholder": "Clave única"}),
-            "departamento": forms.TextInput(attrs={"class": "form-control", "placeholder": "Departamento"}),
-            "categoria": forms.TextInput(attrs={"class": "form-control", "placeholder": "Categoría"}),
-            "existencia": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
-            "precio": forms.NumberInput(attrs={"class": "form-control", "min": 0, "step": "0.01"}),
-            "imagen": forms.ClearableFileInput(attrs={"class": "form-control"}),
-        }
-
-
-class ExcelUploadForm(forms.Form):
-    archivo = forms.FileField(
-        label="Archivo (.xlsx, .xls o .csv)",
-        validators=[FileExtensionValidator(allowed_extensions=["xlsx", "xls", "csv"])],
-        widget=forms.ClearableFileInput(attrs={"class": "form-control"}),
-    )
-
-    def clean_archivo(self):
-        archivo = self.cleaned_data.get("archivo")
-        if not archivo:
-            raise ValidationError("Debe seleccionar un archivo.")
-        ext = Path(archivo.name).suffix.lower()
-        if ext not in {".xlsx", ".xls", ".csv"}:
-            raise ValidationError("Formato no soportado. Use .xlsx, .xls o .csv")
-        return archivo
 
 
 # ═══════════════════════════════════════════════════════════════

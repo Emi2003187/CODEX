@@ -176,9 +176,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 TEMPLATES[0]["OPTIONS"]["context_processors"].append(
     "consultorio_API.context_processors.notificaciones_no_leidas"
 )
-TEMPLATES[0]["OPTIONS"]["context_processors"].append(
-    "consultorio_API.context_processors.usuario_actual"
-)
 
 from pathlib import Path
 CATALOGO_EXCEL_PATH = Path(BASE_DIR) / "Catalogo de Artículos.xlsx"
