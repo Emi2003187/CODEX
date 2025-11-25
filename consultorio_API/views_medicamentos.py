@@ -50,7 +50,7 @@ def _strip_label_value(text: str) -> str:
 def _parse_int(value: str | None) -> int | None:
     if value is None:
         return None
-    cleaned = value.replace(",", "").strip()
+    cleaned = value.replace(",", "").replace(" ", "").strip()
     if not cleaned:
         return None
     try:
@@ -62,7 +62,7 @@ def _parse_int(value: str | None) -> int | None:
 def _parse_decimal(value: str | None) -> Decimal | None:
     if value is None:
         return None
-    cleaned = value.replace("$", "").replace(",", "").strip()
+    cleaned = value.replace("$", "").replace(",", "").replace(" ", "").strip()
     if not cleaned:
         return None
     try:
@@ -83,7 +83,20 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
     items: List[MedicamentoParsed] = []
     errors: List[dict] = []
     i = 0
-    LABELS = ["clave:", "departamento:", "categoría:", "categoria:", "existencia:", "precio:"]
+
+    def match_label(text: str) -> str | None:
+        lower = text.lower().strip()
+        if lower.startswith("clave:"):
+            return "clave"
+        if lower.startswith("departamento:"):
+            return "departamento"
+        if lower.startswith("categoría:") or lower.startswith("categoria:"):
+            return "categoria"
+        if lower.startswith("existencia:"):
+            return "existencia"
+        if lower.startswith("precio:"):
+            return "precio"
+        return None
 
     while i < len(rows):
         line = _clean_line(rows[i])
@@ -91,8 +104,7 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
             i += 1
             continue
 
-        lower_line = line.lower()
-        if any(lower_line.startswith(lbl) for lbl in LABELS):
+        if match_label(line):
             i += 1
             continue
 
@@ -105,9 +117,10 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
             "precio": None,
         }
 
-        # Explora hasta 12 filas siguientes (para tolerar imágenes/espacios)
+        found_detail = False
         j = i + 1
-        max_seek = min(len(rows), i + 12)
+        max_seek = min(len(rows), i + 11)
+        next_candidate_index = None
 
         while j < max_seek:
             detalle_text = _clean_line(rows[j])
@@ -115,52 +128,37 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
                 j += 1
                 continue
 
-            lower_detalle = detalle_text.lower()
-            if any(lower_detalle.startswith(lbl) for lbl in LABELS):
-                if lower_detalle.startswith("clave:"):
-                    info["clave"] = _strip_label_value(detalle_text)
-                elif lower_detalle.startswith("departamento:"):
-                    info["departamento"] = _strip_label_value(detalle_text)
-                elif lower_detalle.startswith("categoría:") or lower_detalle.startswith("categoria:"):
-                    info["categoria"] = _strip_label_value(detalle_text)
-                elif lower_detalle.startswith("existencia:"):
-                    info["existencia"] = _strip_label_value(detalle_text)
-                elif lower_detalle.startswith("precio:"):
-                    info["precio"] = _strip_label_value(detalle_text)
-
-                # Si ya reunimos las etiquetas críticas podemos seguir buscando
-                # datos opcionales sin preocuparnos por cortar pronto.
+            detalle_key = match_label(detalle_text)
+            if detalle_key:
+                found_detail = True
+                info[detalle_key] = _strip_label_value(detalle_text)
                 j += 1
                 continue
 
-            # Si la línea no es etiqueta, puede ser el próximo nombre: salimos
-            # dejando el puntero en esta fila para que sea evaluada en el ciclo
-            # principal.
+            next_candidate_index = j
             break
 
         missing_fields = [field for field in ["clave", "existencia", "precio"] if not info.get(field)]
-        if missing_fields or not nombre:
-            errors.append(
-                {
-                    "linea": i + 1,
-                    "nombre": nombre,
-                    "motivo": f"Faltan campos: {', '.join(missing_fields) if missing_fields else 'Nombre'}",
-                }
-            )
-            i = j if j > i else i + 1
+
+        if missing_fields:
+            if found_detail:
+                errors.append(
+                    {
+                        "linea": i + 1,
+                        "nombre": nombre,
+                        "motivo": f"Faltan campos: {', '.join(missing_fields)}",
+                    }
+                )
+            i = next_candidate_index if next_candidate_index is not None else j
             continue
 
         existencia_val = _parse_int(str(info["existencia"]))
         precio_val = _parse_decimal(str(info["precio"]))
 
-        if existencia_val is None:
-            errors.append({"linea": i + 1, "nombre": nombre, "motivo": "Existencia inválida"})
-            i = j if j > i else i + 1
-            continue
-
-        if precio_val is None:
-            errors.append({"linea": i + 1, "nombre": nombre, "motivo": "Precio inválido"})
-            i = j if j > i else i + 1
+        if existencia_val is None or precio_val is None:
+            motivo = "Existencia inválida" if existencia_val is None else "Precio inválido"
+            errors.append({"linea": i + 1, "nombre": nombre, "motivo": motivo})
+            i = next_candidate_index if next_candidate_index is not None else j
             continue
 
         items.append(
@@ -173,7 +171,8 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
                 precio=precio_val,
             )
         )
-        i = j if j > i else i + 1
+
+        i = next_candidate_index if next_candidate_index is not None else j
 
     return items, errors
 
