@@ -51,8 +51,8 @@ def _a_decimal(valor):
         return None
 
 
-def parsear_catalogo_excel(ruta):
-    workbook = load_workbook(ruta, data_only=True)
+def parsear_catalogo_excel(ruta_excel):
+    workbook = load_workbook(ruta_excel, data_only=True)
     hoja = workbook.active
 
     imagenes_por_fila = _obtener_mapa_imagenes(workbook)
@@ -68,12 +68,9 @@ def parsear_catalogo_excel(ruta):
             fila_departamento = fila + 2
             fila_categoria = fila + 3
 
-            codigo_barras = hoja.cell(row=fila_clave, column=3).value
             existencia = _a_entero(hoja.cell(row=fila_clave, column=7).value)
-
             departamento = hoja.cell(row=fila_departamento, column=3).value
             precio = _a_decimal(hoja.cell(row=fila_departamento, column=7).value)
-
             categoria = hoja.cell(row=fila_categoria, column=3).value
 
             imagen_path = None
@@ -82,15 +79,16 @@ def parsear_catalogo_excel(ruta):
                     imagen_path = _guardar_imagen(imagenes_por_fila[candidate][0])
                     break
 
-            productos.append({
-                "nombre": nombre.strip(),
-                "codigo_barras": codigo_barras if codigo_barras else None,
-                "existencia": existencia,
-                "departamento": departamento if departamento else None,
-                "categoria": categoria if categoria else None,
-                "precio": precio,
-                "imagen": imagen_path,
-            })
+            productos.append(
+                {
+                    "nombre": nombre.strip(),
+                    "existencia": existencia,
+                    "departamento": departamento if departamento else None,
+                    "precio": precio,
+                    "categoria": categoria if categoria else None,
+                    "imagen": imagen_path,
+                }
+            )
 
             fila = fila_categoria + 1
         else:

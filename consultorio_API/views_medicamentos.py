@@ -2,7 +2,6 @@ import os
 import tempfile
 
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -21,10 +20,9 @@ def _verificar_admin(request):
 
 
 def actualizar_catalogo_completo(lista):
-    with transaction.atomic():
-        MedicamentoCatalogo.objects.all().delete()
-        for item in lista:
-            MedicamentoCatalogo.objects.create(**item)
+    MedicamentoCatalogo.objects.all().delete()
+    for item in lista:
+        MedicamentoCatalogo.objects.create(**item)
 
 
 @login_required

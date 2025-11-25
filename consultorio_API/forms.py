@@ -1736,7 +1736,6 @@ class MedicamentoCatalogoForm(forms.ModelForm):
         model = MedicamentoCatalogo
         fields = [
             "nombre",
-            "codigo_barras",
             "existencia",
             "departamento",
             "categoria",
@@ -1745,7 +1744,6 @@ class MedicamentoCatalogoForm(forms.ModelForm):
         ]
         widgets = {
             "nombre": forms.TextInput(attrs={"class": "form-control"}),
-            "codigo_barras": forms.TextInput(attrs={"class": "form-control"}),
             "existencia": forms.NumberInput(attrs={"class": "form-control"}),
             "departamento": forms.TextInput(attrs={"class": "form-control"}),
             "categoria": forms.TextInput(attrs={"class": "form-control"}),
