@@ -526,9 +526,19 @@
                     <i class="bi bi-hospital"></i>
                     <span class="menu-item-text">Consultorios</span>
                 </a>
-                <a href="{% url 'medicamentos_lista' %}" class="menu-item {% if request.resolver_match.url_name in ['medicamentos_lista','medicamento_crear','medicamento_editar','medicamento_eliminar'] %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Medicamentos">
-                    <i class="bi bi-capsule"></i>
-                    <span class="menu-item-text">Medicamentos</span>
+                <a href="{% url 'medicamentos_lista' %}"
+                   class="menu-item
+                   {% if request.resolver_match.url_name == 'medicamentos_lista'
+                         or request.resolver_match.url_name == 'medicamento_crear'
+                         or request.resolver_match.url_name == 'medicamento_editar'
+                         or request.resolver_match.url_name == 'medicamento_eliminar' %}
+                         active
+                   {% endif %}"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="right"
+                   title="Medicamentos">
+                       <i class="bi bi-capsule"></i>
+                       <span class="menu-item-text">Medicamentos</span>
                 </a>
                 <a href="{% url 'importar_catalogo' %}" class="menu-item {% if request.resolver_match.url_name == 'importar_catalogo' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Importar Catálogo">
                     <i class="bi bi-upload"></i>
