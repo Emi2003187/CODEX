@@ -330,16 +330,16 @@ class Receta(models.Model):
 
 
 class MedicamentoCatalogo(models.Model):
-    clave = models.CharField(max_length=100, unique=True)
     nombre = models.CharField(max_length=255)
-    departamento = models.CharField(max_length=100, blank=True, null=True)
-    categoria = models.CharField(max_length=100, blank=True, null=True)
+    codigo_barras = models.CharField(max_length=50, unique=True)
     existencia = models.PositiveIntegerField(default=0)
+    departamento = models.CharField(max_length=100, blank=True, null=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    categoria = models.CharField(max_length=100, blank=True, null=True)
     imagen = models.ImageField(upload_to="catalogo/", blank=True, null=True)
 
     def __str__(self):
-        return f"{self.nombre} ({self.clave})"
+        return f"{self.nombre} ({self.codigo_barras})"
 
 
 class MedicamentoRecetado(models.Model):

@@ -12,7 +12,6 @@ from django.conf import settings
 from collections.abc import Sequence
 from datetime import datetime, timedelta, time
 from typing import Any
-from pathlib import Path
 
 # ───── Django ───────────────────────────────────────────────────────────
 from django import forms
@@ -1219,57 +1218,6 @@ class MedicamentoRecetadoForm(forms.ModelForm):
             'cantidad': 'Cantidad',
             'indicaciones_especificas': 'Indicaciones Específicas',
         }
-
-
-# ═══════════════════════════════════════════════════════════════
-# 📦 CATÁLOGO DE MEDICAMENTOS
-# ═══════════════════════════════════════════════════════════════
-
-
-class MedicamentoCatalogoForm(forms.ModelForm):
-    class Meta:
-        model = MedicamentoCatalogo
-        fields = [
-            "nombre",
-            "clave",
-            "departamento",
-            "categoria",
-            "existencia",
-            "precio",
-            "imagen",
-        ]
-        widgets = {
-            "nombre": forms.TextInput(attrs={"class": "form-control"}),
-            "clave": forms.TextInput(attrs={"class": "form-control"}),
-            "departamento": forms.TextInput(attrs={"class": "form-control"}),
-            "categoria": forms.TextInput(attrs={"class": "form-control"}),
-            "existencia": forms.NumberInput(
-                attrs={"class": "form-control", "min": 0}
-            ),
-            "precio": forms.NumberInput(
-                attrs={"class": "form-control", "min": 0, "step": "0.01"}
-            ),
-            "imagen": forms.ClearableFileInput(attrs={"class": "form-control"}),
-        }
-
-
-class ExcelUploadForm(forms.Form):
-    archivo = forms.FileField(
-        label="Archivo de catálogo",
-        widget=forms.ClearableFileInput(
-            attrs={"class": "form-control", "accept": ".xlsx,.xls,.csv"}
-        ),
-    )
-
-    def clean_archivo(self):
-        archivo = self.cleaned_data.get("archivo")
-        if not archivo:
-            raise ValidationError("Debe seleccionar un archivo.")
-        ext = Path(archivo.name).suffix.lower()
-        permitidas = {".xlsx", ".xls", ".csv"}
-        if ext not in permitidas:
-            raise ValidationError("Formato no soportado. Use .xlsx, .xls o .csv")
-        return archivo
 
 
 # ═══════════════════════════════════════════════════════════════
