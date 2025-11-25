@@ -18,8 +18,8 @@ class Command(BaseCommand):
         count = 0
         media_url = getattr(settings, "MEDIA_URL", "/media/")
         for it in items:
-            codigo = str(it.get("clave") or "").strip()
-            if not codigo:
+            clave = str(it.get("clave") or "").strip()
+            if not clave:
                 continue
             defaults = {
                 "nombre": it.get("nombre", "")[:255],
@@ -32,7 +32,7 @@ class Command(BaseCommand):
             if img_url and img_url.startswith(media_url):
                 defaults["imagen"] = img_url[len(media_url) :]
             MedicamentoCatalogo.objects.update_or_create(
-                codigo_barras=codigo, defaults=defaults
+                clave=clave, defaults=defaults
             )
             count += 1
         self.stdout.write(self.style.SUCCESS(f"Procesados {count} registros"))

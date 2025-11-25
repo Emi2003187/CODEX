@@ -518,6 +518,14 @@
                     <i class="bi bi-people"></i>
                     <span class="menu-item-text">Usuarios</span>
                 </a>
+                <a href="{% url 'medicamentos_lista' %}" class="menu-item {% if request.resolver_match.url_name == 'medicamentos_lista' or request.resolver_match.url_name == 'medicamentos_crear' or request.resolver_match.url_name == 'medicamentos_editar' or request.resolver_match.url_name == 'medicamentos_eliminar' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Catálogo de medicamentos">
+                    <i class="bi bi-capsule"></i>
+                    <span class="menu-item-text">Medicamentos</span>
+                </a>
+                <a href="{% url 'medicamentos_cargar_excel' %}" class="menu-item {% if request.resolver_match.url_name == 'medicamentos_cargar_excel' %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Importar catálogo">
+                    <i class="bi bi-upload"></i>
+                    <span class="menu-item-text">Importar Excel</span>
+                </a>
                 <!--<a href="{% url 'horarios_lista' %}" class="menu-item {% if 'horarios' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Horarios">
                     <i class="bi bi-clock"></i>
                     <span class="menu-item-text">Horarios Médicos</span>
