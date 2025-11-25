@@ -33,6 +33,40 @@ def copiar_codigo(apps, schema_editor):
         med.save(update_fields=["clave"])
 
 
+def normalizar_clave(apps, schema_editor):
+    MedicamentoCatalogo = apps.get_model("consultorio_API", "MedicamentoCatalogo")
+    table_name = MedicamentoCatalogo._meta.db_table
+    with schema_editor.connection.cursor() as cursor:
+        existing_columns = {
+            column.name for column in schema_editor.connection.introspection.get_table_description(cursor, table_name)
+        }
+
+    has_codigo = "codigo_barras" in existing_columns
+    used = set()
+
+    for med in MedicamentoCatalogo.objects.all().order_by("pk"):
+        raw_value = med.clave
+        if not raw_value and has_codigo:
+            raw_value = med.codigo_barras
+
+        if not raw_value:
+            raw_value = f"AUTO-{med.pk}"
+
+        base = str(raw_value)[:100]
+        candidate = base
+        counter = 1
+        while candidate in used:
+            suffix = f"-{counter}"
+            candidate = f"{base[: 100 - len(suffix)]}{suffix}"
+            counter += 1
+
+        if med.clave != candidate:
+            med.clave = candidate
+            med.save(update_fields=["clave"])
+
+        used.add(candidate)
+
+
 def drop_codigo_if_exists(apps, schema_editor):
     MedicamentoCatalogo = apps.get_model("consultorio_API", "MedicamentoCatalogo")
     table_name = MedicamentoCatalogo._meta.db_table
@@ -69,6 +103,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.RunPython(copiar_codigo, migrations.RunPython.noop),
+        migrations.RunPython(normalizar_clave, migrations.RunPython.noop),
         migrations.AlterField(
             model_name="medicamentocatalogo",
             name="clave",
