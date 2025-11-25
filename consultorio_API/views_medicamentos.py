@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import List, Tuple
+import re
+from typing import Dict, List, Tuple
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -71,6 +72,29 @@ def _strip_label_value(text: str, key: str | None = None) -> str:
     return cleaned
 
 
+LABEL_REGEX = re.compile(
+    r"(clave|departamento|categor[ií]a|existencia|precio)\s*:??\s*(.*?)\s*(?=(?:clave|departamento|categor[ií]a|existencia|precio)\s*:|$)",
+    re.IGNORECASE,
+)
+
+
+def _extract_labels(text: str) -> Dict[str, str]:
+    """Extrae múltiples pares etiqueta-valor de una misma línea.
+
+    Soporta combinaciones como ``"Clave: 7501 Existencia: 4 Precio: $ 15.00"``
+    sin perder ninguno de los campos.
+    """
+
+    found: Dict[str, str] = {}
+    for match in LABEL_REGEX.finditer(text):
+        key = match.group(1).lower()
+        value = match.group(2).strip()
+        if key.startswith("categor"):
+            key = "categoria"
+        found[key] = value
+    return found
+
+
 def _parse_int(value: str | None) -> int | None:
     if value is None:
         return None
@@ -108,21 +132,6 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
     errors: List[dict] = []
     i = 0
 
-    def match_label(text: str) -> str | None:
-        lower = text.lower().strip()
-        normalized = lower.replace("  ", " ")
-        if normalized.startswith("clave"):
-            return "clave"
-        if normalized.startswith("departamento"):
-            return "departamento"
-        if normalized.startswith("categoría") or normalized.startswith("categoria"):
-            return "categoria"
-        if normalized.startswith("existencia"):
-            return "existencia"
-        if normalized.startswith("precio"):
-            return "precio"
-        return None
-
     skip_prefixes = {"catalogo de articulos", "catálogo de artículos", "farmacia nova"}
 
     while i < len(rows):
@@ -131,7 +140,7 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
             i += 1
             continue
 
-        if match_label(line):
+        if _extract_labels(line):
             i += 1
             continue
 
@@ -161,10 +170,11 @@ def _parse_sheet(rows: List[List[object]]) -> Tuple[List[MedicamentoParsed], Lis
                 j += 1
                 continue
 
-            detalle_key = match_label(detalle_text)
-            if detalle_key:
+            labels_found = _extract_labels(detalle_text)
+            if labels_found:
                 found_detail = True
-                info[detalle_key] = _strip_label_value(detalle_text, detalle_key)
+                for key, val in labels_found.items():
+                    info[key] = _strip_label_value(val, key)
                 j += 1
                 continue
 
